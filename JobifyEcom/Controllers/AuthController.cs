@@ -88,19 +88,39 @@ public class AuthController : ControllerBase
         }
     }
 
-    [HttpGet("ConfirmEmail")]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+[HttpGet("confirm")]
+public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+{
+    try
     {
-        try
+        var user = await _authService.ConfirmEmailAsync(email, token);
+
+        var response = new AuthResponse
         {
-            await _authService.ConfirmEmailAsync(email, token);
-            return Ok(new ApiResponse<string>(true, "Email confirmed successfully."));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ApiResponse<string>(false, ex.Message));
-        }
+            Success = true,
+            Message = "Email confirmed successfully",
+            Data = new AuthData
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Token = "", // You can skip token here or issue a fresh one if you prefer
+                ExpiresAt = DateTime.UtcNow
+            }
+        };
+
+        return Ok(response);
     }
+    catch (Exception ex)
+    {
+        return BadRequest(new AuthResponse
+        {
+            Success = false,
+            Message = ex.Message
+        });
+    }
+}
+
 
 
     [Authorize]

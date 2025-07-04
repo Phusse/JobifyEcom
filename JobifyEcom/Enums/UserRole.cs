@@ -6,3 +6,9 @@ public enum UserRole
     Worker,
     Admin
 }
+public enum JobStatus
+{
+    Available,
+    Booked,
+    Completed
+}

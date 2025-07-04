@@ -26,7 +26,7 @@ public class AuthService : IAuthService
 
         var user = new User
         {
-            Name = dto.Name,
+            Name = dto.Name, 
             Email = dto.Email,
             PasswordHash = HashPassword(dto.Password),
             Role = dto.Role.ToString(),
@@ -61,24 +61,24 @@ public class AuthService : IAuthService
         return user;
     }
 
-    public async Task ConfirmEmailAsync(string email, string token)
+    public async Task<User> ConfirmEmailAsync(string email, string token)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null)
             throw new Exception("User not found");
 
-        if (user.IsEmailConfirmed)
-            throw new Exception("Email is already confirmed.");
-
         if (user.EmailConfirmationToken != token)
-            throw new Exception("Invalid confirmation token.");
+            throw new Exception("Invalid token. User ID not found.");
 
         user.IsEmailConfirmed = true;
         user.EmailConfirmationToken = null;
 
         await _db.SaveChangesAsync();
+
+        return user;
     }
+
 
 
     private string HashPassword(string password)
