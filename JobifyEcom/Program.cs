@@ -7,18 +7,17 @@ using Microsoft.EntityFrameworkCore;
 using JobifyEcom.Services;
 using JobifyEcom.Helpers;
 using System.Text.Json.Serialization;
-using System.Text.Json; // ✅ Add this to support JsonStringEnumConverter
-
+using System.Text.Json; 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add DbContext with MySQL
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
     ));
 
-// JWT setup
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
 
