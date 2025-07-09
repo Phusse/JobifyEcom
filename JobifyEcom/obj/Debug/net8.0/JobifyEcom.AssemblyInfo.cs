@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JobifyEcom")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+85ac1809b6258c8e80d6452389b8398ce313f7e8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ed2aca817f5e4ffb4dc8ee7a786d67ef6133f0e7")]
 [assembly: System.Reflection.AssemblyProductAttribute("JobifyEcom")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JobifyEcom")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

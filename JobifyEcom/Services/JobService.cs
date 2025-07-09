@@ -28,7 +28,7 @@ public class JobService : IJobService
 
         _db.JobPosts.Add(job);
         await _db.SaveChangesAsync();
-        return job;
+        return job;  
     }
 
     public async Task<List<JobPost>> GetAllJobsAsync()
