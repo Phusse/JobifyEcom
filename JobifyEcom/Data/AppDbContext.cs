@@ -10,4 +10,6 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<WorkerProfile> WorkerProfiles { get; set; }
     public DbSet<JobPost> JobPosts { get; set; }
+    public DbSet<JobRequest> JobRequests { get; set; }
+
 }
