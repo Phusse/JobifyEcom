@@ -1,4 +1,3 @@
-// Services/JobService.cs
 using JobifyEcom.Data;
 using JobifyEcom.Models;
 using JobifyEcom.DTOs;

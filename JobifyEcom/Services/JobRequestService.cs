@@ -1,7 +1,6 @@
 using JobifyEcom.Data;
 using JobifyEcom.Models; 
-// Add the following using if JobRequest is in a different namespace
-// using JobifyEcom.Entities;
+
 
 public class JobRequestService : IJobRequestService
 {

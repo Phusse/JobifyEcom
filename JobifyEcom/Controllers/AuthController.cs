@@ -33,11 +33,11 @@ public class AuthController : ControllerBase
                     Id = user.Id,
                     Name = user.Email.Split('@')[0],
                     Email = user.Email,
-                    Token = "", // No token until email is confirmed
+                    Token = "",
                     ExpiresAt = DateTime.MinValue
                 }
             };
-            return CreatedAtAction(nameof(Register), response); // 201 Created
+            return CreatedAtAction(nameof(Register), response);
         }
         catch (Exception ex)
         {
