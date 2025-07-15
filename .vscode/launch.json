@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C#: JobifyEcom Debug",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/JobifyEcom/bin/Debug/net8.0/JobifyEcom.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/JobifyEcom",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}
