@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\JobifyEcom.props" />
-</Project>

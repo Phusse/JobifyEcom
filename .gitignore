@@ -1,0 +1,73 @@
+## Build artifacts
+**/bin/
+**/obj/
+out/
+Generated_Code/
+
+## Rider and VS Code
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## ASP.NET temporary files
+*.dbmdl
+*.bak
+*.Backup
+*.log
+*.vspscc
+*.vssscc
+
+## User-specific files
+*.user
+*.rsuser
+*.suo
+*.sdf
+*.cache
+*.db
+*.pdb
+.qodo
+
+## Dotnet stuff
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.deps.json
+*.runtimeconfig.dev.json
+
+## NuGet packages
+*.nupkg
+*.snupkg
+packages/
+*.nuspec
+*.psmdcp
+*.ps1
+
+## Others
+TestResults/
+*.vs/
+.env
+.env.*
+secrets.json
+
+## Logs
+*.log
+
+## LocalDB
+*.mdf
+*.ldf
+
+## Mac OS
+.DS_Store
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## Docker
+**/Dockerfile.*
+**/docker-compose*.yml
+**/.dockerignore
