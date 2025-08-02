@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using JobifyEcom.Services;
 using JobifyEcom.Helpers;
 using System.Text.Json.Serialization;
-using System.Text.Json; 
+using System.Text.Json;
+using System.Reflection;
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -43,7 +44,7 @@ builder.Services.AddAuthentication(options =>
 
 // ✅ Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<JwtHelper>(); 
+builder.Services.AddScoped<JwtHelper>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobRequestService, JobRequestService>();
@@ -59,9 +60,14 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
-
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // get self generated xml document
+    string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath, true);
+});
 
 var app = builder.Build();
 
