@@ -1,24 +1,40 @@
 namespace JobifyEcom.Contracts;
 
+/// <summary>
+/// Defines all static API route paths used in the application.
+/// Organizes them by domain (Auth, Job, Worker),
+/// and by HTTP verbs (Get, Post, Put, Patch, Delete).
+/// </summary>
 public static class ApiRoutes
 {
-    private const string root = "api";
-    private const string version = "v1";
+    private const string Root = "api";
+    private const string Version = "v1";
 
-
-    private const string authController = "auth";
-    public const string AuthBase = $"{root}/{version}/{authController}";
-
-    public static class AuthPost
+    /// <summary>
+    /// Routes related to Auth operations.
+    /// </summary>
+    public static class Auth
     {
-        public const string Register = $"{AuthBase}/register";
-        public const string Login = $"{AuthBase}/login";
-        public const string ConfirmEmail = $"{AuthBase}/confirm-email";
-    }
+        private const string Base = $"{Root}/{Version}/auth";
 
-    public static class AuthGet
-    {
-        public const string Me = $"{AuthBase}/me";
-    }
+        /// <summary>POST endpoints for Auth.</summary>
+        public static class Post
+        {
+            /// <summary>Register a new user.</summary>
+            public const string Register = $"{Base}/register";
 
+            /// <summary>Login a user.</summary>
+            public const string Login = $"{Base}/login";
+
+            /// <summary>Confirm email address.</summary>
+            public const string ConfirmEmail = $"{Base}/confirm-email";
+        }
+
+        /// <summary>PUT endpoints for Auth.</summary>
+        public static class Get
+        {
+            /// <summary>Get user details.</summary>
+            public const string Me = $"{Base}/me";
+        }
+    }
 }

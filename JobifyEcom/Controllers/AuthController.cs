@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using JobifyEcom.DTOs;
 using JobifyEcom.Common;
 using Microsoft.AspNetCore.Authorization;
+using JobifyEcom.Contracts;
 
 namespace JobifyEcom.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -16,7 +16,7 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    [HttpPost("register")]
+    [HttpPost(ApiRoutes.Auth.Post.Register)]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         try
@@ -48,7 +48,7 @@ public class AuthController : ControllerBase
         }
     }
 
-    [HttpPost("login")]
+    [HttpPost(ApiRoutes.Auth.Post.Login)]
     public async Task<IActionResult> Login(LoginDto dto)
     {
         try
@@ -88,43 +88,41 @@ public class AuthController : ControllerBase
         }
     }
 
-[HttpGet("confirm")]
-public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
-{
-    try
+    [HttpGet(ApiRoutes.Auth.Post.ConfirmEmail)]
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
     {
-        var user = await _authService.ConfirmEmailAsync(email, token);
-
-        var response = new AuthResponse
+        try
         {
-            Success = true,
-            Message = "Email confirmed successfully",
-            Data = new AuthData
+            var user = await _authService.ConfirmEmailAsync(email, token);
+
+            var response = new AuthResponse
             {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Token = "", // You can skip token here or issue a fresh one if you prefer
-                ExpiresAt = DateTime.UtcNow
-            }
-        };
+                Success = true,
+                Message = "Email confirmed successfully",
+                Data = new AuthData
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Token = "", // You can skip token here or issue a fresh one if you prefer
+                    ExpiresAt = DateTime.UtcNow
+                }
+            };
 
-        return Ok(response);
-    }
-    catch (Exception ex)
-    {
-        return BadRequest(new AuthResponse
+            return Ok(response);
+        }
+        catch (Exception ex)
         {
-            Success = false,
-            Message = ex.Message
-        });
+            return BadRequest(new AuthResponse
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
     }
-}
-
-
 
     [Authorize]
-    [HttpGet("me")]
+    [HttpGet(ApiRoutes.Auth.Get.Me)]
     public IActionResult Me()
     {
         try
