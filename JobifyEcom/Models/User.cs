@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using JobifyEcom.Enums;
 
 public class User
 {
+    [Key]
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     [Required]
@@ -12,8 +14,7 @@ public class User
     public string PasswordHash { get; set; }
 
     [Required]
-    public string Role { get; set; } = "Customer";
+    public UserRole Role { get; set; } = UserRole.Customer;
     public bool IsEmailConfirmed { get; set; } = false;
     public string? EmailConfirmationToken { get; set; }
-
 }

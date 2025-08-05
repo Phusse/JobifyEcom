@@ -1,28 +1,28 @@
 using JobifyEcom.Data;
-using JobifyEcom.Models; 
+using JobifyEcom.Enums;
+using JobifyEcom.Models;
 
-
-public class JobRequestService : IJobRequestService
+public class JobApplicationService : IJobApplicationService
 {
     private readonly AppDbContext _context;
 
-    public JobRequestService(AppDbContext context)
+    public JobApplicationService(AppDbContext context)
     {
         _context = context;
     }
 
-    public async Task<JobRequestResponseDto> CreateRequestAsync(RequestJobDto dto)
+    public async Task<JobRequestResponseDto> CreateApplicationAsync(RequestJobDto dto)
     {
-        var request = new JobRequest
+        var request = new JobApplication
         {
             Id = Guid.NewGuid(),
             CustomerId = dto.CustomerId,
             JobPostId = dto.JobPostId,
-            Status = "Pending",
+            Status = JobApplicationStatus.Pending,
             DateRequested = DateTime.UtcNow
         };
 
-        _context.JobRequests.Add(request);
+        _context.JobApplications.Add(request);
         await _context.SaveChangesAsync();
 
         return new JobRequestResponseDto
@@ -37,7 +37,7 @@ public class JobRequestService : IJobRequestService
 
     public async Task<JobRequestResponseDto> GetByIdAsync(Guid id)
     {
-        var request = await _context.JobRequests.FindAsync(id);
+        var request = await _context.JobApplications.FindAsync(id);
         if (request == null) return null;
 
         return new JobRequestResponseDto
@@ -50,9 +50,9 @@ public class JobRequestService : IJobRequestService
         };
     }
 
-    public async Task<bool> UpdateStatusAsync(Guid id, string status)
+    public async Task<bool> UpdateStatusAsync(Guid id, JobApplicationStatus status)
     {
-        var request = await _context.JobRequests.FindAsync(id);
+        var request = await _context.JobApplications.FindAsync(id);
         if (request == null) return false;
 
         request.Status = status;

@@ -4,8 +4,8 @@ namespace JobifyEcom.Models;
 
 public class WorkerProfile
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }  
+    [Key] public Guid Id { get; set; }
+    public Guid UserId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Bio { get; set; } = string.Empty;
