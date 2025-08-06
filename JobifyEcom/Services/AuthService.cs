@@ -26,10 +26,10 @@ public class AuthService : IAuthService
 
         var user = new User
         {
-            Name = dto.Name, 
+            Name = dto.Name,
             Email = dto.Email,
             PasswordHash = HashPassword(dto.Password),
-            Role = dto.Role.ToString(),
+            Role = dto.Role,
             IsEmailConfirmed = false,
             EmailConfirmationToken = confirmationToken
         };
@@ -50,7 +50,7 @@ public class AuthService : IAuthService
         if (!user.IsEmailConfirmed)
             throw new Exception("Please confirm your email before logging in.");
 
-        return _jwt.GenerateToken(user.Id, user.Email, user.Role);
+        return _jwt.GenerateToken(user.Id, user.Email, user.Role.ToString());
     }
 
     public async Task<User> GetUserByEmailAsync(string email)
@@ -78,8 +78,6 @@ public class AuthService : IAuthService
 
         return user;
     }
-
-
 
     private string HashPassword(string password)
     {

@@ -47,8 +47,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHelper>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IJobService, JobService>();
-builder.Services.AddScoped<IJobRequestService, JobRequestService>();
-
+builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
 
 builder.Services.AddAuthorization();
 
