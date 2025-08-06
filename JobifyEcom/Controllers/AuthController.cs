@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using JobifyEcom.DTOs;
-using JobifyEcom.Common;
 using Microsoft.AspNetCore.Authorization;
 using JobifyEcom.Contracts;
 
@@ -130,14 +129,16 @@ public class AuthController : ControllerBase
             var email = User.FindFirst("email")?.Value;
             var role = User.FindFirst("role")?.Value;
 
-            if (string.IsNullOrWhiteSpace(email))
-                return Unauthorized(new ApiResponse<object>(false, "User not authenticated"));
+            Console.WriteLine($"[Debug] Email: {email}, Role: {role}, User: {User}");
 
-            return Ok(new ApiResponse<object>(true, "User info", new { Email = email, Role = role }));
+            if (string.IsNullOrWhiteSpace(email))
+                return Unauthorized(ApiResponse<object?>.Fail(null, "User not authenticated."));
+
+            return Ok(ApiResponse<object>.Ok(new { Email = email, Role = role }));
         }
         catch
         {
-            return StatusCode(500, new ApiResponse<string>(false, "Internal server error"));
+            return StatusCode(500, ApiResponse<object?>.Fail("Internal server error."));
         }
     }
 }

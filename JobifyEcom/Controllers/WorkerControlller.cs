@@ -1,9 +1,7 @@
 using JobifyEcom.DTOs;
-using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using JobifyEcom.Common;
 
 namespace JobifyEcom.Controllers;
 
@@ -26,11 +24,11 @@ public class WorkerController : ControllerBase
         {
             var userId = GetUserId();
             var profile = await _workerService.CreateProfileAsync(userId, dto);
-            return Ok(new ApiResponse<object>(true, "Worker profile created successfully", profile));
+            return Ok(ApiResponse<object?>.Ok(profile, "Worker profile created successfully."));
         }
         catch (Exception ex)
         {
-            return BadRequest(new ApiResponse<string>(false, ex.Message));
+            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
         }
     }
 
@@ -43,13 +41,13 @@ public class WorkerController : ControllerBase
             var profile = await _workerService.GetMyProfileAsync(userId);
 
             if (profile == null)
-                return NotFound(new ApiResponse<string>(false, "No profile found"));
+                return NotFound(ApiResponse<object?>.Fail(null, "No profile found."));
 
-            return Ok(new ApiResponse<object>(true, "Worker profile retrieved", profile));
+            return Ok(ApiResponse<object?>.Ok(profile, "Worker profile retrived."));
         }
         catch (Exception ex)
         {
-            return BadRequest(new ApiResponse<string>(false, ex.Message));
+            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
         }
     }
 

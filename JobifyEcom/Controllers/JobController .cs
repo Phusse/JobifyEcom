@@ -1,9 +1,7 @@
 using JobifyEcom.DTOs;
-using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using JobifyEcom.Common;
 
 namespace JobifyEcom.Controllers;
 
@@ -26,11 +24,11 @@ public class JobController : ControllerBase
         {
             var userId = GetUserId();
             var job = await _jobService.CreateJobAsync(userId, dto);
-            return Ok(new ApiResponse<object>(true, "Job created successfully", job));
+            return Ok(ApiResponse<object?>.Ok(job, "All jobs fetched successfully."));
         }
         catch (Exception ex)
         {
-            return BadRequest(new ApiResponse<string>(false, ex.Message));
+            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
         }
     }
 
@@ -40,11 +38,11 @@ public class JobController : ControllerBase
         try
         {
             var jobs = await _jobService.GetAllJobsAsync();
-            return Ok(new ApiResponse<object>(true, "All jobs fetched successfully", jobs));
+            return Ok(ApiResponse<object?>.Ok(jobs, "All jobs fetched successfully."));
         }
         catch (Exception ex)
         {
-            return BadRequest(new ApiResponse<string>(false, ex.Message));
+            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
         }
     }
 
@@ -56,11 +54,11 @@ public class JobController : ControllerBase
         {
             var userId = GetUserId();
             var jobs = await _jobService.GetJobsByWorkerAsync(userId);
-            return Ok(new ApiResponse<object>(true, "Your job posts", jobs));
+            return Ok(ApiResponse<object?>.Ok(jobs, "Your job posts"));
         }
         catch (Exception ex)
         {
-            return BadRequest(new ApiResponse<string>(false, ex.Message));
+            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
         }
     }
 
