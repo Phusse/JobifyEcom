@@ -2,7 +2,6 @@ using JobifyEcom.Data;
 using JobifyEcom.Models;
 using JobifyEcom.DTOs;
 using Microsoft.EntityFrameworkCore;
-using JobifyEcom.Enums;
 
 public class WorkerService : IWorkerService
 {
