@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations;
 namespace JobifyEcom.Models;
 
 /// <summary>
-/// Represents a reusable tag or category used across skills and job posts.
+/// Represents a reusable tag or category that can be linked to various entities
+/// such as skills, job posts, and potentially other models.
 /// </summary>
 public class Tag
 {
@@ -14,19 +15,16 @@ public class Tag
 	public Guid Id { get; set; }
 
 	/// <summary>
-	/// The unique name of the tag.
+	/// The unique name of the tag (e.g., "Docker", "C#", "Design").
 	/// </summary>
 	[Required]
+	[MinLength(1)]
 	[StringLength(100)]
 	public string Name { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The job posts associated with this tag.
+	/// A collection of entity-tag mappings that associate this tag with specific entities.
+	/// This enables polymorphic tagging across different types of models.
 	/// </summary>
-	public ICollection<JobPost> JobPosts { get; set; } = [];
-
-	/// <summary>
-	/// The skills associated with this tag.
-	/// </summary>
-	public ICollection<Skill> Skills { get; set; } = [];
+	public ICollection<EntityTag> EntityTags { get; set; } = [];
 }

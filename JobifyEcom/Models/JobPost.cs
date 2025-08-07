@@ -61,7 +61,7 @@ public class JobPost
     public WorkerProfile? Worker { get; set; }
 
     /// <summary>
-    /// A collection of tags associated with this job post.
+    /// A collection of entity tags linking this skill to shared tags.
     /// </summary>
-    public ICollection<Tag> Tags { get; set; } = [];
+    public ICollection<EntityTag> EntityTags { get; set; } = [];
 }

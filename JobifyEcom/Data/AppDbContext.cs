@@ -45,6 +45,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Tag> Tags { get; set; }
 
     /// <summary>
+    /// Gets or sets the EntityTags table that links tags to different entity types (JobPost, Skill, etc.).
+    /// </summary>
+    public DbSet<EntityTag> EntityTags { get; set; }
+
+    /// <summary>
+    /// Gets or sets the SkillVerification table.
+    /// </summary>
+    public DbSet<SkillVerification> SkillVerifications { get; set; }
+
+
+    /// <summary>
     /// Configures entity relationships and value conversions for the database schema.
     /// </summary>
     /// <param name="modelBuilder">
@@ -59,6 +70,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ConfigureJobApplication(modelBuilder);
         ConfigureRating(modelBuilder);
         ConfigureTag(modelBuilder);
+        ConfigureEntityTag(modelBuilder);
+        ConfigureSkillVerification(modelBuilder);
     }
 
     private static void ConfigureUser(ModelBuilder modelBuilder)
@@ -106,9 +119,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .HasForeignKey(s => s.WorkerProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany(s => s.Tags)
-                .WithMany(t => t.Skills)
-                .UsingEntity(j => j.ToTable("SkillTags"));
+            entity.HasMany(s => s.Verifications)
+                .WithOne(v => v.Skill)
+                .HasForeignKey(v => v.SkillId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 
@@ -123,10 +137,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany(w => w.JobPosts)
                 .HasForeignKey(j => j.WorkerId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasMany(j => j.Tags)
-                .WithMany(t => t.JobPosts)
-                .UsingEntity(j => j.ToTable("JobPostTags"));
         });
     }
 
@@ -183,6 +193,38 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                     v => v.ToLower(),
                     v => v
                 );
+        });
+    }
+
+    private static void ConfigureEntityTag(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EntityTag>(entity =>
+        {
+            entity.HasIndex(e => new { e.TagId, e.EntityId, e.EntityType }).IsUnique();
+
+            entity.HasOne(e => e.Tag)
+                  .WithMany(t => t.EntityTags)
+                  .HasForeignKey(e => e.TagId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureSkillVerification(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SkillVerification>(entity =>
+        {
+            entity.Property(v => v.Status)
+                .HasConversion<string>();
+
+            entity.HasOne(v => v.Skill)
+                .WithMany(s => s.Verifications)
+                .HasForeignKey(v => v.SkillId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(v => v.ReviewedByUser)
+                .WithMany()
+                .HasForeignKey(v => v.ReviewedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

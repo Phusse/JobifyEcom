@@ -60,7 +60,13 @@ public class Skill
 	public WorkerProfile? WorkerProfile { get; set; }
 
 	/// <summary>
-	/// A collection of tags (categories) associated with this skill.
+	/// A collection of entity tags linking this skill to shared tags.
 	/// </summary>
-	public ICollection<Tag> Tags { get; set; } = [];
+	public ICollection<EntityTag> EntityTags { get; set; } = [];
+
+	/// <summary>
+	/// The verification record associated with this skill.
+	/// </summary>
+	public ICollection<SkillVerification> Verifications { get; set; } = [];
+
 }
