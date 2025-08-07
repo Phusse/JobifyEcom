@@ -1,6 +1,9 @@
 using JobifyEcom.Data;
+using JobifyEcom.DTOs;
 using JobifyEcom.Enums;
 using JobifyEcom.Models;
+
+namespace JobifyEcom.Services;
 
 public class JobApplicationService : IJobApplicationService
 {

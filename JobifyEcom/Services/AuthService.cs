@@ -3,6 +3,8 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using JobifyEcom.Data;
 using JobifyEcom.Helpers;
+using JobifyEcom.DTOs;
+using JobifyEcom.Models;
 
 namespace JobifyEcom.Services;
 

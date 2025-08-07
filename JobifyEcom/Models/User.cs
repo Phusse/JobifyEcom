@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using JobifyEcom.Enums;
 
+namespace JobifyEcom.Models;
+
 public class User
 {
     [Key]

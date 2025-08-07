@@ -3,6 +3,8 @@ using JobifyEcom.Models;
 using JobifyEcom.DTOs;
 using Microsoft.EntityFrameworkCore;
 
+namespace JobifyEcom.Services;
+
 public class WorkerService : IWorkerService
 {
     private readonly AppDbContext _db;

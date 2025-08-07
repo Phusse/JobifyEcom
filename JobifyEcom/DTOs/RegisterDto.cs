@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using JobifyEcom.Enums;
 
+namespace JobifyEcom.DTOs;
+
 public class RegisterDto
 {
     [Required]

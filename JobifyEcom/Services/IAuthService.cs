@@ -1,3 +1,8 @@
+using JobifyEcom.DTOs;
+using JobifyEcom.Models;
+
+namespace JobifyEcom.Services;
+
 public interface IAuthService
 {
     Task<string> RegisterAsync(RegisterDto dto);

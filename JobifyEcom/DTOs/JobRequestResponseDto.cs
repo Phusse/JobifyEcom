@@ -1,5 +1,7 @@
 using JobifyEcom.Enums;
 
+namespace JobifyEcom.DTOs;
+
 public class JobRequestResponseDto
 {
     public Guid Id { get; set; }

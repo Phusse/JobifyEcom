@@ -8,4 +8,4 @@ namespace JobifyEcom.Exceptions;
 /// </remarks>
 /// <param name="message">The error message. Defaults to "Validation failed".</param>
 /// <param name="errors">An optional list of validation errors.</param>
-public class ValidationException(string message = "Validation failed.", List<string>? errors = null) : AppException(message, StatusCodes.Status400BadRequest, errors) { }
+public class ValidationException(string message = "Validation failed.", List<string>? errors = null) : AppException(StatusCodes.Status400BadRequest, message, errors) { }

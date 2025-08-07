@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using JobifyEcom.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using JobifyEcom.Contracts;
+using JobifyEcom.Services;
 
 namespace JobifyEcom.Controllers;
 
