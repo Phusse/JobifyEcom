@@ -3,6 +3,8 @@ using JobifyEcom.Models;
 using JobifyEcom.DTOs;
 using Microsoft.EntityFrameworkCore;
 
+namespace JobifyEcom.Services;
+
 public class JobService : IJobService
 {
     private readonly AppDbContext _db;
@@ -27,7 +29,7 @@ public class JobService : IJobService
 
         _db.JobPosts.Add(job);
         await _db.SaveChangesAsync();
-        return job;  
+        return job;
     }
 
     public async Task<List<JobPost>> GetAllJobsAsync()

@@ -3,6 +3,8 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using JobifyEcom.Data;
 using JobifyEcom.Helpers;
+using JobifyEcom.DTOs;
+using JobifyEcom.Models;
 
 namespace JobifyEcom.Services;
 
@@ -22,7 +24,7 @@ public class AuthService : IAuthService
         if (await _db.Users.AnyAsync(u => u.Email == dto.Email))
             throw new Exception("User already exists");
 
-        var confirmationToken = Guid.NewGuid().ToString();
+        var confirmationToken = Guid.NewGuid();
 
         var user = new User
         {
@@ -61,7 +63,7 @@ public class AuthService : IAuthService
         return user;
     }
 
-    public async Task<User> ConfirmEmailAsync(string email, string token)
+    public async Task<User> ConfirmEmailAsync(string email, Guid token)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
 

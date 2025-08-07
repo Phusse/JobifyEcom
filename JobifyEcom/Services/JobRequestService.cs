@@ -1,6 +1,9 @@
 using JobifyEcom.Data;
+using JobifyEcom.DTOs;
 using JobifyEcom.Enums;
 using JobifyEcom.Models;
+
+namespace JobifyEcom.Services;
 
 public class JobApplicationService : IJobApplicationService
 {
@@ -19,7 +22,6 @@ public class JobApplicationService : IJobApplicationService
             CustomerId = dto.CustomerId,
             JobPostId = dto.JobPostId,
             Status = JobApplicationStatus.Pending,
-            DateRequested = DateTime.UtcNow
         };
 
         _context.JobApplications.Add(request);

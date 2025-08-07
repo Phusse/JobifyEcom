@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace JobifyEcom.DTOs;
+
 public class LoginDto
 {
     [EmailAddress(ErrorMessage = "Invalid email format")]

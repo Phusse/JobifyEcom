@@ -1,3 +1,5 @@
+namespace JobifyEcom.DTOs;
+
 public class WorkerProfileDto
 {
     public Guid Id { get; set; }

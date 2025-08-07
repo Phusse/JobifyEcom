@@ -3,6 +3,8 @@ using JobifyEcom.Models;
 using JobifyEcom.DTOs;
 using Microsoft.EntityFrameworkCore;
 
+namespace JobifyEcom.Services;
+
 public class WorkerService : IWorkerService
 {
     private readonly AppDbContext _db;
@@ -21,7 +23,7 @@ public class WorkerService : IWorkerService
         {
             UserId = userId,
             Bio = dto.Bio,
-            Skills = dto.Skills
+            // Skills = dto.Skills
         };
 
         _db.WorkerProfiles.Add(profile);

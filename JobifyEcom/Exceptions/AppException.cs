@@ -11,7 +11,7 @@ namespace JobifyEcom.Exceptions;
 /// <param name="statusCode">The HTTP status code to return.</param>
 /// <param name="errors"> An optional list of specific error messages.
 /// If null or empty, defaults to a single-item list containing, <paramref name="message"/></param>
-public class AppException(string message, int statusCode, List<string>? errors = null) : Exception(message)
+public class AppException(int statusCode, string message, List<string>? errors = null) : Exception(message)
 {
 	/// <summary>
 	/// Gets the HTTP status code associated with the exception.
