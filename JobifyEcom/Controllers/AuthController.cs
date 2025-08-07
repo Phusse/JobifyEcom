@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet(ApiRoutes.Auth.Post.ConfirmEmail)]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] Guid token)
     {
         try
         {

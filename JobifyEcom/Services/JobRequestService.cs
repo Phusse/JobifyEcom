@@ -22,7 +22,6 @@ public class JobApplicationService : IJobApplicationService
             CustomerId = dto.CustomerId,
             JobPostId = dto.JobPostId,
             Status = JobApplicationStatus.Pending,
-            DateRequested = DateTime.UtcNow
         };
 
         _context.JobApplications.Add(request);

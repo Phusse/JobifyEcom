@@ -23,7 +23,7 @@ public class WorkerService : IWorkerService
         {
             UserId = userId,
             Bio = dto.Bio,
-            Skills = dto.Skills
+            // Skills = dto.Skills
         };
 
         _db.WorkerProfiles.Add(profile);
