@@ -40,6 +40,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Rating> Ratings { get; set; }
 
     /// <summary>
+    /// Gets or sets the Tags table.
+    /// </summary>
+    public DbSet<Tag> Tags { get; set; }
+
+    /// <summary>
     /// Configures entity relationships and value conversions for the database schema.
     /// </summary>
     /// <param name="modelBuilder">
@@ -53,6 +58,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ConfigureJobPost(modelBuilder);
         ConfigureJobApplication(modelBuilder);
         ConfigureRating(modelBuilder);
+        ConfigureTag(modelBuilder);
     }
 
     private static void ConfigureUser(ModelBuilder modelBuilder)
@@ -99,6 +105,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany(w => w.Skills)
                 .HasForeignKey(s => s.WorkerProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(s => s.Tags)
+                .WithMany(t => t.Skills)
+                .UsingEntity(j => j.ToTable("SkillTags"));
         });
     }
 
@@ -113,6 +123,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany(w => w.JobPosts)
                 .HasForeignKey(j => j.WorkerId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(j => j.Tags)
+                .WithMany(t => t.JobPosts)
+                .UsingEntity(j => j.ToTable("JobPostTags"));
         });
     }
 
@@ -153,6 +167,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany()
                 .HasForeignKey(r => r.JobPostId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private static void ConfigureTag(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasIndex(t => t.Name).IsUnique();
+
+            entity.Property(t => t.Name)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasConversion(
+                    v => v.ToLower(),
+                    v => v
+                );
         });
     }
 }

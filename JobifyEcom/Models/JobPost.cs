@@ -59,4 +59,9 @@ public class JobPost
     /// Navigation property to the worker who owns this job post.
     /// </summary>
     public WorkerProfile? Worker { get; set; }
+
+    /// <summary>
+    /// A collection of tags associated with this job post.
+    /// </summary>
+    public ICollection<Tag> Tags { get; set; } = [];
 }

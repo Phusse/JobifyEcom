@@ -58,4 +58,9 @@ public class Skill
 	/// The worker profile that owns this skill.
 	/// </summary>
 	public WorkerProfile? WorkerProfile { get; set; }
+
+	/// <summary>
+	/// A collection of tags (categories) associated with this skill.
+	/// </summary>
+	public ICollection<Tag> Tags { get; set; } = [];
 }
