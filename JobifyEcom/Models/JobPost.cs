@@ -47,7 +47,7 @@ public class JobPost
     /// The current status of the job post (e.g., Available, Booked, Completed).
     /// </summary>
     [Required]
-    public JobStatus Status { get; set; } = JobStatus.Available;
+    public JobStatus Status { get; set; } = JobStatus.Open;
 
     /// <summary>
     /// The UTC date and time the job post was created.
@@ -59,9 +59,4 @@ public class JobPost
     /// Navigation property to the worker who owns this job post.
     /// </summary>
     public WorkerProfile? Worker { get; set; }
-
-    /// <summary>
-    /// A collection of entity tags linking this skill to shared tags.
-    /// </summary>
-    public ICollection<EntityTag> EntityTags { get; set; } = [];
 }

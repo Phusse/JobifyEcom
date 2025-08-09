@@ -4,9 +4,9 @@ using JobifyEcom.Enums;
 namespace JobifyEcom.Models;
 
 /// <summary>
-/// Represents the verification status and review details for a skill.
+/// Represents a verification record for any supported entity (e.g., job post, skill, worker profile).
 /// </summary>
-public class SkillVerification
+public class Verification
 {
 	/// <summary>
 	/// The unique identifier for the verification record.
@@ -15,10 +15,16 @@ public class SkillVerification
 	public Guid Id { get; set; }
 
 	/// <summary>
-	/// The ID of the skill being verified.
+	/// The type of entity being verified (e.g., JobPost, Skill, WorkerProfile).
 	/// </summary>
 	[Required]
-	public Guid SkillId { get; set; }
+	public EntityType EntityType { get; set; }
+
+	/// <summary>
+	/// The ID of the entity being verified.
+	/// </summary>
+	[Required]
+	public Guid EntityId { get; set; }
 
 	/// <summary>
 	/// The current verification status.
@@ -33,7 +39,7 @@ public class SkillVerification
 	public string? ReviewerComment { get; set; }
 
 	/// <summary>
-	/// The ID of the user (admin) who reviewed the skill.
+	/// The ID of the user (admin) who reviewed this record.
 	/// Null if not yet reviewed.
 	/// </summary>
 	public Guid? ReviewedByUserId { get; set; }
@@ -45,12 +51,7 @@ public class SkillVerification
 	public DateTime? ReviewedAt { get; set; }
 
 	/// <summary>
-	/// Navigation to the reviewed skill.
-	/// </summary>
-	public Skill Skill { get; set; } = null!;
-
-	/// <summary>
-	/// Navigation to the admin user who reviewed the skill (optional).
+	/// Navigation to the admin user who reviewed this record (optional).
 	/// </summary>
 	public User? ReviewedByUser { get; set; }
 }
