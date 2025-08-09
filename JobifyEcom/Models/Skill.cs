@@ -46,7 +46,7 @@ public class Skill
 	/// </summary>
 	[Required]
 	[Range(0, 50)]
-	public int YearsExperience { get; set; }
+	public int YearsOfExperience { get; set; }
 
 	/// <summary>
 	/// The foreign key that links this skill to the associated worker profile.
@@ -58,15 +58,4 @@ public class Skill
 	/// The worker profile that owns this skill.
 	/// </summary>
 	public WorkerProfile? WorkerProfile { get; set; }
-
-	/// <summary>
-	/// A collection of entity tags linking this skill to shared tags.
-	/// </summary>
-	public ICollection<EntityTag> EntityTags { get; set; } = [];
-
-	/// <summary>
-	/// The verification record associated with this skill.
-	/// </summary>
-	public ICollection<SkillVerification> Verifications { get; set; } = [];
-
 }

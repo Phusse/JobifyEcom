@@ -50,10 +50,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<EntityTag> EntityTags { get; set; }
 
     /// <summary>
-    /// Gets or sets the SkillVerification table.
+    /// Gets or sets the Verification table that hold verificatioins for different entities.
     /// </summary>
-    public DbSet<SkillVerification> SkillVerifications { get; set; }
-
+    public DbSet<Verification> Verifications { get; set; }
 
     /// <summary>
     /// Configures entity relationships and value conversions for the database schema.
@@ -71,7 +70,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ConfigureRating(modelBuilder);
         ConfigureTag(modelBuilder);
         ConfigureEntityTag(modelBuilder);
-        ConfigureSkillVerification(modelBuilder);
+        ConfigureVerification(modelBuilder);
     }
 
     private static void ConfigureUser(ModelBuilder modelBuilder)
@@ -118,11 +117,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany(w => w.Skills)
                 .HasForeignKey(s => s.WorkerProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasMany(s => s.Verifications)
-                .WithOne(v => v.Skill)
-                .HasForeignKey(v => v.SkillId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 
@@ -132,6 +126,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             entity.Property(j => j.Status)
                 .HasConversion<string>();
+
+            entity.HasIndex(j => j.Status);
 
             entity.HasOne(j => j.Worker)
                 .WithMany(w => w.JobPosts)
@@ -146,6 +142,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             entity.Property(j => j.Status)
                 .HasConversion<string>();
+
+            entity.HasIndex(j => j.Status);
 
             entity.HasOne(j => j.Customer)
                 .WithMany()
@@ -200,6 +198,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<EntityTag>(entity =>
         {
+            entity.Property(e => e.EntityType)
+                .HasConversion<string>();
+
             entity.HasIndex(e => new { e.TagId, e.EntityId, e.EntityType }).IsUnique();
 
             entity.HasOne(e => e.Tag)
@@ -209,17 +210,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         });
     }
 
-    private static void ConfigureSkillVerification(ModelBuilder modelBuilder)
+    private static void ConfigureVerification(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<SkillVerification>(entity =>
+        modelBuilder.Entity<Verification>(entity =>
         {
             entity.Property(v => v.Status)
                 .HasConversion<string>();
 
-            entity.HasOne(v => v.Skill)
-                .WithMany(s => s.Verifications)
-                .HasForeignKey(v => v.SkillId)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(v => v.Status);
+
+            entity.HasIndex(v => new { v.EntityType, v.EntityId });
 
             entity.HasOne(v => v.ReviewedByUser)
                 .WithMany()
