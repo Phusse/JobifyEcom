@@ -7,26 +7,19 @@ namespace JobifyEcom.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class JobApplicationController : ControllerBase
+public class JobApplicationController(IJobApplicationService service) : ControllerBase
 {
-    private readonly IJobApplicationService _service;
-
-    public JobApplicationController(IJobApplicationService service)
-    {
-        _service = service;
-    }
-
-    [HttpPost]
+	[HttpPost]
     public async Task<IActionResult> RequestJob([FromBody] RequestJobDto dto)
     {
-        var result = await _service.CreateApplicationAsync(dto);
+        var result = await service.CreateApplicationAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var request = await _service.GetByIdAsync(id);
+        var request = await service.GetByIdAsync(id);
         if (request == null) return NotFound();
         return Ok(request);
     }
@@ -34,14 +27,14 @@ public class JobApplicationController : ControllerBase
     [HttpPut("{id}/accept")]
     public async Task<IActionResult> AcceptApplication(Guid id)
     {
-        var success = await _service.UpdateStatusAsync(id, JobApplicationStatus.Accepted);
+        var success = await service.UpdateStatusAsync(id, JobApplicationStatus.Accepted);
         return success ? Ok("Request accepted") : NotFound();
     }
 
     [HttpPut("{id}/reject")]
     public async Task<IActionResult> RejectApplication(Guid id)
     {
-        var success = await _service.UpdateStatusAsync(id, JobApplicationStatus.Rejected);
+        var success = await service.UpdateStatusAsync(id, JobApplicationStatus.Rejected);
         return success ? Ok("Request rejected") : NotFound();
     }
 }

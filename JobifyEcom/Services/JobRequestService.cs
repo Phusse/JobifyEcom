@@ -5,16 +5,9 @@ using JobifyEcom.Models;
 
 namespace JobifyEcom.Services;
 
-public class JobApplicationService : IJobApplicationService
+public class JobApplicationService(AppDbContext context) : IJobApplicationService
 {
-    private readonly AppDbContext _context;
-
-    public JobApplicationService(AppDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<JobRequestResponseDto> CreateApplicationAsync(RequestJobDto dto)
+	public async Task<JobRequestResponseDto> CreateApplicationAsync(RequestJobDto dto)
     {
         var request = new JobApplication
         {
@@ -24,8 +17,8 @@ public class JobApplicationService : IJobApplicationService
             Status = JobApplicationStatus.Pending,
         };
 
-        _context.JobApplications.Add(request);
-        await _context.SaveChangesAsync();
+        context.JobApplications.Add(request);
+        await context.SaveChangesAsync();
 
         return new JobRequestResponseDto
         {
@@ -39,7 +32,7 @@ public class JobApplicationService : IJobApplicationService
 
     public async Task<JobRequestResponseDto> GetByIdAsync(Guid id)
     {
-        var request = await _context.JobApplications.FindAsync(id);
+        var request = await context.JobApplications.FindAsync(id);
         if (request == null) return null;
 
         return new JobRequestResponseDto
@@ -54,11 +47,11 @@ public class JobApplicationService : IJobApplicationService
 
     public async Task<bool> UpdateStatusAsync(Guid id, JobApplicationStatus status)
     {
-        var request = await _context.JobApplications.FindAsync(id);
+        var request = await context.JobApplications.FindAsync(id);
         if (request == null) return false;
 
         request.Status = status;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return true;
     }
 }

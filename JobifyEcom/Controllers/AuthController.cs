@@ -7,22 +7,15 @@ using JobifyEcom.Services;
 namespace JobifyEcom.Controllers;
 
 [ApiController]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }
-
-    [HttpPost(ApiRoutes.Auth.Post.Register)]
+	[HttpPost(ApiRoutes.Auth.Post.Register)]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         try
         {
-            var confirmLink = await _authService.RegisterAsync(dto);
-            var user = await _authService.GetUserByEmailAsync(dto.Email);
+            var confirmLink = await authService.RegisterAsync(dto);
+            var user = await authService.GetUserByEmailAsync(dto.Email);
 
             var response = new AuthResponse
             {
@@ -53,7 +46,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var user = await _authService.GetUserByEmailAsync(dto.Email);
+            var user = await authService.GetUserByEmailAsync(dto.Email);
 
             if (!user.IsEmailConfirmed)
                 return Unauthorized(new AuthResponse
@@ -62,7 +55,7 @@ public class AuthController : ControllerBase
                     Message = "Please confirm your email before logging in."
                 });
 
-            var token = await _authService.LoginAsync(dto);
+            var token = await authService.LoginAsync(dto);
 
             var response = new AuthResponse
             {
@@ -93,7 +86,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var user = await _authService.ConfirmEmailAsync(email, token);
+            var user = await authService.ConfirmEmailAsync(email, token);
 
             var response = new AuthResponse
             {

@@ -31,23 +31,14 @@ namespace JobifyEcom.Migrations
                     b.Property<Guid>("EntityId")
                         .HasColumnType("char(36)");
 
-                    b.Property<int>("EntityType")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("JobPostId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid?>("SkillId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
 
                     b.Property<Guid>("TagId")
                         .HasColumnType("char(36)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("JobPostId");
-
-                    b.HasIndex("SkillId");
 
                     b.HasIndex("TagId", "EntityId", "EntityType")
                         .IsUnique();
@@ -72,13 +63,15 @@ namespace JobifyEcom.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("JobPostId");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("JobApplications");
                 });
@@ -102,7 +95,7 @@ namespace JobifyEcom.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -113,6 +106,8 @@ namespace JobifyEcom.Migrations
                         .HasColumnType("char(36)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Status");
 
                     b.HasIndex("WorkerId");
 
@@ -180,7 +175,7 @@ namespace JobifyEcom.Migrations
                     b.Property<Guid>("WorkerProfileId")
                         .HasColumnType("char(36)");
 
-                    b.Property<int>("YearsExperience")
+                    b.Property<int>("YearsOfExperience")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -188,38 +183,6 @@ namespace JobifyEcom.Migrations
                     b.HasIndex("WorkerProfileId");
 
                     b.ToTable("Skills");
-                });
-
-            modelBuilder.Entity("JobifyEcom.Models.SkillVerification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid?>("ReviewedByUserId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("ReviewerComment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
-                    b.Property<Guid>("SkillId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewedByUserId");
-
-                    b.HasIndex("SkillId");
-
-                    b.ToTable("SkillVerifications");
                 });
 
             modelBuilder.Entity("JobifyEcom.Models.Tag", b =>
@@ -279,6 +242,43 @@ namespace JobifyEcom.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("JobifyEcom.Models.Verification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("EntityType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ReviewerComment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("EntityType", "EntityId");
+
+                    b.ToTable("Verifications");
+                });
+
             modelBuilder.Entity("JobifyEcom.Models.WorkerProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -316,14 +316,6 @@ namespace JobifyEcom.Migrations
 
             modelBuilder.Entity("JobifyEcom.Models.EntityTag", b =>
                 {
-                    b.HasOne("JobifyEcom.Models.JobPost", null)
-                        .WithMany("EntityTags")
-                        .HasForeignKey("JobPostId");
-
-                    b.HasOne("JobifyEcom.Models.Skill", null)
-                        .WithMany("EntityTags")
-                        .HasForeignKey("SkillId");
-
                     b.HasOne("JobifyEcom.Models.Tag", "Tag")
                         .WithMany("EntityTags")
                         .HasForeignKey("TagId")
@@ -400,22 +392,14 @@ namespace JobifyEcom.Migrations
                     b.Navigation("WorkerProfile");
                 });
 
-            modelBuilder.Entity("JobifyEcom.Models.SkillVerification", b =>
+            modelBuilder.Entity("JobifyEcom.Models.Verification", b =>
                 {
                     b.HasOne("JobifyEcom.Models.User", "ReviewedByUser")
                         .WithMany()
                         .HasForeignKey("ReviewedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("JobifyEcom.Models.Skill", "Skill")
-                        .WithMany("Verifications")
-                        .HasForeignKey("SkillId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("ReviewedByUser");
-
-                    b.Navigation("Skill");
                 });
 
             modelBuilder.Entity("JobifyEcom.Models.WorkerProfile", b =>
@@ -427,18 +411,6 @@ namespace JobifyEcom.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("JobifyEcom.Models.JobPost", b =>
-                {
-                    b.Navigation("EntityTags");
-                });
-
-            modelBuilder.Entity("JobifyEcom.Models.Skill", b =>
-                {
-                    b.Navigation("EntityTags");
-
-                    b.Navigation("Verifications");
                 });
 
             modelBuilder.Entity("JobifyEcom.Models.Tag", b =>

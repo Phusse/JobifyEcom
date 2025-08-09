@@ -9,22 +9,15 @@ namespace JobifyEcom.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Worker")]
-public class WorkerController : ControllerBase
+public class WorkerController(IWorkerService workerService) : ControllerBase
 {
-    private readonly IWorkerService _workerService;
-
-    public WorkerController(IWorkerService workerService)
-    {
-        _workerService = workerService;
-    }
-
-    [HttpPost("profile")]
+	[HttpPost("profile")]
     public async Task<IActionResult> CreateProfile(CreateWorkerProfileDto dto)
     {
         try
         {
             var userId = GetUserId();
-            var profile = await _workerService.CreateProfileAsync(userId, dto);
+            var profile = await workerService.CreateProfileAsync(userId, dto);
             return Ok(ApiResponse<object?>.Ok(profile, "Worker profile created successfully."));
         }
         catch (Exception ex)
@@ -39,7 +32,7 @@ public class WorkerController : ControllerBase
         try
         {
             var userId = GetUserId();
-            var profile = await _workerService.GetMyProfileAsync(userId);
+            var profile = await workerService.GetMyProfileAsync(userId);
 
             if (profile == null)
                 return NotFound(ApiResponse<object?>.Fail(null, "No profile found."));

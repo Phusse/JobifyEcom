@@ -5,18 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobifyEcom.Services;
 
-public class JobService : IJobService
+public class JobService(AppDbContext db) : IJobService
 {
-    private readonly AppDbContext _db;
-
-    public JobService(AppDbContext db)
+	public async Task<JobPost> CreateJobAsync(Guid userId, CreateJobDto dto)
     {
-        _db = db;
-    }
-
-    public async Task<JobPost> CreateJobAsync(Guid userId, CreateJobDto dto)
-    {
-        var worker = await _db.WorkerProfiles.FirstOrDefaultAsync(w => w.UserId == userId);
+        var worker = await db.WorkerProfiles.FirstOrDefaultAsync(w => w.UserId == userId);
         if (worker == null) throw new Exception("Worker profile not found");
 
         var job = new JobPost
@@ -27,19 +20,19 @@ public class JobService : IJobService
             Price = dto.Price
         };
 
-        _db.JobPosts.Add(job);
-        await _db.SaveChangesAsync();
+        db.JobPosts.Add(job);
+        await db.SaveChangesAsync();
         return job;
     }
 
     public async Task<List<JobPost>> GetAllJobsAsync()
     {
-        return await _db.JobPosts.Include(j => j.Worker).ToListAsync();
+        return await db.JobPosts.Include(j => j.Worker).ToListAsync();
     }
 
     public async Task<List<JobPost>> GetJobsByWorkerAsync(Guid workerId)
     {
-        return await _db.JobPosts
+        return await db.JobPosts
             .Where(j => j.WorkerId == workerId)
             .ToListAsync();
     }
