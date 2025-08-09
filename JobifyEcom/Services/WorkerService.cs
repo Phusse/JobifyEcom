@@ -5,18 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobifyEcom.Services;
 
-public class WorkerService : IWorkerService
+public class WorkerService(AppDbContext db) : IWorkerService
 {
-    private readonly AppDbContext _db;
-
-    public WorkerService(AppDbContext db)
+	public async Task<WorkerProfile> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto)
     {
-        _db = db;
-    }
-
-    public async Task<WorkerProfile> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto)
-    {
-        if (await _db.WorkerProfiles.AnyAsync(w => w.UserId == userId))
+        if (await db.WorkerProfiles.AnyAsync(w => w.UserId == userId))
             throw new Exception("Profile already exists");
 
         var profile = new WorkerProfile
@@ -26,13 +19,13 @@ public class WorkerService : IWorkerService
             // Skills = dto.Skills
         };
 
-        _db.WorkerProfiles.Add(profile);
-        await _db.SaveChangesAsync();
+        db.WorkerProfiles.Add(profile);
+        await db.SaveChangesAsync();
         return profile;
     }
 
     public async Task<WorkerProfile?> GetMyProfileAsync(Guid userId)
     {
-        return await _db.WorkerProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+        return await db.WorkerProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
     }
 }

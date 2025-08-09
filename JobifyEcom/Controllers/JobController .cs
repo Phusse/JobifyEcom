@@ -8,23 +8,16 @@ namespace JobifyEcom.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class JobController : ControllerBase
+public class JobController(IJobService jobService) : ControllerBase
 {
-    private readonly IJobService _jobService;
-
-    public JobController(IJobService jobService)
-    {
-        _jobService = jobService;
-    }
-
-    [Authorize(Roles = "Worker")]
+	[Authorize(Roles = "Worker")]
     [HttpPost]
     public async Task<IActionResult> CreateJob(CreateJobDto dto)
     {
         try
         {
             var userId = GetUserId();
-            var job = await _jobService.CreateJobAsync(userId, dto);
+            var job = await jobService.CreateJobAsync(userId, dto);
             return Ok(ApiResponse<object?>.Ok(job, "All jobs fetched successfully."));
         }
         catch (Exception ex)
@@ -38,7 +31,7 @@ public class JobController : ControllerBase
     {
         try
         {
-            var jobs = await _jobService.GetAllJobsAsync();
+            var jobs = await jobService.GetAllJobsAsync();
             return Ok(ApiResponse<object?>.Ok(jobs, "All jobs fetched successfully."));
         }
         catch (Exception ex)
@@ -54,7 +47,7 @@ public class JobController : ControllerBase
         try
         {
             var userId = GetUserId();
-            var jobs = await _jobService.GetJobsByWorkerAsync(userId);
+            var jobs = await jobService.GetJobsByWorkerAsync(userId);
             return Ok(ApiResponse<object?>.Ok(jobs, "Your job posts"));
         }
         catch (Exception ex)
