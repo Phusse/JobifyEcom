@@ -11,7 +11,7 @@ public class Skill
 {
 	/// <summary>
 	/// The unique identifier for the skill entry.
-	/// This value is automatically set by the backend and cannot be modified externally.
+	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
 	/// </summary>
 	[Key]
 	public Guid Id { get; private set; } = Guid.NewGuid();
@@ -22,7 +22,7 @@ public class Skill
 	[Required]
 	[MinLength(1)]
 	[StringLength(100)]
-	public string Name { get; set; } = string.Empty;
+	public required string Name { get; set; } = string.Empty;
 
 	/// <summary>
 	/// A brief description of the skill (optional).
@@ -34,7 +34,7 @@ public class Skill
 	/// The skill proficiency level (e.g., Beginner, Intermediate, Advanced, Expert).
 	/// </summary>
 	[Required]
-	public SkillLevel Level { get; set; } = SkillLevel.Beginner;
+	public required SkillLevel Level { get; set; } = SkillLevel.Beginner;
 
 	/// <summary>
 	/// An optional URL linking to a certification or portfolio item that verifies the skill.
@@ -47,13 +47,13 @@ public class Skill
 	/// </summary>
 	[Required]
 	[Range(0, 50)]
-	public int YearsOfExperience { get; set; }
+	public required int YearsOfExperience { get; set; }
 
 	/// <summary>
 	/// The foreign key that links this skill to the associated worker profile.
 	/// </summary>
 	[Required]
-	public Guid WorkerProfileId { get; set; }
+	public required Guid WorkerProfileId { get; set; }
 
 	/// <summary>
 	/// The worker profile that owns this skill.

@@ -29,13 +29,10 @@ public class ServiceResult<T>
 	/// <param name="message">An optional informational message.</param>
 	/// <param name="errors">Optional list of warnings or errors.</param>
 	/// <returns>A new <see cref="ServiceResult{T}"/> with the specified data and message.</returns>
-	public static ServiceResult<T> Create(T? data, string? message = null, List<string>? errors = null)
+	public static ServiceResult<T> Create(T? data, string? message = null, List<string>? errors = null) => new()
 	{
-		return new ServiceResult<T>
-		{
-			Data = data,
-			Message = message,
-			Errors = errors,
-		};
-	}
+		Data = data,
+		Message = message,
+		Errors = errors,
+	};
 }

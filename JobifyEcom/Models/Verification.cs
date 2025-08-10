@@ -10,7 +10,7 @@ public class Verification
 {
 	/// <summary>
 	/// The unique identifier for the verification record.
-	/// This value is automatically set by the backend and cannot be modified externally.
+	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
 	/// </summary>
 	[Key]
 	public Guid Id { get; private set; } = Guid.NewGuid();
@@ -19,19 +19,19 @@ public class Verification
 	/// The type of entity being verified (e.g., JobPost, Skill, WorkerProfile).
 	/// </summary>
 	[Required]
-	public EntityType EntityType { get; set; }
+	public required EntityType EntityType { get; set; }
 
 	/// <summary>
 	/// The ID of the entity being verified.
 	/// </summary>
 	[Required]
-	public Guid EntityId { get; set; }
+	public required Guid EntityId { get; set; }
 
 	/// <summary>
 	/// The current verification status.
 	/// </summary>
 	[Required]
-	public VerificationStatus Status { get; set; } = VerificationStatus.Pending;
+	public required VerificationStatus Status { get; set; } = VerificationStatus.Pending;
 
 	/// <summary>
 	/// Optional comment left by the reviewer explaining the decision.

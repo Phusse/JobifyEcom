@@ -1,4 +1,3 @@
-using JobifyEcom.Enums;
 using JobifyEcom.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;

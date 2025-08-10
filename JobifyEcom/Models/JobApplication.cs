@@ -10,7 +10,7 @@ public class JobApplication
 {
     /// <summary>
     /// The unique identifier for the job application.
-    /// This value is automatically set by the backend and cannot be modified externally.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
     /// </summary>
     [Key]
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -19,23 +19,23 @@ public class JobApplication
     /// The ID of the customer (user) who submitted the application.
     /// </summary>
     [Required]
-    public Guid CustomerId { get; set; }
+    public required Guid CustomerId { get; set; }
 
     /// <summary>
     /// The ID of the job post to which the application was submitted.
     /// </summary>
     [Required]
-    public Guid JobPostId { get; set; }
+    public required Guid JobPostId { get; set; }
 
     /// <summary>
     /// The current status of the job application (e.g., Pending, Accepted, Rejected).
     /// </summary>
     [Required]
-    public JobApplicationStatus Status { get; set; } = JobApplicationStatus.Pending;
+    public required JobApplicationStatus Status { get; set; } = JobApplicationStatus.Pending;
 
     /// <summary>
     /// The UTC date and time when the application was submitted.
-    /// This value is automatically set by the backend and cannot be modified externally.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
     /// </summary>
     public DateTime DateRequested { get; private set; } = DateTime.UtcNow;
 

@@ -1,8 +1,6 @@
 using System.Text.Json;
 using JobifyEcom.DTOs;
 using JobifyEcom.Exceptions;
-using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Options;
 
 namespace JobifyEcom.Middleware;
 
@@ -64,14 +62,22 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 		{
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-			var safeMessage = string.IsNullOrWhiteSpace(message)
+			string safeMessage = string.IsNullOrWhiteSpace(message)
 				? "An unknown error occurred. Please reference the trace ID when reporting this issue."
 				: message;
 
 			response = ApiResponse<object>.Fail(null, null, [safeMessage], traceId);
 		}
 
-		_logger.LogError(ex, "An unexpected error occurred. Trace ID: {TraceId}", traceId);
+		if (context.Response.StatusCode >= 500)
+		{
+			_logger.LogError(ex, "Unhandled server error. Trace ID: {TraceId}", traceId);
+		}
+		else
+		{
+			_logger.LogWarning(ex, "Handled application/client error. Trace ID: {TraceId}", traceId);
+		}
+
 		string json = JsonSerializer.Serialize(response, _jsonOptions);
 		await context.Response.WriteAsync(json);
 	}

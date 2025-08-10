@@ -14,6 +14,8 @@ public class WorkerService(AppDbContext db) : IWorkerService
 
         var profile = new WorkerProfile
         {
+            Name = "remove",
+            Email = "remove",
             UserId = userId,
             Bio = dto.Bio,
             // Skills = dto.Skills

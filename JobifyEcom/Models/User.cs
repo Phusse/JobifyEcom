@@ -10,7 +10,7 @@ public class User
 {
     /// <summary>
     /// The unique identifier for the user.
-    /// This value is automatically set by the backend and cannot be modified externally.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
     /// </summary>
     [Key]
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -21,7 +21,7 @@ public class User
     [Required]
     [MinLength(2)]
     [StringLength(100)]
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// The user's email address. Must be unique and lowercase.
@@ -29,19 +29,19 @@ public class User
     [Required]
     [EmailAddress]
     [StringLength(100)]
-    public string Email { get; set; } = string.Empty;
+    public required string Email { get; set; } = string.Empty;
 
     /// <summary>
     /// The hashed password for authentication.
     /// </summary>
     [Required]
-    public string PasswordHash { get; set; } = string.Empty;
+    public required string PasswordHash { get; set; } = string.Empty;
 
     /// <summary>
     /// The role assigned to the user (e.g., Admin, Customer, Worker).
     /// </summary>
     [Required]
-    public UserRole Role { get; set; } = UserRole.Customer;
+    public required UserRole Role { get; set; } = UserRole.Customer;
 
     /// <summary>
     /// Indicates whether the user's email address has been confirmed.

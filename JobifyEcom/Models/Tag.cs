@@ -10,7 +10,7 @@ public class Tag
 {
 	/// <summary>
 	/// The unique identifier for the tag.
-	/// This value is automatically set by the backend and cannot be modified externally.
+	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
 	/// </summary>
 	[Key]
 	public Guid Id { get; private set; } = Guid.NewGuid();
@@ -21,7 +21,7 @@ public class Tag
 	[Required]
 	[MinLength(1)]
 	[StringLength(100)]
-	public string Name { get; set; } = string.Empty;
+	public required string Name { get; set; } = string.Empty;
 
 	/// <summary>
 	/// A collection of entity-tag mappings that associate this tag with specific entities.

@@ -7,7 +7,7 @@ using JobifyEcom.DTOs;
 using JobifyEcom.Models;
 using JobifyEcom.DTOs.Auth;
 using JobifyEcom.Exceptions;
-using System.IdentityModel.Tokens.Jwt;
+using JobifyEcom.Enums;
 
 namespace JobifyEcom.Services;
 
@@ -74,7 +74,8 @@ internal class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
             Email = dto.Email.ToLowerInvariant().Trim(),
             PasswordHash = HashPassword(dto.Password),
             IsEmailConfirmed = false,
-            EmailConfirmationToken = confirmationToken
+            EmailConfirmationToken = confirmationToken,
+            Role = UserRole.Customer,
         };
 
         db.Users.Add(user);
@@ -91,7 +92,7 @@ internal class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
         return Convert.ToBase64String(hashedBytes);
     }
 
-    private bool VerifyPassword(string inputPassword, string storedHash)
+    private static bool VerifyPassword(string inputPassword, string storedHash)
     {
         return HashPassword(inputPassword) == storedHash;
     }

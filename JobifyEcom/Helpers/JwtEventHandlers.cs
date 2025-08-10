@@ -8,90 +8,129 @@ using Microsoft.EntityFrameworkCore;
 namespace JobifyEcom.Helpers;
 
 /// <summary>
-/// Provides factory methods for configuring JWT authentication event handlers.
+/// Provides factory methods for configuring JWT authentication event handlers,
+/// including token claim validation and consistent error responses.
 /// </summary>
 public static class JwtEventHandlers
 {
+	private const string AuthErrorKey = "AuthError";
+
 	/// <summary>
-	/// Creates a <see cref="JwtBearerEvents"/> instance with custom responses for unauthorized and forbidden requests.
+	/// Creates a <see cref="JwtBearerEvents"/> instance configured with:
+	/// <list type="bullet">
+	/// <item>Token claim validation with security stamp checks.</item>
+	/// <item>Consistent JSON responses for <c>401 Unauthorized</c> and <c>403 Forbidden</c>.</item>
+	/// </list>
 	/// </summary>
-	/// <param name="jsonOptions">The JSON serialization options used to format the response.</param>
-	/// <returns>
-	/// A configured <see cref="JwtBearerEvents"/> instance that returns standardized JSON error responses
-	/// for <c>401 Unauthorized</c> and <c>403 Forbidden</c> scenarios.
-	/// </returns>
-	/// <remarks>
-	/// This is useful for returning consistent API responses when token validation fails or access is denied.
-	/// </remarks>
+	/// <param name="jsonOptions">The JSON serialization options used for formatting responses.</param>
+	/// <returns>A configured <see cref="JwtBearerEvents"/> instance.</returns>
 	public static JwtBearerEvents Create(JsonSerializerOptions jsonOptions)
 	{
 		return new JwtBearerEvents
 		{
-			OnTokenValidated = async context =>
-			{
-				var userIdClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-				var securityStampClaim = context.Principal?.FindFirst("security_stamp")?.Value;
-
-				if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(securityStampClaim))
-				{
-					context.Fail("Invalid token claims.");
-					return;
-				}
-
-				// Resolve DbContext from DI
-				var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-
-				if (!Guid.TryParse(userIdClaim, out var userId))
-				{
-					context.Fail("Invalid user ID claim.");
-					return;
-				}
-
-				var user = await db.Users.AsNoTracking()
-										.Where(u => u.Id == userId)
-										.Select(u => new { u.SecurityStamp })
-										.FirstOrDefaultAsync();
-
-				if (user == null)
-				{
-					context.Fail("User not found.");
-					return;
-				}
-
-				if (user.SecurityStamp == Guid.Empty)
-				{
-					context.Fail("User logged out - invalid security stamp.");
-					return;
-				}
-
-				if (user.SecurityStamp.ToString() != securityStampClaim)
-				{
-					context.Fail("Security stamp mismatch. Token is invalid.");
-					return;
-				}
-
-			},
-			OnChallenge = context =>
-			{
-				context.HandleResponse();
-				context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-				context.Response.ContentType = "application/json";
-
-				var response = ApiResponse<object>.Fail(null, "Unauthorized access.", ["Invalid or missing token."]);
-				string json = JsonSerializer.Serialize(response, jsonOptions);
-
-				return context.Response.WriteAsync(json);
-			},
-			OnForbidden = context =>
-			{
-				context.Response.StatusCode = StatusCodes.Status403Forbidden;
-				context.Response.ContentType = "application/json";
-
-				var response = ApiResponse<object>.Fail(null, "Unauthorized access.", ["You do not have access to this resource."]);
-				string json = JsonSerializer.Serialize(response, jsonOptions);
-
-				return context.Response.WriteAsync(json);
-			}
+			OnTokenValidated = HandleTokenValidatedAsync,
+			OnChallenge = context => HandleChallengeAsync(context, jsonOptions),
+			OnForbidden = context => HandleForbiddenAsync(context, jsonOptions)
 		};
 	}
+
+	#region Event Handlers
+
+	private static async Task HandleTokenValidatedAsync(TokenValidatedContext context)
+	{
+		GetClaims(context.Principal, out string? userIdClaim, out string? securityStampClaim);
+
+		if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(securityStampClaim))
+		{
+			FailWithReason(context, "Your login session could not be verified. Please sign in again.");
+			return;
+		}
+
+		if (!Guid.TryParse(userIdClaim, out Guid userId))
+		{
+			FailWithReason(context, "We couldn't confirm your account details. Please sign in again.");
+			return;
+		}
+
+		var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+		Guid? dbSecurityStamp = await GetUserSecurityStampAsync(db, userId);
+
+		if (dbSecurityStamp is null)
+		{
+			FailWithReason(context, "This account no longer exists or has been removed.");
+			return;
+		}
+
+		if (dbSecurityStamp.Value == Guid.Empty)
+		{
+			FailWithReason(context, "You've been signed out. Please log in again to continue.");
+			return;
+		}
+
+		if (!string.Equals(dbSecurityStamp.Value.ToString(), securityStampClaim, StringComparison.Ordinal))
+		{
+			FailWithReason(context, "Your login session is no longer valid. Please sign in again.");
+		}
+	}
+
+	private static Task HandleChallengeAsync(JwtBearerChallengeContext context, JsonSerializerOptions jsonOptions)
+	{
+		context.HandleResponse();
+
+		return WriteJsonErrorAsync(
+			context.Response,
+			StatusCodes.Status401Unauthorized,
+			"You need to be signed in to access this feature.",
+			context.HttpContext.Items[AuthErrorKey] is not string message ? null : [message],
+			jsonOptions
+		);
+	}
+
+	private static Task HandleForbiddenAsync(ForbiddenContext context, JsonSerializerOptions jsonOptions)
+	{
+		return WriteJsonErrorAsync(
+			context.Response,
+			StatusCodes.Status403Forbidden,
+			"You need to be signed in to access this feature.",
+			["You don't have permission to view this page or perform this action."],
+			jsonOptions
+		);
+	}
+
+	#endregion
+
+	#region Helpers
+
+	private static void GetClaims(ClaimsPrincipal? principal, out string? userId, out string? securityStamp)
+	{
+		userId = principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+		securityStamp = principal?.FindFirst("security_stamp")?.Value;
+	}
+
+	private static async Task<Guid?> GetUserSecurityStampAsync(AppDbContext db, Guid userId)
+	{
+		return await db.Users.AsNoTracking()
+			.Where(u => u.Id == userId)
+			.Select(u => (Guid?)u.SecurityStamp)
+			.FirstOrDefaultAsync();
+	}
+
+	private static void FailWithReason(TokenValidatedContext context, string reason)
+	{
+		context.HttpContext.Items[AuthErrorKey] = reason;
+		context.Fail(reason);
+	}
+
+	private static Task WriteJsonErrorAsync(HttpResponse response, int statusCode, string? message, List<string>? errors, JsonSerializerOptions options)
+	{
+		response.StatusCode = statusCode;
+		response.ContentType = "application/json";
+
+		var payload = ApiResponse<object>.Fail(null, message, errors);
+		string json = JsonSerializer.Serialize(payload, options);
+
+		return response.WriteAsync(json);
+	}
+
+	#endregion
 }
