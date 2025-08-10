@@ -8,20 +8,11 @@ using JobifyEcom.Models;
 
 namespace JobifyEcom.Services;
 
-public class AuthService : IAuthService
+public class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
 {
-    private readonly AppDbContext _db;
-    private readonly JwtHelper _jwt;
-
-    public AuthService(AppDbContext db, JwtHelper jwt)
+	public async Task<string> RegisterAsync(RegisterDto dto)
     {
-        _db = db;
-        _jwt = jwt;
-    }
-
-    public async Task<string> RegisterAsync(RegisterDto dto)
-    {
-        if (await _db.Users.AnyAsync(u => u.Email == dto.Email))
+        if (await db.Users.AnyAsync(u => u.Email == dto.Email))
             throw new Exception("User already exists");
 
         var confirmationToken = Guid.NewGuid();
@@ -36,8 +27,8 @@ public class AuthService : IAuthService
             EmailConfirmationToken = confirmationToken
         };
 
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync();
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
 
         // Return link to simulate sending via email
         return $"https://localhost:5001/api/auth/confirm?email={user.Email}&token={confirmationToken}";
@@ -45,19 +36,19 @@ public class AuthService : IAuthService
 
     public async Task<string> LoginAsync(LoginDto dto)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
         if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
             throw new Exception("Invalid credentials");
 
         if (!user.IsEmailConfirmed)
             throw new Exception("Please confirm your email before logging in.");
 
-        return _jwt.GenerateToken(user.Id, user.Email, user.Role.ToString());
+        return jwt.GenerateToken(user.Id, user.Email, user.Role.ToString());
     }
 
     public async Task<User> GetUserByEmailAsync(string email)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user == null)
             throw new Exception("User not found");
         return user;
@@ -65,7 +56,7 @@ public class AuthService : IAuthService
 
     public async Task<User> ConfirmEmailAsync(string email, Guid token)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null)
             throw new Exception("User not found");
@@ -76,7 +67,7 @@ public class AuthService : IAuthService
         user.IsEmailConfirmed = true;
         user.EmailConfirmationToken = null;
 
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         return user;
     }
