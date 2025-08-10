@@ -21,7 +21,7 @@ public class User
     [Required]
     [MinLength(2)]
     [StringLength(100)]
-    public required string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
 
     /// <summary>
     /// The user's email address. Must be unique and lowercase.
@@ -29,13 +29,13 @@ public class User
     [Required]
     [EmailAddress]
     [StringLength(100)]
-    public required string Email { get; set; } = string.Empty;
+    public required string Email { get; set; }
 
     /// <summary>
     /// The hashed password for authentication.
     /// </summary>
     [Required]
-    public required string PasswordHash { get; set; } = string.Empty;
+    public required string PasswordHash { get; set; }
 
     /// <summary>
     /// The role assigned to the user (e.g., Admin, Customer, Worker).

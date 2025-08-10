@@ -79,6 +79,7 @@ builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
 builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
 
 //--------------- Model validation responses ---------------
 builder.Services.Configure<ApiBehaviorOptions>(options =>

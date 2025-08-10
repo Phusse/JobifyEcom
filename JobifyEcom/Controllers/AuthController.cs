@@ -5,6 +5,7 @@ using JobifyEcom.DTOs.Auth;
 using JobifyEcom.DTOs;
 using JobifyEcom.Services;
 using System.Security.Claims;
+using JobifyEcom.Extensions;
 
 namespace JobifyEcom.Controllers;
 
@@ -31,11 +32,8 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPatch(ApiRoutes.Auth.Patch.Logout)]
     public async Task<IActionResult> Logout()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
-            return Unauthorized(ApiResponse<object>.Fail(null, "User not authenticated."));
-
-        var result = await _authService.LogoutAsync(userId);
+        User.TryGetUserId(out var id);
+        var result = await _authService.LogoutAsync(id);
         return Ok(ApiResponse<object>.Ok(result.Data, result.Message));
     }
 }

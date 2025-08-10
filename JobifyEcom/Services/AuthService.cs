@@ -9,24 +9,41 @@ using JobifyEcom.DTOs.Auth;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Enums;
 using JobifyEcom.Security;
+using JobifyEcom.Contracts;
 
 namespace JobifyEcom.Services;
 
-internal class AuthService(AppDbContext db, JwtTokenGenerator jwt) : IAuthService
+/// <summary>
+/// Provides authentication-related operations such as login, logout, and registration.
+/// </summary>
+/// <remarks>
+/// This service handles:
+/// <list type="bullet">
+///   <item><description>User authentication via email and password.</description></item>
+///   <item><description>JWT generation for authenticated users.</description></item>
+///   <item><description>Security stamp updates to support token invalidation on logout or credential changes.</description></item>
+///   <item><description>New user registration with email confirmation tokens.</description></item>
+/// </list>
+/// </remarks>
+internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextAccessor httpContextAccessor) : IAuthService
 {
-    public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest dto)
+    private readonly AppDbContext _db = db;
+    private readonly JwtTokenGenerator _jwt = jwt;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+
+    public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
     {
-        if (dto.Email is null or { Length: 0 } || dto.Password is null or { Length: 0 })
+        if (request.Email is null or { Length: 0 } || request.Password is null or { Length: 0 })
             throw new UnauthorizedException("Invalid credentials.", ["Email and password are required."]);
 
-        string email = dto.Email.ToLowerInvariant().Trim();
-        string password = dto.Password;
+        string email = request.Email.ToLowerInvariant().Trim();
+        string password = request.Password;
 
-        string normalizedEmail = dto.Email.ToLowerInvariant().Trim();
+        string normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
 
-        if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
+        if (user == null || !PasswordSecurity.VerifyPassword(request.Password, user.PasswordHash))
             throw new UnauthorizedException("Invalid credentials.", ["Email or password is incorrect."]);
 
         if (!user.IsEmailConfirmed)
@@ -51,50 +68,65 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt) : IAuthServic
         return ServiceResult<LoginResponse>.Create(response, "Login successful");
     }
 
-    public async Task<ServiceResult<object>> LogoutAsync(Guid userId)
+    public async Task<ServiceResult<object>> LogoutAsync(Guid? userId)
     {
         User user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId)
-            ?? throw new NotFoundException("User not found");
+            ?? throw new NotFoundException("Unable to find your user details. If this issue persists, please contact support.");
 
         user.SecurityStamp = Guid.Empty;
         await db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "Logged out successfully");
+        return ServiceResult<object>.Create(null, "You have been logged out successfully.");
     }
 
-    public async Task<ServiceResult<object>> RegisterAsync(RegisterRequest dto)
+    public async Task<ServiceResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
     {
-        if (await db.Users.AnyAsync(u => u.Email == dto.Email.ToLowerInvariant().Trim()))
-            throw new AppException(400, "User already exists", ["A user with this email already exists."]);
+        string normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
-        var confirmationToken = Guid.NewGuid();
-
-        var user = new User
+        if (await _db.Users.AnyAsync(u => u.Email == normalizedEmail))
         {
-            Name = dto.Name,
-            Email = dto.Email.ToLowerInvariant().Trim(),
-            PasswordHash = HashPassword(dto.Password),
+            throw new ConflictException("User registration conflict.", ["A user with this email address already exists."]);
+        }
+
+        Guid confirmationToken = Guid.NewGuid();
+
+        User user = new()
+        {
+            Name = request.Name,
+            Email = normalizedEmail,
+            PasswordHash = PasswordSecurity.HashPassword(request.Password),
             IsEmailConfirmed = false,
             EmailConfirmationToken = confirmationToken,
             Role = UserRole.Customer,
         };
 
-        db.Users.Add(user);
-        await db.SaveChangesAsync();
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
 
-        string confirmationLink = $"https://localhost:5001/api/auth/confirm?email={user.Email}&token={confirmationToken}";
+        // TODO: Find a better way to get the host if better
+        // or revamp this to scale better
+        HttpRequest? requestHttp = _httpContextAccessor.HttpContext?.Request;
+        string baseUrl;
+        List<string>? warnings = null;
 
-        return ServiceResult<object>.Create(new { ConfirmationLink = confirmationLink }, "Registration successful. Please confirm your email.");
-    }
+        if (requestHttp is null || string.IsNullOrEmpty(requestHttp.Host.Value))
+        {
+            baseUrl = "http://localhost:5122";
+            warnings = ["Base URL could not be determined from the HTTP request. Using fallback URL."];
+        }
+        else
+        {
+            baseUrl = $"{requestHttp.Scheme}://{requestHttp.Host.Value}";
+        }
 
-    private static string HashPassword(string password)
-    {
-        byte[] hashedBytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
-    }
+        // TODO: Replace with the actual confirmation route when implemented
+        string confirmationLink = $"{baseUrl}/{ApiRoutes.Auth.Patch.Logout}?email={user.Email}&token={confirmationToken}";
 
-    private static bool VerifyPassword(string inputPassword, string storedHash)
-    {
-        return HashPassword(inputPassword) == storedHash;
+        RegisterResponse response = new()
+        {
+            ConfirmationLink = confirmationLink,
+        };
+
+        return ServiceResult<RegisterResponse>.Create(response, "Registration successful. Please check your email to confirm your account.", warnings);
     }
 }

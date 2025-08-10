@@ -15,7 +15,7 @@ public interface IAuthService
     /// <param name="request">The login request containing user credentials.</param>
     /// <returns>
     /// A task representing the asynchronous operation.
-    /// The result contains a <see cref="LoginResponse"/> wrapped in a <see cref="ServiceResult{T}"/>.
+    /// The result contains a <see cref="LoginResponse"/> wrapped in a <see cref="ServiceResult{LoginResponse}"/>.
     /// </returns>
     Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request);
 
@@ -25,15 +25,15 @@ public interface IAuthService
     /// <param name="request">The registration request containing user details.</param>
     /// <returns>
     /// A task representing the asynchronous operation.
-    /// The result contains a <see cref="ServiceResult{T}"/> wrapping an <see cref="object"/>,
-    /// which can hold any additional data or be null when no data is returned.
+    /// The result contains a <see cref="ServiceResult{RegisterResponse}"/>
+    /// which includes a confirmation link and a message instructing the user to confirm their email.
     /// </returns>
-    Task<ServiceResult<object>> RegisterAsync(RegisterRequest request);
+    Task<ServiceResult<RegisterResponse>> RegisterAsync(RegisterRequest request);
 
     /// <summary>
     /// Logs out the current user, invalidating their authentication tokens as needed.
     /// </summary>
     /// <param name="userId">The unique identifier of the user to log out.</param>
     /// <returns>A task representing the asynchronous logout operation.</returns>
-    Task<ServiceResult<object>> LogoutAsync(Guid userId);
+    Task<ServiceResult<object>> LogoutAsync(Guid? userId);
 }
