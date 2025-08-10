@@ -9,16 +9,17 @@ public class Rating
 {
 	/// <summary>
 	/// The unique identifier for the rating.
+	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
 	/// </summary>
 	[Key]
-	public Guid Id { get; set; }
+	public Guid Id { get; private set; } = Guid.NewGuid();
 
 	/// <summary>
 	/// The rating score (e.g., 1–5 stars).
 	/// </summary>
 	[Required]
 	[Range(1, 5)]
-	public int Score { get; set; }
+	public required int Score { get; set; }
 
 	/// <summary>
 	/// Optional feedback from the customer.
@@ -28,7 +29,7 @@ public class Rating
 
 	/// <summary>
 	/// The date and time when the rating was submitted.
-	/// This value is automatically set by the backend and cannot be modified externally.
+	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
 	/// </summary>
 	public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
@@ -36,16 +37,16 @@ public class Rating
 	/// The ID of the customer who submitted the rating.
 	/// </summary>
 	[Required]
-	public Guid CustomerId { get; set; }
+	public required Guid CustomerId { get; set; }
 
 	/// <summary>
 	/// The ID of the worker profile being rated.
 	/// </summary>
 	[Required]
-	public Guid WorkerProfileId { get; set; }
+	public required Guid WorkerProfileId { get; set; }
 
 	/// <summary>
-	/// (Optional) The job this rating is associated with.
+	/// The job this rating is associated with.
 	/// </summary>
 	public Guid? JobPostId { get; set; }
 

@@ -29,8 +29,9 @@ public class ApiResponse<T>
 
     /// <summary>
     /// The UTC timestamp indicating when the response was generated.
+    /// The value is set automatically by the backend.
     /// </summary>
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; private set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Optional data returned by the API. May be null for operations that do not return content.

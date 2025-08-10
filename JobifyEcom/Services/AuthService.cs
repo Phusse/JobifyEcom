@@ -1,86 +1,132 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using JobifyEcom.Data;
-using JobifyEcom.Helpers;
 using JobifyEcom.DTOs;
 using JobifyEcom.Models;
+using JobifyEcom.DTOs.Auth;
+using JobifyEcom.Exceptions;
+using JobifyEcom.Enums;
+using JobifyEcom.Security;
+using JobifyEcom.Contracts;
 
 namespace JobifyEcom.Services;
 
-public class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
+/// <summary>
+/// Provides authentication-related operations such as login, logout, and registration.
+/// </summary>
+/// <remarks>
+/// This service handles:
+/// <list type="bullet">
+///   <item><description>User authentication via email and password.</description></item>
+///   <item><description>JWT generation for authenticated users.</description></item>
+///   <item><description>Security stamp updates to support token invalidation on logout or credential changes.</description></item>
+///   <item><description>New user registration with email confirmation tokens.</description></item>
+/// </list>
+/// </remarks>
+internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextAccessor httpContextAccessor) : IAuthService
 {
-	public async Task<string> RegisterAsync(RegisterDto dto)
+    private readonly AppDbContext _db = db;
+    private readonly JwtTokenGenerator _jwt = jwt;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+
+    public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
     {
-        if (await db.Users.AnyAsync(u => u.Email == dto.Email))
-            throw new Exception("User already exists");
-
-        var confirmationToken = Guid.NewGuid();
-
-        var user = new User
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
         {
-            Name = dto.Name,
-            Email = dto.Email,
-            PasswordHash = HashPassword(dto.Password),
-            Role = dto.Role,
-            IsEmailConfirmed = false,
-            EmailConfirmationToken = confirmationToken
-        };
+            throw new ValidationException("Invalid credentials.", ["Email and password are required."]);
+        }
 
-        db.Users.Add(user);
-        await db.SaveChangesAsync();
+        string normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
-        // Return link to simulate sending via email
-        return $"https://localhost:5001/api/auth/confirm?email={user.Email}&token={confirmationToken}";
-    }
+        User? user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
 
-    public async Task<string> LoginAsync(LoginDto dto)
-    {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-        if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
-            throw new Exception("Invalid credentials");
+        if (user is null || !PasswordSecurity.VerifyPassword(request.Password, user.PasswordHash))
+        {
+            throw new UnauthorizedException("Invalid credentials.", ["The email or password you entered is incorrect."]);
+        }
 
         if (!user.IsEmailConfirmed)
-            throw new Exception("Please confirm your email before logging in.");
+        {
+            throw new UnauthorizedException("Email not confirmed.", ["Please confirm your email before logging in."]);
+        }
 
-        return jwt.GenerateToken(user.Id, user.Email, user.Role.ToString());
+        user.SecurityStamp = Guid.NewGuid();
+        await _db.SaveChangesAsync();
+
+        string token = _jwt.GenerateToken(user);
+        DateTime expiresAt = JwtTokenReader.GetExpiryFromToken(token);
+
+        LoginResponse response = new()
+		{
+            Token = token,
+            ExpiresAt = expiresAt,
+        };
+
+        return ServiceResult<LoginResponse>.Create(response, "Login successful.");
     }
 
-    public async Task<User> GetUserByEmailAsync(string email)
+    public async Task<ServiceResult<object>> LogoutAsync(Guid? userId)
     {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null)
-            throw new Exception("User not found");
-        return user;
+        User user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new NotFoundException("Unable to find your user details. If this issue persists, please contact support.");
+
+        user.SecurityStamp = Guid.Empty;
+        await _db.SaveChangesAsync();
+
+        return ServiceResult<object>.Create(null, "You have been logged out successfully.");
     }
 
-    public async Task<User> ConfirmEmailAsync(string email, Guid token)
+    public async Task<ServiceResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
     {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        string normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
-        if (user == null)
-            throw new Exception("User not found");
+        if (await _db.Users.AnyAsync(u => u.Email == normalizedEmail))
+        {
+            throw new ConflictException("User registration conflict.", ["A user with this email address already exists."]);
+        }
 
-        if (user.EmailConfirmationToken != token)
-            throw new Exception("Invalid token. User ID not found.");
+        Guid confirmationToken = Guid.NewGuid();
 
-        user.IsEmailConfirmed = true;
-        user.EmailConfirmationToken = null;
+        User user = new()
+        {
+            Name = request.Name,
+            Email = normalizedEmail,
+            PasswordHash = PasswordSecurity.HashPassword(request.Password),
+            IsEmailConfirmed = false,
+            EmailConfirmationToken = confirmationToken,
+            Role = UserRole.Customer,
+        };
 
-        await db.SaveChangesAsync();
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
 
-        return user;
-    }
+        #region Rework Later
 
-    private string HashPassword(string password)
-    {
-        using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
-    }
+        // TODO: Find a better way to get the host if better
+        // or revamp this to scale better
+        HttpRequest? requestHttp = _httpContextAccessor.HttpContext?.Request;
+        string baseUrl;
+        List<string>? warnings = null;
 
-    private bool VerifyPassword(string inputPassword, string storedHash)
-    {
-        return HashPassword(inputPassword) == storedHash;
+        if (requestHttp is null || string.IsNullOrEmpty(requestHttp.Host.Value))
+        {
+            baseUrl = "http://localhost:5122";
+            warnings = ["Base URL could not be determined from the HTTP request. Using fallback URL."];
+        }
+        else
+        {
+            baseUrl = $"{requestHttp.Scheme}://{requestHttp.Host.Value}";
+        }
+
+        // TODO: Replace with the actual confirmation route when implemented
+        string confirmationLink = $"{baseUrl}/{ApiRoutes.Auth.Patch.Logout}?email={user.Email}&token={confirmationToken}";
+
+        RegisterResponse response = new()
+        {
+            ConfirmationLink = confirmationLink,
+        };
+
+        #endregion
+
+        return ServiceResult<RegisterResponse>.Create(response, "Registration successful. Please check your email to confirm your account.", warnings);
     }
 }

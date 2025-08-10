@@ -9,15 +9,16 @@ public class WorkerProfile
 {
     /// <summary>
     /// The unique identifier for the worker profile.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
     /// </summary>
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; private set; } = Guid.NewGuid();
 
     /// <summary>
     /// The ID of the associated user account.
     /// </summary>
     [Required]
-    public Guid UserId { get; set; }
+    public required Guid UserId { get; set; }
 
     /// <summary>
     /// The name of the worker.
@@ -25,7 +26,7 @@ public class WorkerProfile
     [Required]
     [MinLength(2)]
     [StringLength(100)]
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// The email address of the worker.
@@ -33,17 +34,17 @@ public class WorkerProfile
     [Required]
     [EmailAddress]
     [StringLength(100)]
-    public string Email { get; set; } = string.Empty;
+    public required string Email { get; set; } = string.Empty;
 
     /// <summary>
     /// A short biography or description of the worker.
     /// </summary>
     [StringLength(250)]
-    public string Bio { get; set; } = string.Empty;
+    public string? Bio { get; set; }
 
     /// <summary>
     /// The UTC date and time when the profile was created.
-    /// This value is automatically set by the backend and cannot be modified externally.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
     /// </summary>
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 

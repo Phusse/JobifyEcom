@@ -8,4 +8,7 @@ namespace JobifyEcom.Exceptions;
 /// </remarks>
 /// <param name="message">The error message. Defaults to "Resource not found".</param>
 /// <param name="errors">An optional list of specific error messages.</param>
-public class NotFoundException(string message = "Resource not found.", List<string>? errors = null) : AppException(StatusCodes.Status404NotFound, message, errors) { }
+public class NotFoundException(
+	string message = "We couldn't find what you're looking for.",
+	List<string>? errors = null
+) : AppException(StatusCodes.Status404NotFound, message, errors);

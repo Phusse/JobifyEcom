@@ -10,9 +10,10 @@ public class User
 {
     /// <summary>
     /// The unique identifier for the user.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
     /// </summary>
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; private set; } = Guid.NewGuid();
 
     /// <summary>
     /// The full name of the user.
@@ -20,7 +21,7 @@ public class User
     [Required]
     [MinLength(2)]
     [StringLength(100)]
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
 
     /// <summary>
     /// The user's email address. Must be unique and lowercase.
@@ -28,19 +29,19 @@ public class User
     [Required]
     [EmailAddress]
     [StringLength(100)]
-    public string Email { get; set; } = string.Empty;
+    public required string Email { get; set; }
 
     /// <summary>
     /// The hashed password for authentication.
     /// </summary>
     [Required]
-    public string PasswordHash { get; set; } = string.Empty;
+    public required string PasswordHash { get; set; }
 
     /// <summary>
     /// The role assigned to the user (e.g., Admin, Customer, Worker).
     /// </summary>
     [Required]
-    public UserRole Role { get; set; } = UserRole.Customer;
+    public required UserRole Role { get; set; } = UserRole.Customer;
 
     /// <summary>
     /// Indicates whether the user's email address has been confirmed.
@@ -51,6 +52,12 @@ public class User
     /// A unique token used for verifying the user's email address.
     /// </summary>
     public Guid? EmailConfirmationToken { get; set; }
+
+    /// <summary>
+    /// A unique identifier that changes whenever the user's security credentials are updated or tokens are invalidated.
+    /// Used to validate JWT tokens and ensure tokens issued before this value are rejected.
+    /// </summary>
+    public Guid SecurityStamp { get; set; } = Guid.Empty;
 
     /// <summary>
     /// The worker profile associated with this user, if the user is a worker.

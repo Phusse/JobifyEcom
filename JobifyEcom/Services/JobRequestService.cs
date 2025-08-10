@@ -11,7 +11,6 @@ public class JobApplicationService(AppDbContext context) : IJobApplicationServic
     {
         var request = new JobApplication
         {
-            Id = Guid.NewGuid(),
             CustomerId = dto.CustomerId,
             JobPostId = dto.JobPostId,
             Status = JobApplicationStatus.Pending,

@@ -2,6 +2,7 @@ using JobifyEcom.Data;
 using JobifyEcom.Models;
 using JobifyEcom.DTOs;
 using Microsoft.EntityFrameworkCore;
+using JobifyEcom.Enums;
 
 namespace JobifyEcom.Services;
 
@@ -17,7 +18,8 @@ public class JobService(AppDbContext db) : IJobService
             WorkerId = worker.Id,
             Title = dto.Title,
             Description = dto.Description,
-            Price = dto.Price
+            Price = dto.Price,
+            Status = JobStatus.Open,
         };
 
         db.JobPosts.Add(job);

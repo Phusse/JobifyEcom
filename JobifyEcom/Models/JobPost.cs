@@ -10,15 +10,16 @@ public class JobPost
 {
     /// <summary>
     /// The unique identifier for the job post.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
     /// </summary>
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; private set; } = Guid.NewGuid();
 
     /// <summary>
     /// The ID of the worker who created the job post.
     /// </summary>
     [Required]
-    public Guid WorkerId { get; set; }
+    public required Guid WorkerId { get; set; }
 
     /// <summary>
     /// The title of the job post.
@@ -26,7 +27,7 @@ public class JobPost
     [Required]
     [MinLength(5)]
     [StringLength(100)]
-    public string Title { get; set; } = string.Empty;
+    public required string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// A detailed description of the job or service.
@@ -34,24 +35,24 @@ public class JobPost
     [Required]
     [MinLength(10)]
     [StringLength(2000)]
-    public string Description { get; set; } = string.Empty;
+    public required string Description { get; set; } = string.Empty;
 
     /// <summary>
     /// The price or cost for the job.
     /// </summary>
     [Required]
     [Range(0.01, 1000000)]
-    public decimal Price { get; set; }
+    public required decimal Price { get; set; }
 
     /// <summary>
     /// The current status of the job post (e.g., Available, Booked, Completed).
     /// </summary>
     [Required]
-    public JobStatus Status { get; set; } = JobStatus.Open;
+    public required JobStatus Status { get; set; } = JobStatus.Open;
 
     /// <summary>
     /// The UTC date and time the job post was created.
-    /// This value is automatically set by the backend and cannot be modified externally.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
     /// </summary>
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 

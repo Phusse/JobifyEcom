@@ -1,8 +1,6 @@
 using System.Text.Json;
 using JobifyEcom.DTOs;
 using JobifyEcom.Exceptions;
-using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Options;
 
 namespace JobifyEcom.Middleware;
 
@@ -14,12 +12,12 @@ namespace JobifyEcom.Middleware;
 /// <param name="logger">Logger used to log exceptions.</param>
 /// <param name="env">Provides information about the hosting environment.</param>
 /// <param name="jsonOptions">JSON options used to serialize the response.</param>
-public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IHostEnvironment env, IOptions<JsonOptions> jsonOptions)
+public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IHostEnvironment env, JsonSerializerOptions jsonOptions)
 {
 	private readonly RequestDelegate _next = next;
 	private readonly ILogger<ExceptionHandlingMiddleware> _logger = logger;
 	private readonly IHostEnvironment _env = env;
-	private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions;
+	private readonly JsonSerializerOptions _jsonOptions = jsonOptions;
 
 	/// <summary>
 	/// Invokes the middleware to handle exceptions in the HTTP request pipeline.
@@ -49,25 +47,35 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 		string traceId = context.TraceIdentifier;
 		context.Response.ContentType = "application/json";
 
-		ApiResponse<object?> response;
+		string? message = _env.IsDevelopment()
+			? ex.InnerException?.Message ?? ex.Message
+			: null;
+
+		ApiResponse<object> response;
 
 		if (ex is AppException appEx)
 		{
 			context.Response.StatusCode = appEx.StatusCode;
-			response = ApiResponse<object?>.Fail(null, appEx.Message, appEx.Errors, traceId);
+			response = ApiResponse<object>.Fail(null, message, appEx.Errors, traceId);
 		}
 		else
 		{
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-			string message = _env.IsDevelopment()
-				? ex.InnerException?.Message ?? ex.Message
-				: "Something went wrong.";
+			string safeMessage = string.IsNullOrWhiteSpace(message)
+				? "An unknown error occurred. Please reference the trace ID when reporting this issue."
+				: message;
 
-			List<string> errors = [message];
+			response = ApiResponse<object>.Fail(null, null, [safeMessage], traceId);
+		}
 
-			_logger.LogError(ex, "Unhandled exception occurred. TraceId: {TraceId}", traceId);
-			response = ApiResponse<object?>.Fail(null, message, errors, traceId);
+		if (context.Response.StatusCode >= 500)
+		{
+			_logger.LogError(ex, "Unhandled server error. Trace ID: {TraceId}", traceId);
+		}
+		else
+		{
+			_logger.LogWarning(ex, "Handled application/client error. Trace ID: {TraceId}", traceId);
 		}
 
 		string json = JsonSerializer.Serialize(response, _jsonOptions);
