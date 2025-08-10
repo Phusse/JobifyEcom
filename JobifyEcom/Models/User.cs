@@ -10,9 +10,10 @@ public class User
 {
     /// <summary>
     /// The unique identifier for the user.
+    /// This value is automatically set by the backend and cannot be modified externally.
     /// </summary>
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; private set; } = Guid.NewGuid();
 
     /// <summary>
     /// The full name of the user.
@@ -51,6 +52,12 @@ public class User
     /// A unique token used for verifying the user's email address.
     /// </summary>
     public Guid? EmailConfirmationToken { get; set; }
+
+    /// <summary>
+    /// A unique identifier that changes whenever the user's security credentials are updated or tokens are invalidated.
+    /// Used to validate JWT tokens and ensure tokens issued before this value are rejected.
+    /// </summary>
+    public Guid SecurityStamp { get; set; } = Guid.Empty;
 
     /// <summary>
     /// The worker profile associated with this user, if the user is a worker.

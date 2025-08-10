@@ -11,9 +11,10 @@ public class EntityTag
 {
 	/// <summary>
 	/// The unique identifier for this entity-tag association.
+	/// This value is automatically set by the backend and cannot be modified externally.
 	/// </summary>
 	[Key]
-	public Guid Id { get; set; }
+	public Guid Id { get; private set; } = Guid.NewGuid();
 
 	/// <summary>
 	/// The foreign key of the associated tag.

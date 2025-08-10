@@ -5,24 +5,74 @@ using JobifyEcom.Data;
 using JobifyEcom.Helpers;
 using JobifyEcom.DTOs;
 using JobifyEcom.Models;
+using JobifyEcom.DTOs.Auth;
+using JobifyEcom.Exceptions;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace JobifyEcom.Services;
 
-public class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
+internal class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
 {
-	public async Task<string> RegisterAsync(RegisterDto dto)
+    public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest dto)
     {
-        if (await db.Users.AnyAsync(u => u.Email == dto.Email))
-            throw new Exception("User already exists");
+        if (dto.Email is null or { Length: 0 } || dto.Password is null or { Length: 0 })
+            throw new UnauthorizedException("Invalid credentials.", ["Email and password are required."]);
+
+        string email = dto.Email.ToLowerInvariant().Trim();
+        string password = dto.Password;
+
+        string normalizedEmail = dto.Email.ToLowerInvariant().Trim();
+
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+
+        if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
+            throw new UnauthorizedException("Invalid credentials.", ["Email or password is incorrect."]);
+
+        if (!user.IsEmailConfirmed)
+            throw new UnauthorizedException("Email not confirmed.", ["Please confirm your email before logging in."]);
+
+        user.SecurityStamp = Guid.NewGuid();
+        await db.SaveChangesAsync();
+
+        string token = jwt.GenerateToken(user);
+        DateTime expiresAt = jwt.GetExpiryFromToken(token);
+
+        var response = new LoginResponse
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Token = token,
+            ExpiresAt = expiresAt,
+            Role = user.Role,
+        };
+
+        return ServiceResult<LoginResponse>.Create(response, "Login successful");
+    }
+
+    public async Task<ServiceResult<object>> LogoutAsync(Guid userId)
+    {
+        User user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new NotFoundException("User not found");
+
+        user.SecurityStamp = Guid.Empty;
+        await db.SaveChangesAsync();
+
+        return ServiceResult<object>.Create(null, "Logged out successfully");
+    }
+
+    public async Task<ServiceResult<object>> RegisterAsync(RegisterRequest dto)
+    {
+        if (await db.Users.AnyAsync(u => u.Email == dto.Email.ToLowerInvariant().Trim()))
+            throw new AppException(400, "User already exists", ["A user with this email already exists."]);
 
         var confirmationToken = Guid.NewGuid();
 
         var user = new User
         {
             Name = dto.Name,
-            Email = dto.Email,
+            Email = dto.Email.ToLowerInvariant().Trim(),
             PasswordHash = HashPassword(dto.Password),
-            Role = dto.Role,
             IsEmailConfirmed = false,
             EmailConfirmationToken = confirmationToken
         };
@@ -30,52 +80,14 @@ public class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        // Return link to simulate sending via email
-        return $"https://localhost:5001/api/auth/confirm?email={user.Email}&token={confirmationToken}";
+        string confirmationLink = $"https://localhost:5001/api/auth/confirm?email={user.Email}&token={confirmationToken}";
+
+        return ServiceResult<object>.Create(new { ConfirmationLink = confirmationLink }, "Registration successful. Please confirm your email.");
     }
 
-    public async Task<string> LoginAsync(LoginDto dto)
+    private static string HashPassword(string password)
     {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-        if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
-            throw new Exception("Invalid credentials");
-
-        if (!user.IsEmailConfirmed)
-            throw new Exception("Please confirm your email before logging in.");
-
-        return jwt.GenerateToken(user.Id, user.Email, user.Role.ToString());
-    }
-
-    public async Task<User> GetUserByEmailAsync(string email)
-    {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null)
-            throw new Exception("User not found");
-        return user;
-    }
-
-    public async Task<User> ConfirmEmailAsync(string email, Guid token)
-    {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
-
-        if (user == null)
-            throw new Exception("User not found");
-
-        if (user.EmailConfirmationToken != token)
-            throw new Exception("Invalid token. User ID not found.");
-
-        user.IsEmailConfirmed = true;
-        user.EmailConfirmationToken = null;
-
-        await db.SaveChangesAsync();
-
-        return user;
-    }
-
-    private string HashPassword(string password)
-    {
-        using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+        byte[] hashedBytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
         return Convert.ToBase64String(hashedBytes);
     }
 

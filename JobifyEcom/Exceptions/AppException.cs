@@ -20,9 +20,8 @@ public class AppException(int statusCode, string message, List<string>? errors =
 
 	/// <summary>
 	/// Gets the list of detailed error messages.
-	/// Always contains at least one message.
 	/// </summary>
-	public List<string> Errors { get; } = string.IsNullOrWhiteSpace(message) && (errors == null || errors.Count == 0)
-		? ["An unexpected error occurred."]
-		: (errors is { Count: > 0 } ? errors : [message]);
+	public List<string>? Errors { get; } = (errors is not null && errors.Count > 0)
+		? errors
+		: null;
 }

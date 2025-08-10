@@ -11,9 +11,10 @@ public class Skill
 {
 	/// <summary>
 	/// The unique identifier for the skill entry.
+	/// This value is automatically set by the backend and cannot be modified externally.
 	/// </summary>
 	[Key]
-	public Guid Id { get; set; }
+	public Guid Id { get; private set; } = Guid.NewGuid();
 
 	/// <summary>
 	/// The name of the skill (e.g., "C#", "Photoshop").

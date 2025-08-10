@@ -10,7 +10,7 @@ namespace JobifyEcom.Controllers;
 [Route("api/[controller]")]
 public class JobController(IJobService jobService) : ControllerBase
 {
-	[Authorize(Roles = "Worker")]
+    [Authorize(Roles = "Worker")]
     [HttpPost]
     public async Task<IActionResult> CreateJob(CreateJobDto dto)
     {
@@ -18,25 +18,26 @@ public class JobController(IJobService jobService) : ControllerBase
         {
             var userId = GetUserId();
             var job = await jobService.CreateJobAsync(userId, dto);
-            return Ok(ApiResponse<object?>.Ok(job, "All jobs fetched successfully."));
+            return Ok(ApiResponse<object>.Ok(job, "All jobs fetched successfully."));
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
+            return BadRequest(ApiResponse<object>.Fail(null, null, [ex.Message]));
         }
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetAllJobs()
     {
         try
         {
             var jobs = await jobService.GetAllJobsAsync();
-            return Ok(ApiResponse<object?>.Ok(jobs, "All jobs fetched successfully."));
+            return Ok(ApiResponse<object>.Ok(jobs, "All jobs fetched successfully."));
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
+            return BadRequest(ApiResponse<object>.Fail(null, null, [ex.Message]));
         }
     }
 
@@ -48,11 +49,11 @@ public class JobController(IJobService jobService) : ControllerBase
         {
             var userId = GetUserId();
             var jobs = await jobService.GetJobsByWorkerAsync(userId);
-            return Ok(ApiResponse<object?>.Ok(jobs, "Your job posts"));
+            return Ok(ApiResponse<object>.Ok(jobs, "Your job posts"));
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
+            return BadRequest(ApiResponse<object>.Fail(null, null, [ex.Message]));
         }
     }
 

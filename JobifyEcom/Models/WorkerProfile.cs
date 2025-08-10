@@ -9,9 +9,10 @@ public class WorkerProfile
 {
     /// <summary>
     /// The unique identifier for the worker profile.
+    /// This value is automatically set by the backend and cannot be modified externally.
     /// </summary>
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; private set; } = Guid.NewGuid();
 
     /// <summary>
     /// The ID of the associated user account.

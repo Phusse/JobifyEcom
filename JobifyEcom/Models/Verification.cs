@@ -10,9 +10,10 @@ public class Verification
 {
 	/// <summary>
 	/// The unique identifier for the verification record.
+	/// This value is automatically set by the backend and cannot be modified externally.
 	/// </summary>
 	[Key]
-	public Guid Id { get; set; }
+	public Guid Id { get; private set; } = Guid.NewGuid();
 
 	/// <summary>
 	/// The type of entity being verified (e.g., JobPost, Skill, WorkerProfile).

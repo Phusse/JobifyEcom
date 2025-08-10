@@ -25,16 +25,13 @@ public static class ApiRoutes
 
             /// <summary>Login a user.</summary>
             public const string Login = $"{Base}/login";
-
-            /// <summary>Confirm email address.</summary>
-            public const string ConfirmEmail = $"{Base}/confirm-email";
         }
 
-        /// <summary>PUT endpoints for Auth.</summary>
-        public static class Get
+        /// <summary>PATCH endpoints for Auth.</summary>
+        public static class Patch
         {
-            /// <summary>Get user details.</summary>
-            public const string Me = $"{Base}/me";
+            /// <summary>Logout a user.</summary>
+            public const string Logout = $"{Base}/logout";
         }
     }
 }

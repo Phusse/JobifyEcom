@@ -5,18 +5,33 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using JobifyEcom.Services;
 using JobifyEcom.Helpers;
-using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
 using JobifyEcom.DTOs;
 using JobifyEcom.Middleware;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
+using System.Text.Json.Serialization;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+// Build WebApplication
+var builder = WebApplication.CreateBuilder(args);
 
-//--------------- Add database connection ---------------
+//--------------- Global JsonSerializerOptions ---------------
+var globalJsonOptions = new JsonSerializerOptions
+{
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    PropertyNameCaseInsensitive = true,
+    ReferenceHandler = ReferenceHandler.IgnoreCycles
+};
+globalJsonOptions.Converters.Add(
+    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false)
+);
+
+// Register as singleton so it’s available everywhere
+builder.Services.AddSingleton(globalJsonOptions);
+
+//--------------- Database connection ---------------
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -24,42 +39,25 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-//--------------- JSON Options ---------------
-builder.Services.Configure<JsonOptions>(options =>
-{
-    JsonSerializerOptions serializerOptions = options.JsonSerializerOptions;
-    serializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    serializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    serializerOptions.PropertyNameCaseInsensitive = true;
-    serializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+//--------------- Controllers use same JSON options ---------------
+builder.Services.AddControllers()
+    .AddJsonOptions(opts =>
+    {
+        opts.JsonSerializerOptions.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
+        opts.JsonSerializerOptions.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
+        opts.JsonSerializerOptions.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
+        opts.JsonSerializerOptions.ReferenceHandler = globalJsonOptions.ReferenceHandler;
 
-    serializerOptions.Converters.Add(
-        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false)
-    );
-});
-
-//--------------- Register JwtEventHandlers ---------------
-builder.Services.AddSingleton(provider =>
-{
-    JsonSerializerOptions jsonOptions = provider.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
-    return JwtEventHandlers.Create(jsonOptions);
-});
+        foreach (var converter in globalJsonOptions.Converters)
+            opts.JsonSerializerOptions.Converters.Add(converter);
+    });
 
 //--------------- JWT Authentication ---------------
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer();
-
-builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-    .Configure<IServiceProvider>((options, provider) =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        IConfigurationSection jwtSettings = builder.Configuration.GetSection("JwtSettings");
+        var jwtSettings = builder.Configuration.GetSection("JwtSettings");
         string secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-
-        var jwtEvents = provider.GetRequiredService<JwtBearerEvents>();
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -73,31 +71,30 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
             ClockSkew = TimeSpan.Zero
         };
 
-        options.Events = jwtEvents;
-    }
-);
+        // Use the global JSON options for JWT events
+        options.Events = JwtEventHandlers.Create(globalJsonOptions);
+    });
 
-//--------------- Register application services ---------------
+//--------------- Services & Auth ---------------
 builder.Services.AddScoped<JwtHelper>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
 
-//--------------- Configure model validation responses ---------------
+//--------------- Model validation responses ---------------
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>
     {
-        List<string> errors = [.. context.ModelState
+        var errors = context.ModelState
             .Where(e => e.Value?.Errors.Count > 0)
             .SelectMany(e => e.Value!.Errors)
             .Select(e => e.ErrorMessage)
-        ];
+            .ToList();
 
-        var response = ApiResponse<object?>.Fail(null, "Invalid input data", errors);
+        var response = ApiResponse<object>.Fail(null, "Invalid input data", errors);
         return new BadRequestObjectResult(response);
     };
 });
@@ -137,8 +134,7 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
-//--------------- Build & run the app ---------------
-WebApplication app = builder.Build();
+var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
@@ -151,7 +147,10 @@ else
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();

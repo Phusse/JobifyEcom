@@ -9,9 +9,10 @@ public class Rating
 {
 	/// <summary>
 	/// The unique identifier for the rating.
+	/// This value is automatically set by the backend and cannot be modified externally.
 	/// </summary>
 	[Key]
-	public Guid Id { get; set; }
+	public Guid Id { get; private set; } = Guid.NewGuid();
 
 	/// <summary>
 	/// The rating score (e.g., 1–5 stars).

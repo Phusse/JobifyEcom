@@ -11,18 +11,18 @@ namespace JobifyEcom.Controllers;
 [Authorize(Roles = "Worker")]
 public class WorkerController(IWorkerService workerService) : ControllerBase
 {
-	[HttpPost("profile")]
+    [HttpPost("profile")]
     public async Task<IActionResult> CreateProfile(CreateWorkerProfileDto dto)
     {
         try
         {
             var userId = GetUserId();
             var profile = await workerService.CreateProfileAsync(userId, dto);
-            return Ok(ApiResponse<object?>.Ok(profile, "Worker profile created successfully."));
+            return Ok(ApiResponse<object>.Ok(profile, "Worker profile created successfully."));
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
+            return BadRequest(ApiResponse<object>.Fail(null, null, [ex.Message]));
         }
     }
 
@@ -35,13 +35,13 @@ public class WorkerController(IWorkerService workerService) : ControllerBase
             var profile = await workerService.GetMyProfileAsync(userId);
 
             if (profile == null)
-                return NotFound(ApiResponse<object?>.Fail(null, "No profile found."));
+                return NotFound(ApiResponse<object>.Fail(null, "No profile found."));
 
-            return Ok(ApiResponse<object?>.Ok(profile, "Worker profile retrived."));
+            return Ok(ApiResponse<object>.Ok(profile, "Worker profile retrived."));
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<object?>.Fail(null, null, [ex.Message]));
+            return BadRequest(ApiResponse<object>.Fail(null, null, [ex.Message]));
         }
     }
 

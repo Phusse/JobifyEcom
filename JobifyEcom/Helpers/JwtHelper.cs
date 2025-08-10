@@ -1,3 +1,5 @@
+using JobifyEcom.Enums;
+using JobifyEcom.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -17,16 +19,24 @@ public class JwtHelper(IConfiguration config)
     private readonly IConfiguration _config = config;
 
     /// <summary>
-    /// Generates a signed JWT token with user claims.
+    /// Generates a signed JWT token containing user claims including the security stamp for token validation.
     /// </summary>
-    /// <param name="userId">The unique identifier of the user.</param>
-    /// <param name="email">The user's email address.</param>
-    /// <param name="role">The role assigned to the user (e.g., admin, user).</param>
+    /// <param name="user">The user for whom the token is generated.</param>
     /// <returns>A signed JWT token as a string.</returns>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if required JWT configuration values are missing.
+    /// Thrown if required JWT configuration values such as SecretKey, Issuer, or Audience are missing.
     /// </exception>
-    public string GenerateToken(Guid userId, string email, string role)
+    /// <remarks>
+    /// The generated token includes the following claims:
+    /// <list type="bullet">
+    /// <item><description><see cref="ClaimTypes.NameIdentifier"/>: The user's unique ID.</description></item>
+    /// <item><description>email: The user's email address.</description></item>
+    /// <item><description>role: The user's role (e.g., Admin, Customer).</description></item>
+    /// <item><description>security_stamp: A unique GUID used to validate the token against the user's current security stamp to enable token invalidation on logout or credential changes.</description></item>
+    /// </list>
+    /// The token expires after 3 hours from issuance.
+    /// </remarks>
+    public string GenerateToken(User user)
     {
         IConfigurationSection jwtSettings = _config.GetSection("JwtSettings");
         string? secretKey = jwtSettings["SecretKey"];
@@ -40,9 +50,10 @@ public class JwtHelper(IConfiguration config)
 
         Claim[] claims =
         [
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim("email", email),
-            new Claim("role", role),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim("email", user.Email),
+            new Claim("role", user.Role.ToString()),
+            new Claim("security_stamp", user.SecurityStamp.ToString()),
         ];
 
         SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(secretKey));
@@ -56,9 +67,26 @@ public class JwtHelper(IConfiguration config)
             signingCredentials: creds
         );
 
-        JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+        JwtSecurityTokenHandler handler = new();
         string tokenString = handler.WriteToken(token);
 
         return tokenString;
+    }
+
+    public DateTime GetExpiryFromToken(string token)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(token);
+
+        // 'exp' claim is in seconds since Unix epoch
+        var expClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
+
+        if (expClaim == null || !long.TryParse(expClaim, out long expSeconds))
+        {
+            throw new InvalidOperationException("Token does not contain a valid expiration claim.");
+        }
+
+        // Convert Unix time seconds to DateTime (UTC)
+        return DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime;
     }
 }
