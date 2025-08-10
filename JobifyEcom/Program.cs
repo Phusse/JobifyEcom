@@ -14,20 +14,10 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 using JobifyEcom.Security;
 
-// Build WebApplication
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 //--------------- Global JsonSerializerOptions ---------------
-var globalJsonOptions = new JsonSerializerOptions
-{
-    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    PropertyNameCaseInsensitive = true,
-    ReferenceHandler = ReferenceHandler.IgnoreCycles
-};
-globalJsonOptions.Converters.Add(
-    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false)
-);
+JsonSerializerOptions globalJsonOptions = JsonOptionsFactory.Create();
 
 // Register as singleton so it’s available everywhere
 builder.Services.AddSingleton(globalJsonOptions);
@@ -42,23 +32,28 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //--------------- Controllers use same JSON options ---------------
 builder.Services.AddControllers()
-    .AddJsonOptions(opts =>
+    .AddJsonOptions(options =>
     {
-        opts.JsonSerializerOptions.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
-        opts.JsonSerializerOptions.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
-        opts.JsonSerializerOptions.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
-        opts.JsonSerializerOptions.ReferenceHandler = globalJsonOptions.ReferenceHandler;
+        options.JsonSerializerOptions.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
+        options.JsonSerializerOptions.ReferenceHandler = globalJsonOptions.ReferenceHandler;
 
-        foreach (var converter in globalJsonOptions.Converters)
-            opts.JsonSerializerOptions.Converters.Add(converter);
-    });
+        foreach (JsonConverter converter in globalJsonOptions.Converters)
+        {
+            options.JsonSerializerOptions.Converters.Add(converter);
+        }
+    }
+);
 
 //--------------- JWT Authentication ---------------
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-        string secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+        IConfigurationSection jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
+        string secretKey = jwtSettings["SecretKey"]
+            ?? throw new InvalidOperationException("Missing JWT configuration: 'SecretKey' value is not set in JwtSettings.");
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -74,7 +69,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
         // Use the global JSON options for JWT events
         options.Events = JwtEventHandlers.Create(globalJsonOptions);
-    });
+    }
+);
 
 //--------------- Services & Auth ---------------
 builder.Services.AddScoped<JwtTokenGenerator>();
@@ -89,13 +85,12 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>
     {
-        var errors = context.ModelState
+        List<string> errors = [.. context.ModelState
             .Where(e => e.Value?.Errors.Count > 0)
             .SelectMany(e => e.Value!.Errors)
-            .Select(e => e.ErrorMessage)
-            .ToList();
+            .Select(e => e.ErrorMessage)];
 
-        var response = ApiResponse<object>.Fail(null, "Invalid input data", errors);
+        var response = ApiResponse<object>.Fail(null, "Some of the provided data is invalid.", errors);
         return new BadRequestObjectResult(response);
     };
 });
@@ -135,7 +130,7 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
