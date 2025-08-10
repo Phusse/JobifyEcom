@@ -8,10 +8,11 @@ using JobifyEcom.Models;
 using JobifyEcom.DTOs.Auth;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Enums;
+using JobifyEcom.Security;
 
 namespace JobifyEcom.Services;
 
-internal class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
+internal class AuthService(AppDbContext db, JwtTokenGenerator jwt) : IAuthService
 {
     public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest dto)
     {
@@ -35,7 +36,7 @@ internal class AuthService(AppDbContext db, JwtHelper jwt) : IAuthService
         await db.SaveChangesAsync();
 
         string token = jwt.GenerateToken(user);
-        DateTime expiresAt = jwt.GetExpiryFromToken(token);
+        DateTime expiresAt = JwtTokenReader.GetExpiryFromToken(token);
 
         var response = new LoginResponse
         {

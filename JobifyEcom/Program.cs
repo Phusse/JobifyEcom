@@ -12,6 +12,7 @@ using JobifyEcom.DTOs;
 using JobifyEcom.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
+using JobifyEcom.Security;
 
 // Build WebApplication
 var builder = WebApplication.CreateBuilder(args);
@@ -76,7 +77,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 //--------------- Services & Auth ---------------
-builder.Services.AddScoped<JwtHelper>();
+builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IJobService, JobService>();
