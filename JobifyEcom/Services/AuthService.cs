@@ -33,48 +33,47 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
 
     public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
     {
-        if (request.Email is null or { Length: 0 } || request.Password is null or { Length: 0 })
-            throw new UnauthorizedException("Invalid credentials.", ["Email and password are required."]);
-
-        string email = request.Email.ToLowerInvariant().Trim();
-        string password = request.Password;
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            throw new ValidationException("Invalid credentials.", ["Email and password are required."]);
+        }
 
         string normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+        User? user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
 
-        if (user == null || !PasswordSecurity.VerifyPassword(request.Password, user.PasswordHash))
-            throw new UnauthorizedException("Invalid credentials.", ["Email or password is incorrect."]);
+        if (user is null || !PasswordSecurity.VerifyPassword(request.Password, user.PasswordHash))
+        {
+            throw new UnauthorizedException("Invalid credentials.", ["The email or password you entered is incorrect."]);
+        }
 
         if (!user.IsEmailConfirmed)
+        {
             throw new UnauthorizedException("Email not confirmed.", ["Please confirm your email before logging in."]);
+        }
 
         user.SecurityStamp = Guid.NewGuid();
-        await db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
 
-        string token = jwt.GenerateToken(user);
+        string token = _jwt.GenerateToken(user);
         DateTime expiresAt = JwtTokenReader.GetExpiryFromToken(token);
 
-        var response = new LoginResponse
-        {
-            Id = user.Id,
-            Name = user.Name,
-            Email = user.Email,
+        LoginResponse response = new()
+		{
             Token = token,
             ExpiresAt = expiresAt,
-            Role = user.Role,
         };
 
-        return ServiceResult<LoginResponse>.Create(response, "Login successful");
+        return ServiceResult<LoginResponse>.Create(response, "Login successful.");
     }
 
     public async Task<ServiceResult<object>> LogoutAsync(Guid? userId)
     {
-        User user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId)
+        User user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new NotFoundException("Unable to find your user details. If this issue persists, please contact support.");
 
         user.SecurityStamp = Guid.Empty;
-        await db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
 
         return ServiceResult<object>.Create(null, "You have been logged out successfully.");
     }
@@ -103,6 +102,8 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
+        #region Rework Later
+
         // TODO: Find a better way to get the host if better
         // or revamp this to scale better
         HttpRequest? requestHttp = _httpContextAccessor.HttpContext?.Request;
@@ -126,6 +127,8 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
         {
             ConfirmationLink = confirmationLink,
         };
+
+        #endregion
 
         return ServiceResult<RegisterResponse>.Create(response, "Registration successful. Please check your email to confirm your account.", warnings);
     }
