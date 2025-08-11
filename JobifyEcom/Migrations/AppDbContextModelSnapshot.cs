@@ -210,6 +210,9 @@ namespace JobifyEcom.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -236,6 +239,9 @@ namespace JobifyEcom.Migrations
 
                     b.Property<Guid>("SecurityStamp")
                         .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -289,7 +295,6 @@ namespace JobifyEcom.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<string>("Bio")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("varchar(250)");
 

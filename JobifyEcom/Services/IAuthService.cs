@@ -15,9 +15,19 @@ public interface IAuthService
     /// <param name="request">The login request containing user credentials.</param>
     /// <returns>
     /// A task representing the asynchronous operation.
-    /// The result contains a <see cref="LoginResponse"/> wrapped in a <see cref="ServiceResult{LoginResponse}"/>.
+    /// The result contains a <see cref="TokenResponse"/> wrapped in a <see cref="ServiceResult{LoginResponse}"/>.
     /// </returns>
-    Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request);
+    Task<ServiceResult<TokenResponse>> LoginAsync(LoginRequest request);
+
+    /// <summary>
+    /// Refreshes the access token using a valid refresh token.
+    /// </summary>
+    /// <param name="request">The request containing the refresh token to validate and exchange for a new access token.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains a <see cref="ServiceResult{TokenResponse}"/> which includes the new access token and its expiration time.
+    /// </returns>
+    Task<ServiceResult<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request);
 
     /// <summary>
     /// Registers a new user using the provided registration data.

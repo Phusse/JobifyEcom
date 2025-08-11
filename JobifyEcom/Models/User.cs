@@ -38,7 +38,8 @@ public class User
     public required string PasswordHash { get; set; }
 
     /// <summary>
-    /// The role assigned to the user (e.g., Admin, Customer, Worker).
+    /// The role assigned to the user, determining access permissions (e.g., Admin, Customer, Worker).
+    /// <br>Defaults to <see cref="UserRole.Customer"/>.</br>
     /// </summary>
     [Required]
     public required UserRole Role { get; set; } = UserRole.Customer;
@@ -57,7 +58,20 @@ public class User
     /// A unique identifier that changes whenever the user's security credentials are updated or tokens are invalidated.
     /// Used to validate JWT tokens and ensure tokens issued before this value are rejected.
     /// </summary>
+    [Required]
     public Guid SecurityStamp { get; set; } = Guid.Empty;
+
+    /// <summary>
+    /// The UTC date and time when the user was created.
+    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+    /// </summary>
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The UTC date and time when the user was last updated.
+    /// </summary>
+    [Required]
+    public required DateTime UpdatedAt { get; set; }
 
     /// <summary>
     /// The worker profile associated with this user, if the user is a worker.
