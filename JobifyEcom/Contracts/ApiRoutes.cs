@@ -25,6 +25,9 @@ public static class ApiRoutes
 
             /// <summary>Login a user.</summary>
             public const string Login = $"{Base}/login";
+
+            /// <summary>Refresh authentication tokens.</summary>
+            public const string Refresh = $"{Base}/refresh";
         }
 
         /// <summary>PATCH endpoints for Auth.</summary>

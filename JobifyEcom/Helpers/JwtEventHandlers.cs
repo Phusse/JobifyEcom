@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
+using JobifyEcom.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,7 +39,13 @@ public static class JwtEventHandlers
 
 	private static async Task HandleTokenValidatedAsync(TokenValidatedContext context)
 	{
-		GetClaims(context.Principal, out string? userIdClaim, out string? securityStampClaim);
+		GetClaims(context.Principal, out string? userIdClaim, out string? securityStampClaim, out string? tokenType);
+
+		if (!string.Equals(tokenType, TokenType.Access.ToString(), StringComparison.OrdinalIgnoreCase))
+		{
+			FailWithReason(context, "Your session token isn't valid for this action. Please log in again to get the correct token.");
+			return;
+		}
 
 		if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(securityStampClaim))
 		{
@@ -101,10 +108,11 @@ public static class JwtEventHandlers
 
 	#region Helpers
 
-	private static void GetClaims(ClaimsPrincipal? principal, out string? userId, out string? securityStamp)
+	private static void GetClaims(ClaimsPrincipal? principal, out string? userId, out string? securityStamp, out string? tokenType)
 	{
 		userId = principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 		securityStamp = principal?.FindFirst("security_stamp")?.Value;
+		tokenType = principal?.FindFirst("token_type")?.Value;
 	}
 
 	private static async Task<Guid?> GetUserSecurityStampAsync(AppDbContext db, Guid userId)

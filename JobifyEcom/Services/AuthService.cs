@@ -7,6 +7,7 @@ using JobifyEcom.Exceptions;
 using JobifyEcom.Enums;
 using JobifyEcom.Security;
 using JobifyEcom.Contracts;
+using System.Security.Claims;
 
 namespace JobifyEcom.Services;
 
@@ -28,60 +29,105 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
     private readonly JwtTokenGenerator _jwt = jwt;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
-    public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
+    private readonly TimeSpan _accessTokenLifetime = TimeSpan.FromMinutes(30);
+    private readonly TimeSpan _refreshTokenLifetime = TimeSpan.FromDays(7);
+
+    public async Task<ServiceResult<TokenResponse>> LoginAsync(LoginRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
         {
-            throw new ValidationException("Invalid credentials.", ["Email and password are required."]);
+            throw new ValidationException(
+                "Missing login details.",
+                ["Please enter both your email address and password to continue."]
+            );
         }
 
-        string normalizedEmail = request.Email.ToLowerInvariant().Trim();
-
-        User? user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+        User? user = await GetUserByEmailAsync(request.Email);
 
         if (user is null || !PasswordSecurity.VerifyPassword(request.Password, user.PasswordHash))
         {
-            throw new UnauthorizedException("Invalid credentials.", ["The email or password you entered is incorrect."]);
+            throw new UnauthorizedException(
+                "Login failed.",
+                ["We couldn't find an account with those details. Double-check your email and password, then try again."]
+            );
         }
 
         if (!user.IsEmailConfirmed)
         {
-            throw new UnauthorizedException("Email not confirmed.", ["Please confirm your email before logging in."]);
+            throw new UnauthorizedException(
+                "Email confirmation required.",
+                ["You need to confirm your email before logging in. Check your inbox for the confirmation link."]
+            );
         }
 
         user.SecurityStamp = Guid.NewGuid();
         await _db.SaveChangesAsync();
 
-        string token = _jwt.GenerateToken(user);
-        DateTime expiresAt = JwtTokenReader.GetExpiryFromToken(token);
+        TokenResponse response = GenerateTokenResponse(user);
+        return ServiceResult<TokenResponse>.Create(response, "Login successful.", GetTokenWarnings(response));
+    }
 
-        LoginResponse response = new()
-		{
-            Token = token,
-            ExpiresAt = expiresAt,
-        };
+    public async Task<ServiceResult<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            throw new ValidationException(
+                "No refresh token provided.",
+                ["We couldn't continue your session because a refresh token was missing from the request."]
+            );
+        }
 
-        return ServiceResult<LoginResponse>.Create(response, "Login successful.");
+        ClaimsPrincipal principal = ValidateToken(request.RefreshToken, TokenType.Refresh);
+
+        ExtractTokenUserData(principal, out Guid userId, out Guid tokenSecurityStamp);
+
+        User user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new UnauthorizedException(
+                "Account not found.",
+                ["We couldn't find an account linked to this session. It may have been deleted or changed."]
+            );
+
+        if (user.SecurityStamp != tokenSecurityStamp)
+        {
+            throw new UnauthorizedException(
+                "Session no longer valid.",
+                ["Your account security has changed. Please sign in again to continue."]
+            );
+        }
+
+        TokenResponse response = GenerateTokenResponse(user);
+        return ServiceResult<TokenResponse>.Create(
+            response,
+            "Your session has been renewed successfully.",
+            GetTokenWarnings(response)
+        );
     }
 
     public async Task<ServiceResult<object>> LogoutAsync(Guid? userId)
     {
         User user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
-            ?? throw new NotFoundException("Unable to find your user details. If this issue persists, please contact support.");
+            ?? throw new NotFoundException(
+                "User not found.",
+                ["We couldn't find your account information. If this keeps happening, please contact support."]
+            );
 
+        // Clearing the security stamp ensures all existing tokens are invalidated
         user.SecurityStamp = Guid.Empty;
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "You have been logged out successfully.");
+        return ServiceResult<object>.Create(null, "You've been signed out successfully.");
     }
 
     public async Task<ServiceResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
     {
-        string normalizedEmail = request.Email.ToLowerInvariant().Trim();
+        string normalizedEmail = NormalizeEmail(request.Email);
 
         if (await _db.Users.AnyAsync(u => u.Email == normalizedEmail))
         {
-            throw new ConflictException("User registration conflict.", ["A user with this email address already exists."]);
+            throw new ConflictException(
+                "Email already registered.",
+                ["An account with this email address already exists. Try signing in instead."]
+            );
         }
 
         Guid confirmationToken = Guid.NewGuid();
@@ -94,39 +140,132 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
             IsEmailConfirmed = false,
             EmailConfirmationToken = confirmationToken,
             Role = UserRole.Customer,
+            UpdatedAt = DateTime.UtcNow,
         };
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        #region Rework Later
+        BuildConfirmationLink(user.Email, confirmationToken, out string confirmationLink, out List<string>? warnings);
 
-        // TODO: Find a better way to get the host if better
-        // or revamp this to scale better
+        RegisterResponse response = new()
+        {
+            ConfirmationLink = confirmationLink
+        };
+
+        return ServiceResult<RegisterResponse>.Create(
+            response,
+            "Registration complete. Please check your inbox for a confirmation link to activate your account.",
+            warnings
+        );
+    }
+
+    #region Private Helpers
+
+    private static string NormalizeEmail(string email) => email.ToLowerInvariant().Trim();
+
+    private async Task<User?> GetUserByEmailAsync(string email)
+    {
+        return await _db.Users.FirstOrDefaultAsync(u => u.Email == NormalizeEmail(email));
+    }
+
+    private TokenResponse GenerateTokenResponse(User user)
+    {
+        string accessToken = _jwt.GenerateToken(user, _accessTokenLifetime, TokenType.Access);
+        string refreshToken = _jwt.GenerateToken(user, _refreshTokenLifetime, TokenType.Refresh);
+
+        return new TokenResponse
+        {
+            AccessToken = accessToken,
+            AccessTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(accessToken),
+            RefreshToken = refreshToken,
+            RefreshTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(refreshToken),
+        };
+    }
+
+    private static List<string>? GetTokenWarnings(TokenResponse response)
+    {
+        List<string>? warnings = null;
+
+        if (response.AccessTokenExpiresAt is null)
+        {
+            warnings ??= [];
+            warnings.Add("Unable to determine when your access session expires.");
+        }
+
+        if (response.RefreshTokenExpiresAt is null)
+        {
+            warnings ??= [];
+            warnings.Add("Unable to determine when your refresh session expires.");
+        }
+
+        return warnings;
+    }
+
+    private ClaimsPrincipal ValidateToken(string token, TokenType tokenType)
+    {
+        ClaimsPrincipal? principal = JwtTokenReader.ValidateToken(_jwt.Config, token, tokenType);
+
+        if (principal != null) return principal;
+
+        // Try validating without token type restriction to detect token type errors
+        ClaimsPrincipal? genericPrincipal = JwtTokenReader.ValidateToken(_jwt.Config, token, null);
+
+        if (genericPrincipal != null)
+        {
+            string? tokenTypeClaim = genericPrincipal.FindFirst("token_type")?.Value;
+
+            if (!string.Equals(tokenTypeClaim, tokenType.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedException(
+                    "Invalid token type.",
+                    [$"The token provided is not a {tokenType} token. Please provide a valid {tokenType} token."]
+                );
+            }
+        }
+
+        throw new UnauthorizedException(
+            "Session expired.",
+            ["Your session has expired or is no longer valid. Please sign in again."]
+        );
+    }
+
+    private static void ExtractTokenUserData(ClaimsPrincipal principal, out Guid userId, out Guid securityStamp)
+    {
+        string? userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string? securityStampClaim = principal.FindFirst("security_stamp")?.Value;
+
+        if (!Guid.TryParse(userIdClaim, out userId) || !Guid.TryParse(securityStampClaim, out securityStamp))
+        {
+            throw new UnauthorizedException(
+                "Session data invalid.",
+                ["We couldn't verify your session details. Please login again."]
+            );
+        }
+    }
+
+    private void BuildConfirmationLink(string email, Guid token, out string confirmationLink, out List<string>? warnings)
+    {
         HttpRequest? requestHttp = _httpContextAccessor.HttpContext?.Request;
         string baseUrl;
-        List<string>? warnings = null;
+        warnings = null;
 
         if (requestHttp is null || string.IsNullOrEmpty(requestHttp.Host.Value))
         {
             baseUrl = "http://localhost:5122";
-            warnings = ["Base URL could not be determined from the HTTP request. Using fallback URL."];
+            warnings =
+            [
+                "Unable to determine the server address from the request. Using a default fallback URL."
+            ];
         }
         else
         {
             baseUrl = $"{requestHttp.Scheme}://{requestHttp.Host.Value}";
         }
 
-        // TODO: Replace with the actual confirmation route when implemented
-        string confirmationLink = $"{baseUrl}/{ApiRoutes.Auth.Patch.Logout}?email={user.Email}&token={confirmationToken}";
-
-        RegisterResponse response = new()
-        {
-            ConfirmationLink = confirmationLink,
-        };
-
-        #endregion
-
-        return ServiceResult<RegisterResponse>.Create(response, "Registration successful. Please check your email to confirm your account.", warnings);
+        // TODO: Update this route to the actual email confirmation endpoint when available
+        confirmationLink = $"{baseUrl}/{ApiRoutes.Auth.Patch.Logout}?email={email}&token={token}";
     }
+
+    #endregion
 }

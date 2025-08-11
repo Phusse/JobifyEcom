@@ -10,33 +10,39 @@ namespace JobifyEcom.Security;
 /// Generates signed JSON Web Tokens (JWT) for authenticated users.
 /// </summary>
 /// <remarks>
-/// This service uses application configuration values for JWT settings such as
-/// <c>SecretKey</c>, <c>Issuer</c>, and <c>Audience</c> from <c>JwtSettings</c>.
+/// Uses application configuration values (<c>JwtSettings</c>) for
+/// <c>SecretKey</c>, <c>Issuer</c>, and <c>Audience</c>.
 /// </remarks>
-/// <param name="config">The application configuration for accessing JWT settings.</param>
 public class JwtTokenGenerator(IConfiguration config)
 {
 	private readonly IConfiguration _config = config;
 
 	/// <summary>
-	/// Generates a signed JWT token containing user claims.
+	/// Gets the configuration instance used to read JWT settings.
+	/// </summary>
+	public IConfiguration Config => _config;
+
+	/// <summary>
+	/// Generates a signed JWT token for a given user and token type.
 	/// </summary>
 	/// <param name="user">The user for whom the token is generated.</param>
-	/// <returns>A signed JWT token as a string.</returns>
+	/// <param name="expiry">The lifetime of the token.</param>
+	/// <param name="tokenType">Specifies whether this is an Access or Refresh token.</param>
+	/// <returns>A signed JWT token string.</returns>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown if required JWT configuration values such as <c>SecretKey</c>, <c>Issuer</c>, or <c>Audience</c> are missing.
+	/// Thrown if JWT configuration values (<c>SecretKey</c>, <c>Issuer</c>, <c>Audience</c>) are missing.
 	/// </exception>
 	/// <remarks>
-	/// The generated token includes the following claims:
+	/// The generated token contains:
 	/// <list type="bullet">
-	/// <item><description><see cref="ClaimTypes.NameIdentifier"/>: The user's unique ID.</description></item>
-	/// <item><description>email: The user's email address.</description></item>
-	/// <item><description>role: The user's role (e.g., Admin, Customer).</description></item>
-	/// <item><description>security_stamp: A unique GUID used to validate the token against the user's current security stamp to enable token invalidation.</description></item>
+	/// <item><description><see cref="ClaimTypes.NameIdentifier"/> – user's unique ID.</description></item>
+	/// <item><description>email – user's email address.</description></item>
+	/// <item><description>role – user's role.</description></item>
+	/// <item><description>security_stamp – unique GUID for token invalidation.</description></item>
+	/// <item><description>TokenType – indicates whether it's Access or Refresh.</description></item>
 	/// </list>
-	/// The token expires after 3 hours from issuance.
 	/// </remarks>
-	public string GenerateToken(User user)
+	public string GenerateToken(User user, TimeSpan expiry, TokenType tokenType)
 	{
 		IConfigurationSection jwtSettings = _config.GetSection("JwtSettings");
 		string? secretKey = jwtSettings["SecretKey"];
@@ -51,10 +57,11 @@ public class JwtTokenGenerator(IConfiguration config)
 		Claim[] claims =
 		[
 			new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-				new Claim("email", user.Email),
-				new Claim("role", user.Role.ToString()),
-				new Claim("security_stamp", user.SecurityStamp.ToString()),
-			];
+			new Claim("email", user.Email),
+			new Claim("role", user.Role.ToString()),
+			new Claim("security_stamp", user.SecurityStamp.ToString()),
+			new Claim("token_type", tokenType.ToString()),
+		];
 
 		SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(secretKey));
 		SigningCredentials creds = new(key, SecurityAlgorithms.HmacSha256);
@@ -63,11 +70,10 @@ public class JwtTokenGenerator(IConfiguration config)
 			issuer: issuer,
 			audience: audience,
 			claims: claims,
-			expires: DateTime.UtcNow.AddHours(3),
+			expires: DateTime.UtcNow.Add(expiry),
 			signingCredentials: creds
 		);
 
-		JwtSecurityTokenHandler handler = new();
-		return handler.WriteToken(token);
+		return new JwtSecurityTokenHandler().WriteToken(token);
 	}
 }
