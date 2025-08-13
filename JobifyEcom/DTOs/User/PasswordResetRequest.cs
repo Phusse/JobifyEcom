@@ -12,13 +12,14 @@ public class PasswordResetRequest
 	/// The unique, time-sensitive token provided to the user
 	/// to authorize the password reset.
 	/// </summary>
-	[Required]
+	[Required(ErrorMessage = "Password reset token is required. Please check your email for the link.")]
 	public string? Token { get; set; }
 
 	/// <summary>
 	/// The new password the user wishes to set for their account.
 	/// Must meet the system's password policy requirements.
 	/// </summary>
-	[Required]
+	[Required(ErrorMessage = "Please enter your new password.")]
+	[MinLength(6, ErrorMessage = "Your new password must be at least 6 characters long.")]
 	public string? NewPassword { get; set; }
 }

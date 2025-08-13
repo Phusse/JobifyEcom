@@ -3,19 +3,21 @@ using System.ComponentModel.DataAnnotations;
 namespace JobifyEcom.DTOs.User;
 
 /// <summary>
-/// Represents the request to confirm an email address.
+/// Represents the request needed to confirm a user's email address.
 /// </summary>
 public class EmailConfirmRequest
 {
 	/// <summary>
-	/// The email address to confirm. This should be the same as the one used for registration.
+	/// The email address to confirm.
+	/// This must match the email used during registration.
 	/// </summary>
-	[Required]
+	[Required(ErrorMessage = "Please enter your email address.")]
+	[EmailAddress(ErrorMessage = "Please enter a valid email address.")]
 	public string? Email { get; set; }
 
 	/// <summary>
-	/// The token used to confirm the email address.
+	/// The unique confirmation token sent to the user's email.
 	/// </summary>
-	[Required]
+	[Required(ErrorMessage = "Email confirmation token is required. Please check your email for the link.")]
 	public string? Token { get; set; }
 }
