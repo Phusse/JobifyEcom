@@ -68,16 +68,12 @@ public static class ApiRoutes
             public const string PasswordResetConfirm = $"{Base}/{{id}}/password-reset/confirm";
         }
 
-        /// <summary>PUT endpoints for Users.</summary>
-        public static class Put
-        {
-            /// <summary>Update user profile.</summary>
-            public const string Update = $"{Base}/{{id}}";
-        }
-
         /// <summary>PATCH endpoints for Users.</summary>
         public static class Patch
         {
+            /// <summary>Update user profile.</summary>
+            public const string Update = $"{Base}/{{id}}";
+
             /// <summary>Confirm email address via token.</summary>
             public const string ConfirmEmail = $"{Base}/confirm-email";
 

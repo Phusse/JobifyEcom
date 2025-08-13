@@ -55,6 +55,16 @@ public class User
     public Guid? EmailConfirmationToken { get; set; }
 
     /// <summary>
+    /// Indicates whether the account is locked and the user cannot log in.
+    /// </summary>
+    public bool IsLocked { get; set; } = false;
+
+    /// <summary>
+    /// The UTC date and time when the account was locked, if applicable.
+    /// </summary>
+    public DateTime? LockedAt { get; set; }
+
+    /// <summary>
     /// A unique identifier that changes whenever the user's security credentials are updated or tokens are invalidated.
     /// Used to validate JWT tokens and ensure tokens issued before this value are rejected.
     /// </summary>
