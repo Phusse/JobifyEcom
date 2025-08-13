@@ -43,6 +43,8 @@ namespace JobifyEcom.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsEmailConfirmed = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     EmailConfirmationToken = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    IsLocked = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    LockedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     SecurityStamp = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)

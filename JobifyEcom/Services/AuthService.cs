@@ -8,6 +8,7 @@ using JobifyEcom.Enums;
 using JobifyEcom.Security;
 using JobifyEcom.Contracts;
 using System.Security.Claims;
+using JobifyEcom.Extensions;
 
 namespace JobifyEcom.Services;
 
@@ -23,10 +24,10 @@ namespace JobifyEcom.Services;
 ///   <item><description>New user registration with email confirmation tokens.</description></item>
 /// </list>
 /// </remarks>
-internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextAccessor httpContextAccessor) : IAuthService
+internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAccessor httpContextAccessor) : IAuthService
 {
     private readonly AppDbContext _db = db;
-    private readonly JwtTokenGenerator _jwt = jwt;
+    private readonly JwtTokenService _jwt = jwt;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     private readonly TimeSpan _accessTokenLifetime = TimeSpan.FromMinutes(30);
@@ -78,7 +79,6 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
         }
 
         ClaimsPrincipal principal = ValidateToken(request.RefreshToken, TokenType.Refresh);
-
         ExtractTokenUserData(principal, out Guid userId, out Guid tokenSecurityStamp);
 
         User user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
@@ -103,15 +103,21 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
         );
     }
 
-    public async Task<ServiceResult<object>> LogoutAsync(Guid? userId)
+    public async Task<ServiceResult<object>> LogoutAsync()
     {
-        User user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
+        Guid? userId = (_httpContextAccessor.HttpContext?.User.GetUserId())
+            ?? throw new UnauthorizedException(
+                "Authentication required.",
+                ["You must be logged in to log out."]
+            );
+
+        User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId.Value)
             ?? throw new NotFoundException(
                 "User not found.",
                 ["We couldn't find your account information. If this keeps happening, please contact support."]
             );
 
-        // Clearing the security stamp ensures all existing tokens are invalidated
+        // Invalidate tokens by clearing the security stamp
         user.SecurityStamp = Guid.Empty;
         await _db.SaveChangesAsync();
 
@@ -204,16 +210,16 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
 
     private ClaimsPrincipal ValidateToken(string token, TokenType tokenType)
     {
-        ClaimsPrincipal? principal = JwtTokenReader.ValidateToken(_jwt.Config, token, tokenType);
+        ClaimsPrincipal? principal = _jwt.ValidateToken(token, tokenType);
 
-        if (principal != null) return principal;
+        if (principal is not null) return principal;
 
         // Try validating without token type restriction to detect token type errors
-        ClaimsPrincipal? genericPrincipal = JwtTokenReader.ValidateToken(_jwt.Config, token, null);
+        ClaimsPrincipal? genericPrincipal = _jwt.ValidateToken(token, null);
 
-        if (genericPrincipal != null)
+        if (genericPrincipal is not null)
         {
-            string? tokenTypeClaim = genericPrincipal.FindFirst("token_type")?.Value;
+            string? tokenTypeClaim = genericPrincipal.GetTokenType();
 
             if (!string.Equals(tokenTypeClaim, tokenType.ToString(), StringComparison.OrdinalIgnoreCase))
             {
@@ -232,8 +238,8 @@ internal class AuthService(AppDbContext db, JwtTokenGenerator jwt, IHttpContextA
 
     private static void ExtractTokenUserData(ClaimsPrincipal principal, out Guid userId, out Guid securityStamp)
     {
-        string? userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        string? securityStampClaim = principal.FindFirst("security_stamp")?.Value;
+        string? userIdClaim = principal.GetUserId().ToString();
+        string? securityStampClaim = principal.GetSecurityStamp().ToString();
 
         if (!Guid.TryParse(userIdClaim, out userId) || !Guid.TryParse(securityStampClaim, out securityStamp))
         {

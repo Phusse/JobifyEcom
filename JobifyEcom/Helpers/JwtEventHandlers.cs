@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
+using JobifyEcom.Extensions;
 using JobifyEcom.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -110,9 +111,9 @@ public static class JwtEventHandlers
 
 	private static void GetClaims(ClaimsPrincipal? principal, out string? userId, out string? securityStamp, out string? tokenType)
 	{
-		userId = principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-		securityStamp = principal?.FindFirst("security_stamp")?.Value;
-		tokenType = principal?.FindFirst("token_type")?.Value;
+		userId = principal?.GetUserId().ToString();
+		securityStamp = principal?.GetSecurityStamp().ToString();
+		tokenType = principal?.GetTokenType();
 	}
 
 	private static async Task<Guid?> GetUserSecurityStampAsync(AppDbContext db, Guid userId)

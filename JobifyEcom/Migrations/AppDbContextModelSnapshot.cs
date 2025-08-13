@@ -224,6 +224,12 @@ namespace JobifyEcom.Migrations
                     b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("LockedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)

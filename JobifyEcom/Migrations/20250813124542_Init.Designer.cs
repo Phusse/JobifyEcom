@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobifyEcom.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250811160137_Init")]
+    [Migration("20250813124542_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -226,6 +226,12 @@ namespace JobifyEcom.Migrations
 
                     b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("LockedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
                         .IsRequired()

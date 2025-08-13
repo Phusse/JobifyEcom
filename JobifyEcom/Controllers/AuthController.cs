@@ -104,8 +104,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPatch(ApiRoutes.Auth.Patch.Logout)]
     public async Task<IActionResult> Logout()
     {
-        User.TryGetUserId(out Guid userId);
-        ServiceResult<object> result = await _authService.LogoutAsync(userId);
+        ServiceResult<object> result = await _authService.LogoutAsync();
         return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 }

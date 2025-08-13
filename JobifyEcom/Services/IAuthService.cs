@@ -43,7 +43,6 @@ public interface IAuthService
     /// <summary>
     /// Logs out the current user, invalidating their authentication tokens as needed.
     /// </summary>
-    /// <param name="userId">The unique identifier of the user to log out.</param>
     /// <returns>A task representing the asynchronous logout operation.</returns>
-    Task<ServiceResult<object>> LogoutAsync(Guid? userId);
+    Task<ServiceResult<object>> LogoutAsync();
 }
