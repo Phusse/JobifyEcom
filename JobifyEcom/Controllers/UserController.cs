@@ -14,10 +14,11 @@ public class UserController(IUserService userService) : ControllerBase
 	private readonly IUserService _userService = userService;
 
 	// GET: Current authenticated user
+	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
 	[HttpGet(ApiRoutes.Users.Get.Me)]
 	public async Task<IActionResult> GetCurrentUser()
 	{
-		var result = await _userService.GetCurrentUserAsync();
+		ServiceResult<ProfileResponse> result = await _userService.GetCurrentUserAsync();
 		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
 	}
 
@@ -38,9 +39,6 @@ public class UserController(IUserService userService) : ControllerBase
 	}
 
 	// PATCH: Update user
-
-	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
-	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
 	[HttpPatch(ApiRoutes.Users.Patch.Update)]
 	public async Task<IActionResult> UpdateUser([FromRoute] Guid id, [FromBody] ProfileUpdateRequest request)
 	{

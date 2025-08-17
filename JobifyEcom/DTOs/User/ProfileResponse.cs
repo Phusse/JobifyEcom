@@ -1,3 +1,5 @@
+using JobifyEcom.Enums;
+
 namespace JobifyEcom.DTOs.User;
 
 /// <summary>
@@ -20,6 +22,11 @@ public class ProfileResponse
 	/// The user's email address.
 	/// </summary>
 	public required string Email { get; set; }
+
+	/// <summary>
+	/// The role assigned to the user.
+	/// </summary>
+	public required UserRole Role { get; set; }
 
 	/// <summary>
 	/// The UTC date and time when the user account was created.

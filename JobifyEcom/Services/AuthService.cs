@@ -61,6 +61,14 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             );
         }
 
+        if (user.IsLocked)
+        {
+            throw new UnauthorizedException(
+                "Account locked",
+                ["Your account has been locked. Please contact support for assistance."]
+            );
+        }
+
         user.SecurityStamp = Guid.NewGuid();
         await _db.SaveChangesAsync();
 
@@ -81,7 +89,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         ClaimsPrincipal principal = ValidateToken(request.RefreshToken, TokenType.Refresh);
         ExtractTokenUserData(principal, out Guid userId, out Guid tokenSecurityStamp);
 
-        User user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
+        User user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new UnauthorizedException(
                 "Account not found.",
                 ["We couldn't find an account linked to this session. It may have been deleted or changed."]
@@ -95,17 +103,35 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             );
         }
 
-        TokenResponse response = GenerateTokenResponse(user);
+        if (user.IsLocked)
+        {
+            throw new UnauthorizedException(
+                "Account locked",
+                ["Your account has been locked. Please contact support."]
+            );
+        }
+
+        // Only generate a new access token; keep the refresh token the same
+        string newAccessToken = _jwt.GenerateToken(user, _accessTokenLifetime, TokenType.Access);
+
+        TokenResponse response = new()
+        {
+            AccessToken = newAccessToken,
+            AccessTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(newAccessToken),
+            RefreshToken = request.RefreshToken,  // reuse the same refresh token
+            RefreshTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(request.RefreshToken)
+        };
+
         return ServiceResult<TokenResponse>.Create(
             response,
-            "Your session has been renewed successfully.",
+            "Your access token has been renewed successfully.",
             GetTokenWarnings(response)
         );
     }
 
     public async Task<ServiceResult<object>> LogoutAsync()
     {
-        Guid? userId = (_httpContextAccessor.HttpContext?.User.GetUserId())
+        Guid? userId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Authentication required.",
                 ["You must be logged in to log out."]

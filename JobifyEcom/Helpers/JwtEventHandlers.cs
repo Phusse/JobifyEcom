@@ -3,6 +3,7 @@ using System.Text.Json;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
 using JobifyEcom.Extensions;
+using JobifyEcom.Models;
 using JobifyEcom.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ namespace JobifyEcom.Helpers;
 /// </summary>
 public static class JwtEventHandlers
 {
+	private const string AuthMessageKey = "AuthMessage";
 	private const string AuthErrorKey = "AuthError";
 
 	/// <summary>
@@ -44,40 +46,71 @@ public static class JwtEventHandlers
 
 		if (!string.Equals(tokenType, TokenType.Access.ToString(), StringComparison.OrdinalIgnoreCase))
 		{
-			FailWithReason(context, "Your session token isn't valid for this action. Please log in again to get the correct token.");
+			FailWithReason(
+				context,
+				"Invalid session",
+				"Your session token isn't valid for this action. Please log in again to get the correct token."
+			);
+
 			return;
 		}
 
 		if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(securityStampClaim))
 		{
-			FailWithReason(context, "Your login session could not be verified. Please sign in again.");
+			FailWithReason(
+				context,
+				"Session not verified",
+				"Your login session could not be verified. Please sign in again."
+			);
+
 			return;
 		}
 
 		if (!Guid.TryParse(userIdClaim, out Guid userId))
 		{
-			FailWithReason(context, "We couldn't confirm your account details. Please sign in again.");
+			FailWithReason(
+				context,
+				"Account not confirmed",
+				"We couldn't confirm your account details. Please sign in again."
+			);
+
 			return;
 		}
 
 		var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-		Guid? dbSecurityStamp = await GetUserSecurityStampAsync(db, userId);
+
+		User? user = await db.Users.AsNoTracking()
+			.FirstOrDefaultAsync(u => u.Id == userId);
+
+		if (user is null)
+		{
+			FailWithReason(context, "Account not found", "No user found for the provided credentials.");
+			return;
+		}
+
+		Guid? dbSecurityStamp = user.SecurityStamp;
+		bool isAccountLocked = user.IsLocked;
+
+		if (isAccountLocked)
+		{
+			FailWithReason(context, "Account locked", "Account is locked. Please contact support for assistance.");
+		}
 
 		if (dbSecurityStamp is null)
 		{
-			FailWithReason(context, "This account no longer exists or has been removed.");
+			FailWithReason(context, "Account removed", "This account no longer exists or has been removed.");
 			return;
 		}
 
 		if (dbSecurityStamp.Value == Guid.Empty)
 		{
-			FailWithReason(context, "You've been signed out. Please log in again to continue.");
+			FailWithReason(context, "Signed out", "You've been signed out. Please log in again to continue.");
 			return;
 		}
 
 		if (!string.Equals(dbSecurityStamp.Value.ToString(), securityStampClaim, StringComparison.Ordinal))
 		{
-			FailWithReason(context, "Your login session is no longer valid. Please sign in again.");
+			FailWithReason(context, "Session expired", "Your login session is no longer valid. Please sign in again.");
 		}
 	}
 
@@ -85,11 +118,14 @@ public static class JwtEventHandlers
 	{
 		context.HandleResponse();
 
+		string? userMessage = context.HttpContext.Items[AuthMessageKey] as string;
+		string? errorReason = context.HttpContext.Items[AuthErrorKey] as string;
+
 		return WriteJsonErrorAsync(
 			context.Response,
 			StatusCodes.Status401Unauthorized,
-			"You need to be signed in to access this feature.",
-			context.HttpContext.Items[AuthErrorKey] is not string message ? null : [message],
+			userMessage ?? "You need to be signed in to access this feature.",
+			errorReason is not null ? [errorReason] : null,
 			jsonOptions
 		);
 	}
@@ -116,18 +152,18 @@ public static class JwtEventHandlers
 		tokenType = principal?.GetTokenType();
 	}
 
-	private static async Task<Guid?> GetUserSecurityStampAsync(AppDbContext db, Guid userId)
+	private static void FailWithReason(TokenValidatedContext context, string? message = null, string? reason = null)
 	{
-		return await db.Users.AsNoTracking()
-			.Where(u => u.Id == userId)
-			.Select(u => (Guid?)u.SecurityStamp)
-			.FirstOrDefaultAsync();
-	}
+		context.HttpContext.Items[AuthMessageKey] = string.IsNullOrWhiteSpace(message)
+			? "Your session is no longer valid. Please sign in again."
+			: message;
 
-	private static void FailWithReason(TokenValidatedContext context, string reason)
-	{
-		context.HttpContext.Items[AuthErrorKey] = reason;
-		context.Fail(reason);
+		string failReason = string.IsNullOrWhiteSpace(reason)
+			? "Token validation failed."
+			: reason;
+
+		context.HttpContext.Items[AuthErrorKey] = failReason;
+		context.Fail(failReason);
 	}
 
 	private static Task WriteJsonErrorAsync(HttpResponse response, int statusCode, string? message, List<string>? errors, JsonSerializerOptions options)

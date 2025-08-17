@@ -53,7 +53,8 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// </remarks>
     /// <param name="request">The refresh token request containing the refresh token string.</param>
     /// <returns>
-    /// A new access token and refresh token pair, or an error if the request is invalid or unauthorized.
+    /// A new access token along with its expiry, while the provided refresh token remains unchanged.
+    /// Throws an error if the request is invalid or unauthorized.
     /// </returns>
     /// <response code="200">Token successfully refreshed.</response>
     /// <response code="400">Invalid request payload or failed validation.</response>

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using JobifyEcom.Security;
 
 namespace JobifyEcom.Extensions;
 
@@ -12,7 +13,7 @@ public static class ClaimsPrincipalExtensions
 	/// </summary>
 	public static Guid? GetUserId(this ClaimsPrincipal user)
 	{
-		string? value = user.FindFirstValue(ClaimTypes.NameIdentifier);
+		string? value = user.FindFirstValue(AppClaimTypes.UserId);
 		return Guid.TryParse(value, out var id) ? id : null;
 	}
 
@@ -21,7 +22,7 @@ public static class ClaimsPrincipalExtensions
 	/// </summary>
 	public static string? GetEmail(this ClaimsPrincipal user)
 	{
-		return user.FindFirstValue("email");
+		return user.FindFirstValue(AppClaimTypes.Email);
 	}
 
 	/// <summary>
@@ -29,7 +30,7 @@ public static class ClaimsPrincipalExtensions
 	/// </summary>
 	public static string? GetRole(this ClaimsPrincipal user)
 	{
-		return user.FindFirstValue("role");
+		return user.FindFirstValue(AppClaimTypes.Role);
 	}
 
 	/// <summary>
@@ -37,7 +38,7 @@ public static class ClaimsPrincipalExtensions
 	/// </summary>
 	public static Guid? GetSecurityStamp(this ClaimsPrincipal user)
 	{
-		string? value = user.FindFirstValue("security_stamp");
+		string? value = user.FindFirstValue(AppClaimTypes.SecurityStamp);
 		return Guid.TryParse(value, out var stamp) ? stamp : null;
 	}
 
@@ -46,6 +47,29 @@ public static class ClaimsPrincipalExtensions
 	/// </summary>
 	public static string? GetTokenType(this ClaimsPrincipal user)
 	{
-		return user.FindFirstValue("token_type");
+		return user.FindFirstValue(AppClaimTypes.TokenType);
+	}
+
+	/// <summary>
+	/// Gets all claims as a dictionary for easier debugging/logging.
+	/// </summary>
+	public static Dictionary<string, string?> GetAllClaims(this ClaimsPrincipal user)
+	{
+		return user.Claims
+			.GroupBy(c => c.Type)
+			.ToDictionary(g => g.Key, g => g.FirstOrDefault()?.Value);
+	}
+
+	/// <summary>
+	/// Logs all claims to console (useful for debugging).
+	/// </summary>
+	public static void LogClaims(this ClaimsPrincipal user, string? prefix = null)
+	{
+		prefix ??= "[Claims]";
+
+		foreach (Claim claim in user.Claims)
+		{
+			Console.WriteLine($"{prefix} {claim.Type}: {claim.Value}");
+		}
 	}
 }

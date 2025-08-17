@@ -19,7 +19,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 //--------------- Global JsonSerializerOptions ---------------
 JsonSerializerOptions globalJsonOptions = JsonOptionsFactory.Create();
 
-// Register as singleton so it’s available everywhere
+// Register as singleton so it's available everywhere
 builder.Services.AddSingleton(globalJsonOptions);
 
 //--------------- Database connection ---------------

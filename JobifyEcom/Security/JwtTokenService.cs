@@ -52,11 +52,11 @@ public class JwtTokenService(IConfiguration config)
 
 		Claim[] claims =
 		[
-			new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-			new Claim("email", user.Email),
-			new Claim("role", user.Role.ToString()),
-			new Claim("security_stamp", user.SecurityStamp.ToString()),
-			new Claim("token_type", tokenType.ToString()),
+			new Claim(AppClaimTypes.UserId, user.Id.ToString()),
+			new Claim(AppClaimTypes.Email, user.Email),
+			new Claim(AppClaimTypes.Role, user.Role.ToString()),
+			new Claim(AppClaimTypes.SecurityStamp, user.SecurityStamp.ToString()),
+			new Claim(AppClaimTypes.TokenType, tokenType.ToString()),
 		];
 
 		SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(secretKey));
