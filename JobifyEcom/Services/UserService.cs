@@ -15,9 +15,52 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	private readonly AppDbContext _db = db;
 	private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
-	public Task<ServiceResult<object>> ConfirmEmailAsync(EmailConfirmRequest request)
+	public async Task<ServiceResult<object>> ConfirmEmailAsync(EmailConfirmRequest request)
 	{
-		throw new NotImplementedException();
+		if (string.IsNullOrWhiteSpace(request?.Email))
+		{
+			throw new ValidationException(
+				"Email confirmation failed.",
+				["We couldn't process your request because the email address is missing."]
+			);
+		}
+
+		if (request.Token is null)
+		{
+			throw new ValidationException(
+				"Email confirmation failed.",
+				["Your confirmation link is missing or invalid. Please try again."]
+			);
+		}
+
+		string normalizedEmail = request.Email.ToLowerInvariant().Trim();
+
+		User user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail)
+			?? throw new NotFoundException(
+				"Email confirmation failed.",
+				["We couldn't find an account with this email address."]
+			);
+
+		if (user.IsEmailConfirmed)
+		{
+			return ServiceResult<object>.Create(null, "Your email has already been confirmed.");
+		}
+
+		if (user.EmailConfirmationToken is null || user.EmailConfirmationToken != request.Token)
+		{
+			throw new ValidationException(
+				"Email confirmation failed.",
+				["This confirmation link is no longer valid. Please request a new one."]
+			);
+		}
+
+		user.IsEmailConfirmed = true;
+		user.EmailConfirmationToken = null;
+		user.UpdatedAt = DateTime.UtcNow;
+
+		await _db.SaveChangesAsync();
+
+		return ServiceResult<object>.Create(null, "Thank you! Your email has been successfully confirmed.");
 	}
 
 	public Task<ServiceResult<object>> DeleteUserAsync(Guid id)

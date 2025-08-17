@@ -7,14 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JobifyEcom.Controllers;
 
-[Authorize]
 [ApiController]
 public class UserController(IUserService userService) : ControllerBase
 {
 	private readonly IUserService _userService = userService;
 
-	// GET: Current authenticated user
 	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
+	[Authorize]
 	[HttpGet(ApiRoutes.Users.Get.Me)]
 	public async Task<IActionResult> GetCurrentUser()
 	{
@@ -46,9 +45,9 @@ public class UserController(IUserService userService) : ControllerBase
 		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
 	}
 
-	// PATCH: Confirm email
-	[HttpPatch(ApiRoutes.Users.Patch.ConfirmEmail)]
-	public async Task<IActionResult> ConfirmEmail([FromBody] EmailConfirmRequest request)
+	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
+	[HttpGet(ApiRoutes.Users.Get.ConfirmEmail)]
+	public async Task<IActionResult> ConfirmEmail([FromQuery] EmailConfirmRequest request)
 	{
 		var result = await _userService.ConfirmEmailAsync(request);
 		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));

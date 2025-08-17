@@ -185,6 +185,9 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             ConfirmationLink = confirmationLink
         };
 
+        //TODO: remove after or if email service has been added.
+        warnings ??= ["Email sending is not yet avaiable. For now, the confirmation link is included in the response data."];
+
         return ServiceResult<RegisterResponse>.Create(
             response,
             "Registration complete. Please check your inbox for a confirmation link to activate your account.",
@@ -295,8 +298,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             baseUrl = $"{requestHttp.Scheme}://{requestHttp.Host.Value}";
         }
 
-        // TODO: Update this route to the actual email confirmation endpoint when available
-        confirmationLink = $"{baseUrl}/{ApiRoutes.Auth.Patch.Logout}?email={email}&token={token}";
+        confirmationLink = $"{baseUrl}/{ApiRoutes.Users.Get.ConfirmEmail}?email={Uri.EscapeDataString(email)}&token={token}";
     }
 
     #endregion

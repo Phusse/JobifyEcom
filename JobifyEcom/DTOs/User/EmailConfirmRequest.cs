@@ -19,5 +19,5 @@ public class EmailConfirmRequest
 	/// The unique confirmation token sent to the user's email.
 	/// </summary>
 	[Required(ErrorMessage = "Email confirmation token is required. Please check your email for the link.")]
-	public string? Token { get; set; }
+	public Guid? Token { get; set; }
 }
