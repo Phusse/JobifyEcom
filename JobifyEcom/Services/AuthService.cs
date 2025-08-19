@@ -119,7 +119,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             AccessToken = newAccessToken,
             AccessTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(newAccessToken),
             RefreshToken = request.RefreshToken,  // reuse the same refresh token
-            RefreshTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(request.RefreshToken)
+            RefreshTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(request.RefreshToken),
         };
 
         return ServiceResult<TokenResponse>.Create(
@@ -298,7 +298,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             baseUrl = $"{requestHttp.Scheme}://{requestHttp.Host.Value}";
         }
 
-        confirmationLink = $"{baseUrl}/{ApiRoutes.Users.Get.ConfirmEmail}?email={Uri.EscapeDataString(email)}&token={token}";
+        confirmationLink = $"{baseUrl}/{ApiRoutes.Users.Patch.ConfirmEmail}?email={Uri.EscapeDataString(email)}&token={token}";
     }
 
     #endregion

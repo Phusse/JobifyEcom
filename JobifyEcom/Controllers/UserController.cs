@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.User;
@@ -45,11 +46,19 @@ public class UserController(IUserService userService) : ControllerBase
 		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
 	}
 
+	[HttpGet(ApiRoutes.Users.Patch.ConfirmEmail)]
+	[ApiExplorerSettings(IgnoreApi = true)]
+	public async Task<IActionResult> ConfirmEmailLink([FromQuery] EmailConfirmRequest request)
+		=> await ConfirmEmailInternal(request);
+
 	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
-	[HttpGet(ApiRoutes.Users.Get.ConfirmEmail)]
+	[HttpPatch(ApiRoutes.Users.Patch.ConfirmEmail)]
 	public async Task<IActionResult> ConfirmEmail([FromQuery] EmailConfirmRequest request)
+		=> await ConfirmEmailInternal(request);
+
+	private async Task<IActionResult> ConfirmEmailInternal(EmailConfirmRequest request)
 	{
-		var result = await _userService.ConfirmEmailAsync(request);
+		ServiceResult<object> result = await _userService.ConfirmEmailAsync(request);
 		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
 	}
 

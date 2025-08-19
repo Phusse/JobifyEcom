@@ -56,9 +56,6 @@ public static class ApiRoutes
 
             /// <summary>list/search users with paging and filtering.</summary>
             public const string List = $"{Base}";
-
-            /// <summary>Confirm email address via token.</summary>
-            public const string ConfirmEmail = $"{Base}/confirm-email";
         }
 
         /// <summary>POST endpoints for Users.</summary>
@@ -74,6 +71,9 @@ public static class ApiRoutes
         /// <summary>PATCH endpoints for Users.</summary>
         public static class Patch
         {
+            /// <summary>Confirm email address via token.</summary>
+            public const string ConfirmEmail = $"{Base}/confirm-email";
+
             /// <summary>Update user profile.</summary>
             public const string Update = $"{Base}/{{id}}";
 
