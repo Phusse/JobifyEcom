@@ -77,7 +77,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<User>(entity =>
         {
-            entity.Property(u => u.Role)
+            entity.Property(u => u.StaffRole)
                 .HasConversion<string>();
 
             entity.HasIndex(u => u.Email)

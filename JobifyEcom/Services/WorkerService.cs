@@ -7,7 +7,7 @@ namespace JobifyEcom.Services;
 
 public class WorkerService(AppDbContext db) : IWorkerService
 {
-	public async Task<WorkerProfile> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto)
+    public async Task<WorkerProfile> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto)
     {
         if (await db.WorkerProfiles.AnyAsync(w => w.UserId == userId))
             throw new Exception("Profile already exists");

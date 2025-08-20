@@ -24,9 +24,9 @@ public class ProfileResponse
 	public required string Email { get; set; }
 
 	/// <summary>
-	/// The role assigned to the user.
+	/// The roles assigned to the user.
 	/// </summary>
-	public required UserRole Role { get; set; }
+	public required List<SystemRole> Roles { get; set; }
 
 	/// <summary>
 	/// The UTC date and time when the user account was created.

@@ -2,7 +2,6 @@ using System.Security.Claims;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.User;
-using JobifyEcom.Enums;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Extensions;
 using JobifyEcom.Models;
@@ -82,8 +81,10 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 				["You must be logged in to perform this action."]
 			);
 
+		// Eagerly include the WorkerProfile to get the full user roles.
 		User user = await _db.Users
 			.AsNoTracking()
+			.Include(u => u.WorkerProfile)
 			.FirstOrDefaultAsync(u => u.Id == currentUserId)
 			?? throw new NotFoundException(
 				"User not found.",
@@ -96,7 +97,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 			Name = user.Name,
 			Email = user.Email,
 			CreatedAt = user.CreatedAt,
-			Role = user.Role,
+			Roles = user.GetUserRoles(),
 		};
 
 		return ServiceResult<ProfileResponse>.Create(response, "User retrieved successfully.");

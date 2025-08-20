@@ -4,7 +4,6 @@ using JobifyEcom.DTOs;
 using JobifyEcom.Models;
 using JobifyEcom.DTOs.Auth;
 using JobifyEcom.Exceptions;
-using JobifyEcom.Enums;
 using JobifyEcom.Security;
 using JobifyEcom.Contracts;
 using System.Security.Claims;
@@ -89,7 +88,11 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         ClaimsPrincipal principal = ValidateToken(request.RefreshToken, TokenType.Refresh);
         ExtractTokenUserData(principal, out Guid userId, out Guid tokenSecurityStamp);
 
-        User user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId)
+        // Eagerly include the WorkerProfile to ensure role and claims resolution works correctly
+        // when generating the JWT.
+        User user = await _db.Users.AsNoTracking()
+            .Include(u => u.WorkerProfile)
+            .FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new UnauthorizedException(
                 "Account not found.",
                 ["We couldn't find an account linked to this session. It may have been deleted or changed."]
@@ -171,7 +174,6 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             PasswordHash = PasswordSecurity.HashPassword(request.Password),
             IsEmailConfirmed = false,
             EmailConfirmationToken = confirmationToken,
-            Role = UserRole.Customer,
             UpdatedAt = DateTime.UtcNow,
         };
 
@@ -201,7 +203,11 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
     private async Task<User?> GetUserByEmailAsync(string email)
     {
-        return await _db.Users.FirstOrDefaultAsync(u => u.Email == NormalizeEmail(email));
+        // Eagerly include the WorkerProfile to ensure role and claims resolution works correctly
+        // when generating the JWT.
+        return await _db.Users
+            .Include(u => u.WorkerProfile)
+            .FirstOrDefaultAsync(u => u.Email == NormalizeEmail(email));
     }
 
     private TokenResponse GenerateTokenResponse(User user)

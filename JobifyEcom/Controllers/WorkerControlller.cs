@@ -1,6 +1,5 @@
 using JobifyEcom.DTOs;
 using JobifyEcom.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -8,7 +7,6 @@ namespace JobifyEcom.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Worker")]
 public class WorkerController(IWorkerService workerService) : ControllerBase
 {
     [HttpPost("profile")]
