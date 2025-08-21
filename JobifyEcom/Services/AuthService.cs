@@ -14,15 +14,9 @@ namespace JobifyEcom.Services;
 /// <summary>
 /// Provides authentication-related operations such as login, logout, and registration.
 /// </summary>
-/// <remarks>
-/// This service handles:
-/// <list type="bullet">
-///   <item><description>User authentication via email and password.</description></item>
-///   <item><description>JWT generation for authenticated users.</description></item>
-///   <item><description>Security stamp updates to support token invalidation on logout or credential changes.</description></item>
-///   <item><description>New user registration with email confirmation tokens.</description></item>
-/// </list>
-/// </remarks>
+/// <param name="db">The database context.</param>
+/// <param name="jwt">The JWT token service.</param>
+/// <param name="httpContextAccessor">The HTTP context accessor.</param>
 internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAccessor httpContextAccessor) : IAuthService
 {
     private readonly AppDbContext _db = db;
@@ -38,7 +32,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         {
             throw new ValidationException(
                 "Missing login details.",
-                ["Please enter both your email address and password to continue."]
+                ["Please enter both your email address and password to sign in."]
             );
         }
 
@@ -48,7 +42,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         {
             throw new UnauthorizedException(
                 "Login failed.",
-                ["We couldn't find an account with those details. Double-check your email and password, then try again."]
+                ["We couldn't find an account with those credentials. Please check your email and password, then try again."]
             );
         }
 
@@ -56,15 +50,15 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         {
             throw new UnauthorizedException(
                 "Email confirmation required.",
-                ["You need to confirm your email before logging in. Check your inbox for the confirmation link."]
+                ["Please confirm your email address before signing in. Check your inbox for the confirmation link."]
             );
         }
 
         if (user.IsLocked)
         {
             throw new UnauthorizedException(
-                "Account locked",
-                ["Your account has been locked. Please contact support for assistance."]
+                "Account locked.",
+                ["Your account is currently locked. Contact support if you need help unlocking it."]
             );
         }
 
@@ -72,7 +66,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         await _db.SaveChangesAsync();
 
         TokenResponse response = GenerateTokenResponse(user);
-        return ServiceResult<TokenResponse>.Create(response, "Login successful.", GetTokenWarnings(response));
+        return ServiceResult<TokenResponse>.Create(response, "Signed in successfully.", GetTokenWarnings(response));
     }
 
     public async Task<ServiceResult<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
@@ -81,27 +75,25 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         {
             throw new ValidationException(
                 "No refresh token provided.",
-                ["We couldn't continue your session because a refresh token was missing from the request."]
+                ["A refresh token is required to renew your session. Please provide a valid refresh token."]
             );
         }
 
         ClaimsPrincipal principal = ValidateToken(request.RefreshToken, TokenType.Refresh);
         ExtractTokenUserData(principal, out Guid userId, out Guid tokenSecurityStamp);
 
-        // Eagerly include the WorkerProfile to ensure role and claims resolution works correctly
-        // when generating the JWT.
         User user = await _db.Users.AsNoTracking()
             .Include(u => u.WorkerProfile)
             .FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new UnauthorizedException(
                 "Account not found.",
-                ["We couldn't find an account linked to this session. It may have been deleted or changed."]
+                ["We couldn't find an account for this session. It may have been deleted or changed."]
             );
 
         if (user.SecurityStamp != tokenSecurityStamp)
         {
             throw new UnauthorizedException(
-                "Session no longer valid.",
+                "Session invalid.",
                 ["Your account security has changed. Please sign in again to continue."]
             );
         }
@@ -109,25 +101,24 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         if (user.IsLocked)
         {
             throw new UnauthorizedException(
-                "Account locked",
-                ["Your account has been locked. Please contact support."]
+                "Account locked.",
+                ["Your account is currently locked. Contact support if you need help unlocking it."]
             );
         }
 
-        // Only generate a new access token; keep the refresh token the same
         string newAccessToken = _jwt.GenerateToken(user, _accessTokenLifetime, TokenType.Access);
 
         TokenResponse response = new()
         {
             AccessToken = newAccessToken,
             AccessTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(newAccessToken),
-            RefreshToken = request.RefreshToken,  // reuse the same refresh token
+            RefreshToken = request.RefreshToken,
             RefreshTokenExpiresAt = JwtTokenReader.GetExpiryFromToken(request.RefreshToken),
         };
 
         return ServiceResult<TokenResponse>.Create(
             response,
-            "Your access token has been renewed successfully.",
+            "Your session has been renewed. You are still signed in.",
             GetTokenWarnings(response)
         );
     }
@@ -137,20 +128,19 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         Guid? userId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Authentication required.",
-                ["You must be logged in to log out."]
+                ["You must be signed in to log out."]
             );
 
         User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId.Value)
             ?? throw new NotFoundException(
                 "User not found.",
-                ["We couldn't find your account information. If this keeps happening, please contact support."]
+                ["We couldn't find your account. If this keeps happening, please contact support."]
             );
 
-        // Invalidate tokens by clearing the security stamp
         user.SecurityStamp = Guid.Empty;
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "You've been signed out successfully.");
+        return ServiceResult<object>.Create(null, "You have been signed out.");
     }
 
     public async Task<ServiceResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
@@ -161,7 +151,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         {
             throw new ConflictException(
                 "Email already registered.",
-                ["An account with this email address already exists. Try signing in instead."]
+                ["An account with this email address already exists. Please sign in or use a different email."]
             );
         }
 
@@ -187,12 +177,11 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             ConfirmationLink = confirmationLink
         };
 
-        //TODO: remove after or if email service has been added.
-        warnings ??= ["Email sending is not yet avaiable. For now, the confirmation link is included in the response data."];
+        warnings ??= ["Email sending is not yet available. For now, the confirmation link is included in the response."];
 
         return ServiceResult<RegisterResponse>.Create(
             response,
-            "Registration complete. Please check your inbox for a confirmation link to activate your account.",
+            "Registration successful! Please check your email for a confirmation link to activate your account.",
             warnings
         );
     }

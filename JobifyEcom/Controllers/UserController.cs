@@ -40,9 +40,9 @@ public class UserController(IUserService userService) : ControllerBase
 
 	// PATCH: Update user
 	[HttpPatch(ApiRoutes.Users.Patch.Update)]
-	public async Task<IActionResult> UpdateUser([FromRoute] Guid id, [FromBody] ProfileUpdateRequest request)
+	public async Task<IActionResult> UpdateUser([FromBody] ProfileUpdateRequest request)
 	{
-		var result = await _userService.UpdateUserAsync(id, request);
+		var result = await _userService.UpdateCurrentUserAsync(request);
 		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
 	}
 
@@ -93,6 +93,13 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> ResetPassword([FromRoute] Guid id, [FromBody] PasswordResetRequest request)
 	{
 		var result = await _userService.ResetPasswordAsync(id, request);
+		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+	}
+
+	[HttpDelete(ApiRoutes.Users.Delete.Me)]
+	public async Task<IActionResult> DeleteCurrentUser()
+	{
+		var result = await _userService.DeleteCurrentUserAsync();
 		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
 	}
 

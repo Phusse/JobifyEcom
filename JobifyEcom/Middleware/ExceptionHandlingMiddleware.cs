@@ -56,26 +56,40 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 		if (ex is AppException appEx)
 		{
 			context.Response.StatusCode = appEx.StatusCode;
-			response = ApiResponse<object>.Fail(null, message, appEx.Errors, traceId);
+			
+			// Show the developer message in development, otherwise just the user-friendly errors
+			response = ApiResponse<object>.Fail(
+				null,
+				message,
+				appEx.Errors?.Count > 0
+					? appEx.Errors
+					: ["Something went wrong with your request. Please review the details and try again."],
+				traceId
+			);
 		}
 		else
 		{
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
 			string safeMessage = string.IsNullOrWhiteSpace(message)
-				? "An unknown error occurred. Please reference the trace ID when reporting this issue."
+				? "A server error occurred and your request could not be completed. Please try again later or contact support with the trace ID."
 				: message;
 
-			response = ApiResponse<object>.Fail(null, null, [safeMessage], traceId);
+			response = ApiResponse<object>.Fail(
+				null,
+				null,
+				[safeMessage],
+				traceId
+			);
 		}
 
 		if (context.Response.StatusCode >= 500)
 		{
-			_logger.LogError(ex, "Unhandled server error. Trace ID: {TraceId}", traceId);
+			_logger.LogError(ex, "A server error occurred. Trace ID: {TraceId}", traceId);
 		}
 		else
 		{
-			_logger.LogWarning(ex, "Handled application/client error. Trace ID: {TraceId}", traceId);
+			_logger.LogWarning(ex, "A handled application/client error occurred. Trace ID: {TraceId}", traceId);
 		}
 
 		string json = JsonSerializer.Serialize(response, _jsonOptions);

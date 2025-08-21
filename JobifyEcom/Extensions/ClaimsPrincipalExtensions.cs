@@ -14,7 +14,7 @@ public static class ClaimsPrincipalExtensions
 	public static Guid? GetUserId(this ClaimsPrincipal user)
 	{
 		string? value = user.FindFirstValue(AppClaimTypes.UserId);
-		return Guid.TryParse(value, out var id) ? id : null;
+		return Guid.TryParse(value, out Guid id) ? id : null;
 	}
 
 	/// <summary>
@@ -26,11 +26,13 @@ public static class ClaimsPrincipalExtensions
 	}
 
 	/// <summary>
-	/// Gets the authenticated user's role from claims.
+	/// Gets the authenticated user's roles from claims.
 	/// </summary>
-	public static string? GetRole(this ClaimsPrincipal user)
+	/// <param name="user">The claims principal representing the authenticated user.</param>
+	/// <returns>A list of roles assigned to the user.</returns>
+	public static IReadOnlyList<string> GetRoles(this ClaimsPrincipal user)
 	{
-		return user.FindFirstValue(AppClaimTypes.Role);
+		return [.. user.FindAll(AppClaimTypes.Role).Select(c => c.Value)];
 	}
 
 	/// <summary>
@@ -39,7 +41,7 @@ public static class ClaimsPrincipalExtensions
 	public static Guid? GetSecurityStamp(this ClaimsPrincipal user)
 	{
 		string? value = user.FindFirstValue(AppClaimTypes.SecurityStamp);
-		return Guid.TryParse(value, out var stamp) ? stamp : null;
+		return Guid.TryParse(value, out Guid stamp) ? stamp : null;
 	}
 
 	/// <summary>

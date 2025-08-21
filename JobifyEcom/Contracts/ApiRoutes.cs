@@ -75,7 +75,7 @@ public static class ApiRoutes
             public const string ConfirmEmail = $"{Base}/confirm-email";
 
             /// <summary>Update user profile.</summary>
-            public const string Update = $"{Base}/{{id}}";
+            public const string Update = $"{Base}/me/update";
 
             /// <summary>Lock user account.</summary>
             public const string Lock = $"{Base}/{{id}}/lock";
@@ -87,6 +87,9 @@ public static class ApiRoutes
         /// <summary>DELETE endpoints for Users.</summary>
         public static class Delete
         {
+            /// <summary>Delete current authenticated user profile.</summary>
+            public const string Me = $"{Base}/me/delete";
+
             /// <summary>Delete user profile.</summary>
             public const string ById = $"{Base}/{{id}}";
         }

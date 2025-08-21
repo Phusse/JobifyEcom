@@ -31,10 +31,9 @@ public interface IUserService
 	/// <summary>
 	/// Updates the profile information of a specific user.
 	/// </summary>
-	/// <param name="id">The unique identifier of the user to update.</param>
 	/// <param name="request">The new profile values to update.</param>
 	/// <returns>The updated user profile.</returns>
-	Task<ServiceResult<ProfileResponse>> UpdateUserAsync(Guid id, ProfileUpdateRequest request);
+	Task<ServiceResult<ProfileResponse>> UpdateCurrentUserAsync(ProfileUpdateRequest request);
 
 	/// <summary>
 	/// Confirms a user's email address using a verification token.
@@ -71,6 +70,12 @@ public interface IUserService
 	/// <param name="request">The password reset details.</param>
 	/// <returns>A result indicating success or failure.</returns>
 	Task<ServiceResult<object>> ResetPasswordAsync(Guid id, PasswordResetRequest request);
+
+	/// <summary>
+	/// Deletes the currently authenticated user's account.
+	/// </summary>
+	/// <returns>A result indicating success or failure.</returns>
+	Task<ServiceResult<object>> DeleteCurrentUserAsync();
 
 	/// <summary>
 	/// Permanently deletes a user account.

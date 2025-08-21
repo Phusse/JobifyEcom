@@ -24,6 +24,11 @@ public class ProfileResponse
 	public required string Email { get; set; }
 
 	/// <summary>
+	/// A short biography or description for the user.
+	/// </summary>
+	public required string Bio { get; set; }
+
+	/// <summary>
 	/// The roles assigned to the user.
 	/// </summary>
 	public required List<SystemRole> Roles { get; set; }

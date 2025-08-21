@@ -51,7 +51,6 @@ public static class JwtEventHandlers
 				"Invalid session",
 				"Your session token isn't valid for this action. Please log in again to get the correct token."
 			);
-
 			return;
 		}
 
@@ -62,7 +61,6 @@ public static class JwtEventHandlers
 				"Session not verified",
 				"Your login session could not be verified. Please sign in again."
 			);
-
 			return;
 		}
 
@@ -73,7 +71,6 @@ public static class JwtEventHandlers
 				"Account not confirmed",
 				"We couldn't confirm your account details. Please sign in again."
 			);
-
 			return;
 		}
 
@@ -93,7 +90,7 @@ public static class JwtEventHandlers
 
 		if (isAccountLocked)
 		{
-			FailWithReason(context, "Account locked", "Account is locked. Please contact support for assistance.");
+			FailWithReason(context, "Account locked", "Your account is locked. Please contact support for help unlocking it.");
 		}
 
 		if (dbSecurityStamp is null)
