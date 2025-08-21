@@ -16,16 +16,6 @@ public class CursorPaginationResponse<T>
 	public required bool HasMore { get; set; }
 
 	/// <summary>
-	/// The current page index (starting at 1).
-	/// </summary>
-	public required int CurrentPage { get; set; }
-
-	/// <summary>
-	/// The total number of pages available for this query (respecting any max limit).
-	/// </summary>
-	public int? TotalPages { get; set; }
-
-	/// <summary>
 	/// The list of items for the current page.
 	/// </summary>
 	public required IReadOnlyList<T> Items { get; init; } = [];

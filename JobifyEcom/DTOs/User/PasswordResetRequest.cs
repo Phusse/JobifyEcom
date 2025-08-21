@@ -13,7 +13,7 @@ public class PasswordResetRequest
 	/// to authorize the password reset.
 	/// </summary>
 	[Required(ErrorMessage = "Password reset token is required. Please check your email for the link.")]
-	public string? Token { get; set; }
+	public Guid? Token { get; set; }
 
 	/// <summary>
 	/// The new password the user wishes to set for their account.

@@ -35,6 +35,16 @@ public class User
     public required string PasswordHash { get; set; }
 
     /// <summary>
+    /// Optional token used for password reset.
+    /// </summary>
+    public Guid? PasswordResetToken { get; set; }
+
+    /// <summary>
+    /// Optional expiry date for the password reset token.
+    /// </summary>
+    public DateTime? PasswordResetTokenExpiry { get; set; }
+
+    /// <summary>
     /// A short biography or description for the user.
     /// </summary>
     [StringLength(250)]

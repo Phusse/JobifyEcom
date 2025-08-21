@@ -9,4 +9,9 @@ public class ProfileUpdateRequest
 	/// The new name for the user.
 	/// </summary>
 	public string? Name { get; set; }
+
+	/// <summary>
+	/// The new bio for the user.
+	/// </summary>
+	public string? Bio { get; set; }
 }

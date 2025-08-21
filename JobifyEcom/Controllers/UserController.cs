@@ -1,6 +1,7 @@
 using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.User;
+using JobifyEcom.Enums;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,6 +63,7 @@ public class UserController(IUserService userService) : ControllerBase
 	}
 
 	// PATCH: Lock user
+	[Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
 	[HttpPatch(ApiRoutes.Users.Patch.Lock)]
 	public async Task<IActionResult> LockUser([FromRoute] Guid id)
 	{
@@ -70,6 +72,7 @@ public class UserController(IUserService userService) : ControllerBase
 	}
 
 	// PATCH: Unlock user
+	[Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
 	[HttpPatch(ApiRoutes.Users.Patch.Unlock)]
 	public async Task<IActionResult> UnlockUser([FromRoute] Guid id)
 	{

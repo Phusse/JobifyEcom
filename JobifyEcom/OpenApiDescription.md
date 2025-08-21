@@ -13,7 +13,16 @@ JobifyEcom provides **JWT auth**, user management, worker profiles, job postings
 * Roles: `Worker` needed for some endpoints
 
 **📦 Standard Response**
-`ApiResponse<T>`: `traceId | success | message | errors[] | timestamp | data`
+```json
+{
+	"traceId": "12345",
+	"success": true,
+	"message": "Success",
+	"errors": [],
+	"timestamp": "2023-04-01T12:34:56Z",
+	"data": {}
+}
+```
 
 ---
 

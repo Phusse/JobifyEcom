@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace JobifyEcom.DTOs;
+
+using System.ComponentModel.DataAnnotations;
 
 /// <summary>
 /// Represents a generic paginated request with cursor-based pagination and optional filtering.
@@ -15,15 +15,8 @@ public class CursorPaginationRequest<T>
 	/// <summary>
 	/// The maximum number of items per page. Default is 20.
 	/// </summary>
-	[Range(1, 20)]
+	[Range(1, 50)]
 	public int PageSize { get; set; } = 20;
-
-	/// <summary>
-	/// Maximum number of pages allowed for this query.
-	/// Helps prevent excessive data traversal in one request.
-	/// </summary>
-	[Range(1, 20)]
-	public int MaxPages { get; set; } = 20;
 
 	/// <summary>
 	/// Optional filter object for entity-specific queries.
