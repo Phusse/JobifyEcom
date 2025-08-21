@@ -8,14 +8,14 @@ namespace JobifyEcom.Services;
 
 public class JobService(AppDbContext db) : IJobService
 {
-	public async Task<JobPost> CreateJobAsync(Guid userId, CreateJobDto dto)
+    public async Task<JobPost> CreateJobAsync(Guid userId, CreateJobDto dto)
     {
-        var worker = await db.WorkerProfiles.FirstOrDefaultAsync(w => w.UserId == userId);
-        if (worker == null) throw new Exception("Worker profile not found");
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new Exception("User profile not found");
 
         var job = new JobPost
         {
-            WorkerId = worker.Id,
+            PostedByUserId = user.Id,
             Title = dto.Title,
             Description = dto.Description,
             Price = dto.Price,
@@ -29,13 +29,13 @@ public class JobService(AppDbContext db) : IJobService
 
     public async Task<List<JobPost>> GetAllJobsAsync()
     {
-        return await db.JobPosts.Include(j => j.Worker).ToListAsync();
+        return await db.JobPosts.Include(j => j.PostedBy).ToListAsync();
     }
 
-    public async Task<List<JobPost>> GetJobsByWorkerAsync(Guid workerId)
+    public async Task<List<JobPost>> GetJobsByUserAsync(Guid userId)
     {
         return await db.JobPosts
-            .Where(j => j.WorkerId == workerId)
+            .Where(j => j.PostedByUserId == userId)
             .ToListAsync();
     }
 }

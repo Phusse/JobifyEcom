@@ -3,65 +3,65 @@ using System.ComponentModel.DataAnnotations;
 namespace JobifyEcom.Models;
 
 /// <summary>
-/// Represents a customer-submitted rating for a worker.
+/// Represents a rating given by a <see cref="User"/> (Reviewer) to a <see cref="Models.Worker"/>.
+/// Optionally linked to a specific <see cref="JobPost"/>.
 /// </summary>
 public class Rating
 {
 	/// <summary>
-	/// The unique identifier for the rating.
-	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+	/// The unique identifier for this rating.
+	/// <para>Automatically generated and cannot be modified externally.</para>
 	/// </summary>
 	[Key]
 	public Guid Id { get; private set; } = Guid.NewGuid();
 
 	/// <summary>
-	/// The rating score (e.g., 1–5 stars).
+	/// The score given in this rating, from 1 (lowest) to 5 (highest).
 	/// </summary>
-	[Required]
-	[Range(1, 5)]
+	[Required, Range(1, 5)]
 	public required int Score { get; set; }
 
 	/// <summary>
-	/// Optional feedback from the customer.
+	/// Optional textual comment providing more context about the rating.
 	/// </summary>
 	[StringLength(1000)]
 	public string? Comment { get; set; }
 
 	/// <summary>
-	/// The date and time when the rating was submitted.
-	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+	/// The UTC timestamp when this rating was created.
+	/// <para>Automatically generated and cannot be modified externally.</para>
 	/// </summary>
 	public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
 	/// <summary>
-	/// The ID of the customer who submitted the rating.
+	/// The ID of the user who submitted this rating.
 	/// </summary>
 	[Required]
-	public required Guid CustomerId { get; set; }
+	public Guid ReviewerId { get; set; }
 
 	/// <summary>
-	/// The ID of the worker profile being rated.
+	/// Navigation property to the <see cref="User"/> who submitted this rating.
+	/// </summary>
+	public User? Reviewer { get; set; }
+
+	/// <summary>
+	/// The ID of the <see cref="Models.Worker"/> being rated.
 	/// </summary>
 	[Required]
-	public required Guid WorkerProfileId { get; set; }
+	public Guid WorkerProfileId { get; set; }
 
 	/// <summary>
-	/// The job this rating is associated with.
+	/// Navigation property to the <see cref="Models.Worker"/> being rated.
+	/// </summary>
+	public Worker? Worker { get; set; }
+
+	/// <summary>
+	/// Optional ID of the <see cref="JobPost"/> associated with this rating.
 	/// </summary>
 	public Guid? JobPostId { get; set; }
 
 	/// <summary>
-	/// The customer who submitted the rating.
+	/// Navigation property to the optional <see cref="JobPost"/> associated with this rating.
 	/// </summary>
-	public User? Customer { get; set; }
-
-	/// <summary>
-	/// The worker profile that was rated.
-	/// </summary>
-	public WorkerProfile? WorkerProfile { get; set; }
-
-	/// <summary>
-	/// The job post related to the rating, if any.
-	/// </summary>
-	public JobPost? JobPost { get; set; }
+	public JobPost? Job { get; set; }
 }

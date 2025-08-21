@@ -4,20 +4,20 @@ using JobifyEcom.Enums;
 namespace JobifyEcom.Models;
 
 /// <summary>
-/// Represents a link between a <see cref="Models.Tag"/> and a specific entity (e.g., JobPost, Skill).
-/// Enables polymorphic tagging by storing the entity type and ID.
+/// Represents a link between a <see cref="Models.Tag"/> and a specific entity <see cref="Enums.EntityType"/>.
+/// Supports polymorphic tagging by storing the entity's type and identifier.
 /// </summary>
 public class EntityTag
 {
 	/// <summary>
 	/// The unique identifier for this entity-tag association.
-	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+	/// <para>Automatically generated and cannot be modified externally.</para>
 	/// </summary>
 	[Key]
 	public Guid Id { get; private set; } = Guid.NewGuid();
 
 	/// <summary>
-	/// The foreign key of the associated tag.
+	/// The foreign key referencing the associated <see cref="Models.Tag"/>.
 	/// </summary>
 	[Required]
 	public required Guid TagId { get; set; }
@@ -29,7 +29,7 @@ public class EntityTag
 	public required Guid EntityId { get; set; }
 
 	/// <summary>
-	/// The type of entity that this tag is associated with (e.g., JobPost, Skill).
+	/// The type of entity this tag is associated with <see cref="Enums.EntityType"/>.
 	/// </summary>
 	[Required]
 	public required EntityType EntityType { get; set; }

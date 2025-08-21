@@ -17,7 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// <summary>
     /// Gets or sets the WorkerProfiles table.
     /// </summary>
-    public DbSet<WorkerProfile> WorkerProfiles { get; set; }
+    public DbSet<Worker> Workers { get; set; }
 
     /// <summary>
     /// Gets or sets the Skills table.
@@ -77,31 +77,60 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<User>(entity =>
         {
+            // Convert enum to string
             entity.Property(u => u.StaffRole)
                 .HasConversion<string>();
 
+            // Email must be unique
             entity.HasIndex(u => u.Email)
                 .IsUnique();
+
+            // One-to-one with Workers profile
+            entity.HasOne(u => u.WorkerProfile)
+                .WithOne(w => w.User)
+                .HasForeignKey<Worker>(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Jobs posted by this user
+            entity.HasMany(u => u.JobsPosted)
+                .WithOne(j => j.PostedBy)
+                .HasForeignKey(j => j.PostedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Ratings submitted by this user
+            entity.HasMany(u => u.RatingsSubmitted)
+                .WithOne(r => r.Reviewer)
+                .HasForeignKey(r => r.ReviewerId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
     private static void ConfigureWorkerProfile(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<WorkerProfile>(entity =>
+        modelBuilder.Entity<Worker>(entity =>
         {
+            // One-to-one with User
             entity.HasOne(w => w.User)
                 .WithOne(u => u.WorkerProfile)
-                .HasForeignKey<WorkerProfile>(w => w.UserId)
+                .HasForeignKey<Worker>(w => w.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Skills owned by the worker
             entity.HasMany(w => w.Skills)
-                .WithOne(s => s.WorkerProfile)
-                .HasForeignKey(s => s.WorkerProfileId)
+                .WithOne(s => s.Worker)
+                .HasForeignKey(s => s.WorkerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany(w => w.JobPosts)
-                .WithOne(j => j.Worker)
-                .HasForeignKey(j => j.WorkerId)
+            // Job applications submitted by this worker
+            entity.HasMany(w => w.ApplicationsSubmitted)
+                .WithOne(ja => ja.Applicant)
+                .HasForeignKey(ja => ja.WorkerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Ratings received by this worker
+            entity.HasMany(w => w.RatingsReceived)
+                .WithOne(r => r.Worker)
+                .HasForeignKey(r => r.WorkerProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
@@ -110,13 +139,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<Skill>(entity =>
         {
+            // Convert enum to string
             entity.Property(s => s.Level)
                 .HasConversion<string>();
 
-            entity.HasOne(s => s.WorkerProfile)
+            // One-to-many: Worker owns many skills
+            entity.HasOne(s => s.Worker)
                 .WithMany(w => w.Skills)
-                .HasForeignKey(s => s.WorkerProfileId)
+                .HasForeignKey(s => s.WorkerId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Index for quick lookup by name and level if needed
+            entity.HasIndex(s => new { s.Name, s.WorkerId })
+                .IsUnique();
         });
     }
 
@@ -124,15 +159,30 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<JobPost>(entity =>
         {
+            // Convert JobStatus enum to string
             entity.Property(j => j.Status)
                 .HasConversion<string>();
 
+            // Index on status for filtering
             entity.HasIndex(j => j.Status);
 
-            entity.HasOne(j => j.Worker)
-                .WithMany(w => w.JobPosts)
-                .HasForeignKey(j => j.WorkerId)
+            // Job posted by a User
+            entity.HasOne(j => j.PostedBy)
+                .WithMany(u => u.JobsPosted)
+                .HasForeignKey(j => j.PostedByUserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Applications
+            entity.HasMany(j => j.ApplicationsReceived)
+                .WithOne(ja => ja.Job)
+                .HasForeignKey(ja => ja.JobPostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Ratings related to this job post
+            entity.HasMany(j => j.RatingsReceived)
+                .WithOne(r => r.Job)
+                .HasForeignKey(r => r.JobPostId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
@@ -140,19 +190,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<JobApplication>(entity =>
         {
-            entity.Property(j => j.Status)
+            // Convert JobApplicationStatus enum to string
+            entity.Property(ja => ja.Status)
                 .HasConversion<string>();
 
-            entity.HasIndex(j => j.Status);
+            // Optional index for filtering by status
+            entity.HasIndex(ja => ja.Status);
 
-            entity.HasOne(j => j.Customer)
-                .WithMany()
-                .HasForeignKey(j => j.CustomerId)
+            // Worker who applied
+            entity.HasOne(ja => ja.Applicant)
+                .WithMany(w => w.ApplicationsSubmitted)
+                .HasForeignKey(ja => ja.WorkerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(j => j.JobPost)
-                .WithMany()
-                .HasForeignKey(j => j.JobPostId)
+            // Job post being applied to
+            entity.HasOne(ja => ja.Job)
+                .WithMany(j => j.ApplicationsReceived)
+                .HasForeignKey(ja => ja.JobPostId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
@@ -161,18 +215,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<Rating>(entity =>
         {
-            entity.HasOne(r => r.Customer)
-                .WithMany()
-                .HasForeignKey(r => r.CustomerId)
+            // Customer submitting the rating
+            entity.HasOne(r => r.Reviewer)
+                .WithMany(u => u.RatingsSubmitted)
+                .HasForeignKey(r => r.ReviewerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(r => r.WorkerProfile)
-                .WithMany()
+            // Worker profile being rated
+            entity.HasOne(r => r.Worker)
+                .WithMany(w => w.RatingsReceived)
                 .HasForeignKey(r => r.WorkerProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(r => r.JobPost)
-                .WithMany()
+            // Optional JobPost reference
+            entity.HasOne(r => r.Job)
+                .WithMany(j => j.RatingsReceived)
                 .HasForeignKey(r => r.JobPostId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
@@ -182,31 +239,44 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<Tag>(entity =>
         {
+            // Enforce unique tag names
             entity.HasIndex(t => t.Name).IsUnique();
 
+            // Normalize name to lowercase
             entity.Property(t => t.Name)
                 .IsRequired()
                 .HasMaxLength(100)
                 .HasConversion(
-                    v => v.ToLower(),
-                    v => v
+                    v => v.ToLower(),  // store as lowercase
+                    v => v             // read as-is
                 );
+
+            // Navigation to EntityTags
+            entity.HasMany(t => t.TaggedEntities)
+                .WithOne(et => et.Tag)
+                .HasForeignKey(et => et.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
+
 
     private static void ConfigureEntityTag(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<EntityTag>(entity =>
         {
+            // Convert EntityType enum to string in DB
             entity.Property(e => e.EntityType)
                 .HasConversion<string>();
 
-            entity.HasIndex(e => new { e.TagId, e.EntityId, e.EntityType }).IsUnique();
+            // Ensure uniqueness for a tag on a given entity
+            entity.HasIndex(e => new { e.TagId, e.EntityId, e.EntityType })
+                .IsUnique();
 
+            // Relationship to Tag
             entity.HasOne(e => e.Tag)
-                  .WithMany(t => t.EntityTags)
-                  .HasForeignKey(e => e.TagId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(t => t.TaggedEntities)
+                .HasForeignKey(e => e.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 
@@ -214,16 +284,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<Verification>(entity =>
         {
+            // Convert enum to string
             entity.Property(v => v.Status)
                 .HasConversion<string>();
 
+            // Index for faster lookups by status
             entity.HasIndex(v => v.Status);
 
+            // Composite index to quickly find verification for an entity
             entity.HasIndex(v => new { v.EntityType, v.EntityId });
 
-            entity.HasOne(v => v.ReviewedByUser)
+            // Relation to admin user who reviewed
+            entity.HasOne(v => v.Reviewer)
                 .WithMany()
-                .HasForeignKey(v => v.ReviewedByUserId)
+                .HasForeignKey(v => v.ReviewerId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
     }

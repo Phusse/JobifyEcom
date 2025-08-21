@@ -4,60 +4,69 @@ using JobifyEcom.Enums;
 namespace JobifyEcom.Models;
 
 /// <summary>
-/// Represents a job or service offering created by a worker.
+/// Represents a job posted by a <see cref="User"/>.
+/// Workers can apply to this job, and optionally leave ratings after completion.
 /// </summary>
 public class JobPost
 {
     /// <summary>
-    /// The unique identifier for the job post.
-    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+    /// The unique identifier for this job post.
+	/// <para>Automatically generated and cannot be modified externally.</para>
     /// </summary>
     [Key]
     public Guid Id { get; private set; } = Guid.NewGuid();
 
     /// <summary>
-    /// The ID of the worker who created the job post.
+    /// The ID of the user who posted this job.
     /// </summary>
     [Required]
-    public required Guid WorkerId { get; set; }
+    public Guid PostedByUserId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the <see cref="User"/> who posted this job.
+    /// </summary>
+    public User PostedBy { get; set; } = null!;
 
     /// <summary>
     /// The title of the job post.
+    /// Must be between 5 and 100 characters.
     /// </summary>
-    [Required]
-    [MinLength(5)]
-    [StringLength(100)]
+    [Required, MinLength(5), StringLength(100)]
     public required string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// A detailed description of the job or service.
+    /// The detailed description of the job.
+    /// Must be between 10 and 2000 characters.
     /// </summary>
-    [Required]
-    [MinLength(10)]
-    [StringLength(2000)]
+    [Required, MinLength(10), StringLength(2000)]
     public required string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// The price or cost for the job.
+    /// The price offered for completing the job.
+    /// Must be between 0.01 and 1,000,000.
     /// </summary>
-    [Required]
-    [Range(0.01, 1000000)]
+    [Required, Range(0.01, 1000000)]
     public required decimal Price { get; set; }
 
     /// <summary>
-    /// The current status of the job post (e.g., Available, Booked, Completed).
+    /// The current status of the job <see cref="JobStatus"/>.
     /// </summary>
     [Required]
     public required JobStatus Status { get; set; } = JobStatus.Open;
 
     /// <summary>
-    /// The UTC date and time the job post was created.
-    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+    /// The UTC timestamp when this job was created.
+	/// <para>Automatically generated and cannot be modified externally.</para>
     /// </summary>
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Navigation property to the worker who owns this job post.
+    /// The collection of applications submitted to this job.
     /// </summary>
-    public WorkerProfile? Worker { get; set; }
+    public ICollection<JobApplication> ApplicationsReceived { get; set; } = [];
+
+    /// <summary>
+    /// The collection of ratings received for this job.
+    /// </summary>
+    public ICollection<Rating> RatingsReceived { get; set; } = [];
 }
