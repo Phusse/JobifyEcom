@@ -1,4 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
 using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.User;
@@ -22,7 +21,7 @@ public class UserController(IUserService userService) : ControllerBase
 		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
 	}
 
-	// GET: User by ID
+	[Authorize]
 	[HttpGet(ApiRoutes.Users.Get.ById)]
 	public async Task<IActionResult> GetUserById([FromRoute] Guid id)
 	{
@@ -46,8 +45,8 @@ public class UserController(IUserService userService) : ControllerBase
 		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
 	}
 
-	[HttpGet(ApiRoutes.Users.Patch.ConfirmEmail)]
 	[ApiExplorerSettings(IgnoreApi = true)]
+	[HttpGet(ApiRoutes.Users.Patch.ConfirmEmail)]
 	public async Task<IActionResult> ConfirmEmailLink([FromQuery] EmailConfirmRequest request)
 		=> await ConfirmEmailInternal(request);
 

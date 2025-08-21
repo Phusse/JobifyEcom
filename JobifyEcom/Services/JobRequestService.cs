@@ -7,11 +7,11 @@ namespace JobifyEcom.Services;
 
 public class JobApplicationService(AppDbContext context) : IJobApplicationService
 {
-	public async Task<JobRequestResponseDto> CreateApplicationAsync(RequestJobDto dto)
+    public async Task<JobRequestResponseDto> CreateApplicationAsync(RequestJobDto dto)
     {
         var request = new JobApplication
         {
-            CustomerId = dto.CustomerId,
+            WorkerId = dto.CustomerId,
             JobPostId = dto.JobPostId,
             Status = JobApplicationStatus.Pending,
         };
@@ -22,7 +22,7 @@ public class JobApplicationService(AppDbContext context) : IJobApplicationServic
         return new JobRequestResponseDto
         {
             Id = request.Id,
-            CustomerId = request.CustomerId,
+            CustomerId = request.WorkerId,
             JobPostId = request.JobPostId,
             Status = request.Status,
             DateRequested = request.DateRequested
@@ -37,7 +37,7 @@ public class JobApplicationService(AppDbContext context) : IJobApplicationServic
         return new JobRequestResponseDto
         {
             Id = request.Id,
-            CustomerId = request.CustomerId,
+            CustomerId = request.WorkerId,
             JobPostId = request.JobPostId,
             Status = request.Status,
             DateRequested = request.DateRequested

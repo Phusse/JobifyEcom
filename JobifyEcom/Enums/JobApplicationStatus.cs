@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace JobifyEcom.Enums;
 
 /// <summary>
-/// Represents the status of a job application submitted by a customer for a job post.
+/// Represents the status of a job application submitted by a worker for a job post.
 /// </summary>
 public enum JobApplicationStatus
 {
@@ -14,14 +14,14 @@ public enum JobApplicationStatus
 	Pending,
 
 	/// <summary>
-	/// The application has been accepted by the worker or system.
+	/// The application has been accepted by the customer.
 	/// </summary>
 	[Display(Name = "Accepted")]
 	Accepted,
 
 	/// <summary>
-	/// The application has been rejected by the worker or system.
+	/// The application has been rejected by the customer.
 	/// </summary>
 	[Display(Name = "Rejected")]
-	Rejected
+	Rejected,
 }

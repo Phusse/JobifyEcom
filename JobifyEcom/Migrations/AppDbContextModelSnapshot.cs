@@ -17,7 +17,7 @@ namespace JobifyEcom.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.13")
+                .HasAnnotation("ProductVersion", "8.0.19")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -52,9 +52,6 @@ namespace JobifyEcom.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("char(36)");
-
                     b.Property<DateTime>("DateRequested")
                         .HasColumnType("datetime(6)");
 
@@ -65,13 +62,16 @@ namespace JobifyEcom.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.HasKey("Id");
+                    b.Property<Guid>("WorkerId")
+                        .HasColumnType("char(36)");
 
-                    b.HasIndex("CustomerId");
+                    b.HasKey("Id");
 
                     b.HasIndex("JobPostId");
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("WorkerId");
 
                     b.ToTable("JobApplications");
                 });
@@ -90,6 +90,9 @@ namespace JobifyEcom.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
+                    b.Property<Guid>("PostedByUserId")
+                        .HasColumnType("char(36)");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(65,30)");
 
@@ -102,14 +105,11 @@ namespace JobifyEcom.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<Guid>("WorkerId")
-                        .HasColumnType("char(36)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("Status");
+                    b.HasIndex("PostedByUserId");
 
-                    b.HasIndex("WorkerId");
+                    b.HasIndex("Status");
 
                     b.ToTable("JobPosts");
                 });
@@ -127,10 +127,10 @@ namespace JobifyEcom.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("CustomerId")
+                    b.Property<Guid?>("JobPostId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid?>("JobPostId")
+                    b.Property<Guid>("ReviewerId")
                         .HasColumnType("char(36)");
 
                     b.Property<int>("Score")
@@ -141,9 +141,9 @@ namespace JobifyEcom.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerId");
-
                     b.HasIndex("JobPostId");
+
+                    b.HasIndex("ReviewerId");
 
                     b.HasIndex("WorkerProfileId");
 
@@ -172,7 +172,7 @@ namespace JobifyEcom.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<Guid>("WorkerProfileId")
+                    b.Property<Guid>("WorkerId")
                         .HasColumnType("char(36)");
 
                     b.Property<int>("YearsOfExperience")
@@ -180,7 +180,10 @@ namespace JobifyEcom.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorkerProfileId");
+                    b.HasIndex("WorkerId");
+
+                    b.HasIndex("Name", "WorkerId")
+                        .IsUnique();
 
                     b.ToTable("Skills");
                 });
@@ -209,6 +212,10 @@ namespace JobifyEcom.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -239,12 +246,11 @@ namespace JobifyEcom.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<Guid>("SecurityStamp")
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("StaffRole")
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -272,12 +278,12 @@ namespace JobifyEcom.Migrations
                     b.Property<DateTime?>("ReviewedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid?>("ReviewedByUserId")
-                        .HasColumnType("char(36)");
-
                     b.Property<string>("ReviewerComment")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid?>("ReviewerId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -285,7 +291,7 @@ namespace JobifyEcom.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReviewedByUserId");
+                    b.HasIndex("ReviewerId");
 
                     b.HasIndex("Status");
 
@@ -294,28 +300,14 @@ namespace JobifyEcom.Migrations
                     b.ToTable("Verifications");
                 });
 
-            modelBuilder.Entity("JobifyEcom.Models.WorkerProfile", b =>
+            modelBuilder.Entity("JobifyEcom.Models.Worker", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("Bio")
-                        .HasMaxLength(250)
-                        .HasColumnType("varchar(250)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");
@@ -325,13 +317,13 @@ namespace JobifyEcom.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("WorkerProfiles");
+                    b.ToTable("Workers");
                 });
 
             modelBuilder.Entity("JobifyEcom.Models.EntityTag", b =>
                 {
                     b.HasOne("JobifyEcom.Models.Tag", "Tag")
-                        .WithMany("EntityTags")
+                        .WithMany("TaggedEntities")
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -341,27 +333,64 @@ namespace JobifyEcom.Migrations
 
             modelBuilder.Entity("JobifyEcom.Models.JobApplication", b =>
                 {
-                    b.HasOne("JobifyEcom.Models.User", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("JobifyEcom.Models.JobPost", "JobPost")
-                        .WithMany()
+                    b.HasOne("JobifyEcom.Models.JobPost", "Job")
+                        .WithMany("ApplicationsReceived")
                         .HasForeignKey("JobPostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Customer");
+                    b.HasOne("JobifyEcom.Models.Worker", "Applicant")
+                        .WithMany("ApplicationsSubmitted")
+                        .HasForeignKey("WorkerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("JobPost");
+                    b.Navigation("Applicant");
+
+                    b.Navigation("Job");
                 });
 
             modelBuilder.Entity("JobifyEcom.Models.JobPost", b =>
                 {
-                    b.HasOne("JobifyEcom.Models.WorkerProfile", "Worker")
-                        .WithMany("JobPosts")
+                    b.HasOne("JobifyEcom.Models.User", "PostedBy")
+                        .WithMany("JobsPosted")
+                        .HasForeignKey("PostedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PostedBy");
+                });
+
+            modelBuilder.Entity("JobifyEcom.Models.Rating", b =>
+                {
+                    b.HasOne("JobifyEcom.Models.JobPost", "Job")
+                        .WithMany("RatingsReceived")
+                        .HasForeignKey("JobPostId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("JobifyEcom.Models.User", "Reviewer")
+                        .WithMany("RatingsSubmitted")
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JobifyEcom.Models.Worker", "Worker")
+                        .WithMany("RatingsReceived")
+                        .HasForeignKey("WorkerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Job");
+
+                    b.Navigation("Reviewer");
+
+                    b.Navigation("Worker");
+                });
+
+            modelBuilder.Entity("JobifyEcom.Models.Skill", b =>
+                {
+                    b.HasOne("JobifyEcom.Models.Worker", "Worker")
+                        .WithMany("Skills")
                         .HasForeignKey("WorkerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -369,77 +398,53 @@ namespace JobifyEcom.Migrations
                     b.Navigation("Worker");
                 });
 
-            modelBuilder.Entity("JobifyEcom.Models.Rating", b =>
-                {
-                    b.HasOne("JobifyEcom.Models.User", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("JobifyEcom.Models.JobPost", "JobPost")
-                        .WithMany()
-                        .HasForeignKey("JobPostId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("JobifyEcom.Models.WorkerProfile", "WorkerProfile")
-                        .WithMany()
-                        .HasForeignKey("WorkerProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("JobPost");
-
-                    b.Navigation("WorkerProfile");
-                });
-
-            modelBuilder.Entity("JobifyEcom.Models.Skill", b =>
-                {
-                    b.HasOne("JobifyEcom.Models.WorkerProfile", "WorkerProfile")
-                        .WithMany("Skills")
-                        .HasForeignKey("WorkerProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("WorkerProfile");
-                });
-
             modelBuilder.Entity("JobifyEcom.Models.Verification", b =>
                 {
-                    b.HasOne("JobifyEcom.Models.User", "ReviewedByUser")
+                    b.HasOne("JobifyEcom.Models.User", "Reviewer")
                         .WithMany()
-                        .HasForeignKey("ReviewedByUserId")
+                        .HasForeignKey("ReviewerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("ReviewedByUser");
+                    b.Navigation("Reviewer");
                 });
 
-            modelBuilder.Entity("JobifyEcom.Models.WorkerProfile", b =>
+            modelBuilder.Entity("JobifyEcom.Models.Worker", b =>
                 {
                     b.HasOne("JobifyEcom.Models.User", "User")
                         .WithOne("WorkerProfile")
-                        .HasForeignKey("JobifyEcom.Models.WorkerProfile", "UserId")
+                        .HasForeignKey("JobifyEcom.Models.Worker", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("JobifyEcom.Models.JobPost", b =>
+                {
+                    b.Navigation("ApplicationsReceived");
+
+                    b.Navigation("RatingsReceived");
+                });
+
             modelBuilder.Entity("JobifyEcom.Models.Tag", b =>
                 {
-                    b.Navigation("EntityTags");
+                    b.Navigation("TaggedEntities");
                 });
 
             modelBuilder.Entity("JobifyEcom.Models.User", b =>
                 {
+                    b.Navigation("JobsPosted");
+
+                    b.Navigation("RatingsSubmitted");
+
                     b.Navigation("WorkerProfile");
                 });
 
-            modelBuilder.Entity("JobifyEcom.Models.WorkerProfile", b =>
+            modelBuilder.Entity("JobifyEcom.Models.Worker", b =>
                 {
-                    b.Navigation("JobPosts");
+                    b.Navigation("ApplicationsSubmitted");
+
+                    b.Navigation("RatingsReceived");
 
                     b.Navigation("Skills");
                 });

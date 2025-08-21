@@ -4,7 +4,6 @@ using JobifyEcom.Contracts;
 using JobifyEcom.DTOs.Auth;
 using JobifyEcom.DTOs;
 using JobifyEcom.Services;
-using JobifyEcom.Extensions;
 
 namespace JobifyEcom.Controllers;
 

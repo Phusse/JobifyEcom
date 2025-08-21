@@ -48,7 +48,7 @@ public class JobController(IJobService jobService) : ControllerBase
         try
         {
             var userId = GetUserId();
-            var jobs = await jobService.GetJobsByWorkerAsync(userId);
+            var jobs = await jobService.GetJobsByUserAsync(userId);
             return Ok(ApiResponse<object>.Ok(jobs, "Your job posts"));
         }
         catch (Exception ex)

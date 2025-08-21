@@ -1,3 +1,4 @@
+using JobifyEcom.Enums;
 using JobifyEcom.Extensions;
 using JobifyEcom.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -50,14 +51,18 @@ public class JwtTokenService(IConfiguration config)
 			throw new InvalidOperationException("JWT configuration is missing or incomplete.");
 		}
 
-		Claim[] claims =
+		List<Claim> claims =
 		[
 			new Claim(AppClaimTypes.UserId, user.Id.ToString()),
 			new Claim(AppClaimTypes.Email, user.Email),
-			new Claim(AppClaimTypes.Role, user.Role.ToString()),
 			new Claim(AppClaimTypes.SecurityStamp, user.SecurityStamp.ToString()),
 			new Claim(AppClaimTypes.TokenType, tokenType.ToString()),
 		];
+
+		foreach (SystemRole role in user.GetUserRoles())
+		{
+			claims.Add(new Claim(AppClaimTypes.Role, role.ToString()));
+		}
 
 		SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(secretKey));
 		SigningCredentials creds = new(key, SecurityAlgorithms.HmacSha256);

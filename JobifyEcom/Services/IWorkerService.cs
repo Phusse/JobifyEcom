@@ -5,7 +5,7 @@ namespace JobifyEcom.Services;
 
 public interface IWorkerService
 {
-    Task<WorkerProfile> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto);
-    Task<WorkerProfile?> GetMyProfileAsync(Guid userId);
+    Task<Worker> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto);
+    Task<Worker?> GetMyProfileAsync(Guid userId);
 
 }
