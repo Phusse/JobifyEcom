@@ -143,7 +143,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         return ServiceResult<object>.Create(null, "You have been signed out.");
     }
 
-    public async Task<ServiceResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
+    public async Task<ServiceResult<object>> RegisterAsync(RegisterRequest request)
     {
         string normalizedEmail = NormalizeEmail(request.Email);
 
@@ -172,15 +172,13 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         BuildConfirmationLink(user.Email, confirmationToken, out string confirmationLink, out List<string>? warnings);
 
-        RegisterResponse response = new()
-        {
-            ConfirmationLink = confirmationLink
-        };
-
+        // TODO: Implement email sending
         warnings ??= ["Email sending is not yet available. For now, the confirmation link is included in the response."];
 
-        return ServiceResult<RegisterResponse>.Create(
-            response,
+        return ServiceResult<object>.Create(new
+        {
+            ConfirmationLink = confirmationLink
+        },
             "Registration successful! Please check your email for a confirmation link to activate your account.",
             warnings
         );

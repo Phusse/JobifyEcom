@@ -77,11 +77,21 @@ public static class JwtEventHandlers
 		var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
 
 		User? user = await db.Users.AsNoTracking()
+			.Include(u => u.WorkerProfile)
 			.FirstOrDefaultAsync(u => u.Id == userId);
 
 		if (user is null)
 		{
 			FailWithReason(context, "Account not found", "No user found for the provided credentials.");
+			return;
+		}
+
+		IEnumerable<string> userRoles = user.GetUserRoles().Select(r => r.ToString());
+		IReadOnlyList<string>? tokenRoles = context.Principal?.GetRoles();
+
+		if (!ValidateRoles(userRoles, tokenRoles, out string? error))
+		{
+			FailWithReason(context, "Role mismatch", error);
 			return;
 		}
 
@@ -91,6 +101,7 @@ public static class JwtEventHandlers
 		if (isAccountLocked)
 		{
 			FailWithReason(context, "Account locked", "Your account is locked. Please contact support for help unlocking it.");
+			return;
 		}
 
 		if (dbSecurityStamp is null)
@@ -108,6 +119,7 @@ public static class JwtEventHandlers
 		if (!string.Equals(dbSecurityStamp.Value.ToString(), securityStampClaim, StringComparison.Ordinal))
 		{
 			FailWithReason(context, "Session expired", "Your login session is no longer valid. Please sign in again.");
+			return;
 		}
 	}
 
@@ -172,6 +184,30 @@ public static class JwtEventHandlers
 		string json = JsonSerializer.Serialize(payload, options);
 
 		return response.WriteAsync(json);
+	}
+
+	private static bool ValidateRoles(IEnumerable<string> dbRoles, IEnumerable<string>? tokenRoles, out string? errorMessage)
+	{
+		errorMessage = null;
+
+		if (tokenRoles is null)
+		{
+			errorMessage = "Unable to verify your account roles. Please sign in again.";
+			return false;
+		}
+
+		List<string> dbRolesList = [.. dbRoles];
+		List<string> tokenRolesList = [.. tokenRoles];
+
+		// Must match count + content (strict equality, case-insensitive)
+		if (dbRolesList.Count != tokenRolesList.Count ||
+			!dbRolesList.All(r => tokenRolesList.Contains(r, StringComparer.OrdinalIgnoreCase)))
+		{
+			errorMessage = "Your account roles have changed. Please refresh your session.";
+			return false;
+		}
+
+		return true;
 	}
 
 	#endregion

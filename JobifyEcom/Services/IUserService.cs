@@ -19,7 +19,7 @@ public interface IUserService
 	/// </summary>
 	/// <param name="id">The unique identifier of the user.</param>
 	/// <returns>A service result containing the user's public profile.</returns>
-	Task<ServiceResult<ProfileResponse>> GetUserByIdAsync(Guid id);
+	Task<ServiceResult<object>> GetUserByIdAsync(Guid id);
 
 	/// <summary>
 	/// Searches and lists users using pagination and optional filtering.

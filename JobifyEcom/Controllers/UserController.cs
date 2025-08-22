@@ -27,7 +27,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> GetUserById([FromRoute] Guid id)
 	{
 		var result = await _userService.GetUserByIdAsync(id);
-		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
 	}
 
 	// GET: List/Search users

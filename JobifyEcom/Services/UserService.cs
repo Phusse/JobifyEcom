@@ -5,6 +5,7 @@ using JobifyEcom.DTOs.User;
 using JobifyEcom.Enums;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Extensions;
+using JobifyEcom.Helpers;
 using JobifyEcom.Models;
 using JobifyEcom.Security;
 using Microsoft.EntityFrameworkCore;
@@ -16,10 +17,13 @@ namespace JobifyEcom.Services;
 /// </summary>
 /// <param name="db">The database context.</param>
 /// <param name="httpContextAccessor">The HTTP context accessor.</param>
-internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IUserService
+/// <param name="cursorProtector">The cursor protector.</param>
+internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAccessor, CursorProtector cursorProtector) : IUserService
 {
 	private readonly AppDbContext _db = db;
 	private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+	private readonly CursorProtector _cursorProtector = cursorProtector;
+	private const int MaxCursorDepth = 20;
 
 	public async Task<ServiceResult<ProfileResponse>> GetCurrentUserAsync()
 	{
@@ -43,34 +47,54 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 				["We couldn't find your account. Please contact support if this issue continues."]
 			);
 
-		return ServiceResult<ProfileResponse>.Create(new ProfileResponse
+		ProfileResponse response = new()
 		{
 			Id = user.Id,
 			Name = user.Name,
 			Email = user.Email,
 			Bio = user.Bio ?? string.Empty,
 			Roles = user.GetUserRoles(),
-			CreatedAt = user.CreatedAt,
-		}, "User retrieved successfully.");
+			CreatedAt = user.CreatedAt
+		};
+
+		return ServiceResult<ProfileResponse>.Create(response, "User retrieved successfully.");
 	}
 
-	public async Task<ServiceResult<ProfileResponse>> GetUserByIdAsync(Guid userId)
+	public async Task<ServiceResult<object>> GetUserByIdAsync(Guid userId)
 	{
 		User? user = await _db.Users.FindAsync(userId)
-			?? throw new NotFoundException(
-				"User not found.",
-				["No user exists with the specified ID."]
-			);
+			?? throw new NotFoundException("User not found.", ["No user exists with the specified ID."]);
 
-		return ServiceResult<ProfileResponse>.Create(new ProfileResponse
+		ClaimsPrincipal currentUser = _httpContextAccessor.HttpContext?.User
+			?? throw new UnauthorizedException("Authentication required.", ["You must be signed in."]);
+
+		IReadOnlyList<string> roles = currentUser.GetRoles();
+		bool isAdmin = roles.Contains(SystemRole.Admin.ToString()) || roles.Contains(SystemRole.SuperAdmin.ToString());
+
+		ProfileResponse response = isAdmin switch
 		{
-			Id = user.Id,
-			Name = user.Name,
-			Email = user.Email,
-			Bio = user.Bio ?? string.Empty,
-			Roles = user.GetUserRoles(),
-			CreatedAt = user.CreatedAt,
-		}, "User retrieved successfully.");
+			true => new AdminProfileResponse
+			{
+				Id = user.Id,
+				Name = user.Name,
+				Email = user.Email,
+				Bio = user.Bio ?? string.Empty,
+				Roles = user.GetUserRoles(),
+				CreatedAt = user.CreatedAt,
+				IsLocked = user.IsLocked,
+			},
+			_ => new ProfileResponse
+			{
+				Id = user.Id,
+				Name = user.Name,
+				Email = user.Email,
+				Bio = user.Bio ?? string.Empty,
+				Roles = user.GetUserRoles(),
+				CreatedAt = user.CreatedAt,
+			}
+		};
+
+		return ServiceResult<object>.Create(response, "User retrieved successfully.");
 	}
 
 	public async Task<ServiceResult<object>> ConfirmEmailAsync(EmailConfirmRequest request)
@@ -209,15 +233,19 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		user.PasswordResetToken = Guid.NewGuid();
 		user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
 		user.UpdatedAt = DateTime.UtcNow;
-
 		await _db.SaveChangesAsync();
 
 		// TODO: Email service to send token to user.Email and return in response
+		List<string> warnings =
+		[
+			"Email sending is not yet implemented. For now, the reset token and expiry are returned in the response."
+		];
+
 		return ServiceResult<object>.Create(new
 		{
 			resetToken = user.PasswordResetToken,
 			resetTokenExpiry = user.PasswordResetTokenExpiry
-		}, "A password reset link has been sent to your email address.");
+		}, "A password reset link has been sent to your email address.", warnings);
 	}
 
 	public async Task<ServiceResult<object>> ResetPasswordAsync(Guid id, PasswordResetRequest request)
@@ -245,73 +273,153 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		user.PasswordResetTokenExpiry = null;
 		user.SecurityStamp = Guid.Empty;
 		user.UpdatedAt = DateTime.UtcNow;
-
 		await _db.SaveChangesAsync();
 
 		return ServiceResult<object>.Create(null, "Your password has been updated. You can now sign in with your new password.");
 	}
 
-	public async Task<ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>>> SearchUsersAsync(
-		CursorPaginationRequest<ProfileFilterRequest> request)
+	public async Task<ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>>> SearchUsersAsync(CursorPaginationRequest<ProfileFilterRequest> request)
 	{
-		IQueryable<User> query = _db.Users.AsNoTracking();
+		CursorState? cursorState = null;
+		CursorPaginationResponse<ProfileSummaryResponse> response;
 
-		if (!string.IsNullOrWhiteSpace(request.Filter?.SearchTerm))
-		{
-			string search = request.Filter.SearchTerm.Trim().ToLower();
-			query = query.Where(u =>
-				u.Name.ToLower().Contains(search) ||
-				u.Email.ToLower().Contains(search)
-			);
-		}
-
-		// Sorting
-		string sortBy = request.Filter?.SortBy?.ToLower() ?? "createdat";
-		bool descending = request.Filter?.SortDescending ?? false;
-
-		query = sortBy switch
-		{
-			"name" => descending ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
-			"id" => descending ? query.OrderByDescending(u => u.Id) : query.OrderBy(u => u.Id),
-			_ => descending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
-		};
-
-		// Cursor
+		// If cursor provided, decode it and use its state
 		if (!string.IsNullOrEmpty(request.Cursor))
 		{
-			if (DateTime.TryParse(request.Cursor, out DateTime cursorValue))
+			cursorState = _cursorProtector.Decode(request.Cursor);
+
+			// Stop if max depth reached
+			if (cursorState.Depth >= MaxCursorDepth)
 			{
-				if (descending)
+				response = new CursorPaginationResponse<ProfileSummaryResponse>()
 				{
-					query = query.Where(u => u.CreatedAt < cursorValue);
+					NextCursor = null,
+					HasMore = false,
+					Items = [],
+				};
+
+				return ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>>.Create(response, "No more results.");
+			}
+
+			request.Filter = cursorState.Filter;
+		}
+
+		IQueryable<User> query = _db.Users.AsNoTracking();
+
+		// Apply Search
+		if (!string.IsNullOrWhiteSpace(request.Filter?.SearchTerm))
+		{
+			string search = request.Filter.SearchTerm.Trim();
+			UserSearchField searchBy = request.Filter.SearchBy;
+
+			// Determine search field
+			if (searchBy == UserSearchField.Auto)
+			{
+				if (Guid.TryParse(search, out _))
+				{
+					searchBy = UserSearchField.Id;
+				}
+				else if (IsValidEmail(search))
+				{
+					searchBy = UserSearchField.Email;
 				}
 				else
 				{
-					query = query.Where(u => u.CreatedAt > cursorValue);
+					searchBy = UserSearchField.Name;
 				}
+			}
+
+			query = searchBy switch
+			{
+				UserSearchField.Id => Guid.TryParse(search, out var guid)
+					? query.Where(u => u.Id == guid)
+					: query.Where(u => false),
+
+				UserSearchField.Email => query
+					.Where(u => u.Email.ToLower() == search.ToLower()),
+
+				UserSearchField.Name => query
+					.Where(u => u.Name.ToLower().Contains(search.ToLower())),
+
+				_ => query,
+			};
+		}
+
+		// Apply Sorting
+		bool descending = request.Filter?.SortDescending ?? false;
+		query = request.Filter?.SortBy switch
+		{
+			UserSortField.Name => descending
+				? query.OrderByDescending(u => u.Name).ThenByDescending(u => u.Id)
+				: query.OrderBy(u => u.Name).ThenBy(u => u.Id),
+
+			UserSortField.Id => descending
+				? query.OrderByDescending(u => u.Id)
+				: query.OrderBy(u => u.Id),
+
+			_ => descending
+				? query.OrderByDescending(u => u.CreatedAt).ThenByDescending(u => u.Id)
+				: query.OrderBy(u => u.CreatedAt).ThenBy(u => u.Id),
+		};
+
+		// Apply cursor position (if any)
+		if (cursorState is not null)
+		{
+			CursorState last = cursorState;
+
+			if (descending)
+			{
+				query = query.Where(u =>
+					(u.CreatedAt < last.LastCreatedAt) ||
+					(u.CreatedAt == last.LastCreatedAt && u.Id.CompareTo(last.LastId) < 0));
+			}
+			else
+			{
+				query = query.Where(u =>
+					(u.CreatedAt > last.LastCreatedAt) ||
+					(u.CreatedAt == last.LastCreatedAt && u.Id.CompareTo(last.LastId) > 0));
 			}
 		}
 
-		// Fetch page
+		// Fetch Page
 		List<User> users = await query.Take(request.PageSize).ToListAsync();
 
-		// Map to DTO
-		List<ProfileSummaryResponse> items = users.Select(u => new ProfileSummaryResponse
+		List<ProfileSummaryResponse> items = [.. users.Select(u => new ProfileSummaryResponse
 		{
 			Id = u.Id,
 			Name = u.Name,
-		}).ToList();
+		})];
 
-		// Compute next cursor
-		string? nextCursor = users.Count == request.PageSize
-			? users.Last().CreatedAt.ToString("O")
-			: null;
+		// Build Next Cursor
+		string? nextCursor = null;
+		bool hasMore = false;
 
-		CursorPaginationResponse<ProfileSummaryResponse> response = new()
+		if (users.Count == request.PageSize)
 		{
-			Items = items,
+			User lastUser = users.Last();
+
+			CursorState nextState = new()
+			{
+				LastCreatedAt = lastUser.CreatedAt,
+				LastId = lastUser.Id,
+				SortBy = request.Filter?.SortBy ?? UserSortField.CreatedAt,
+				SortDescending = request.Filter?.SortDescending ?? false,
+				Filter = request.Filter ?? new ProfileFilterRequest(),
+				Depth = (cursorState?.Depth ?? 0) + 1
+			};
+
+			if (nextState.Depth < MaxCursorDepth)
+			{
+				nextCursor = _cursorProtector.Encode(nextState);
+				hasMore = true;
+			}
+		}
+
+		response = new CursorPaginationResponse<ProfileSummaryResponse>()
+		{
 			NextCursor = nextCursor,
-			HasMore = nextCursor is not null
+			HasMore = hasMore,
+			Items = items,
 		};
 
 		return ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>>.Create(response, "Users found.");
@@ -391,7 +499,6 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		}, "User profile updated successfully.");
 	}
 
-	// Add this private helper to centralize permission checks
 	private static void EnsureCanModifyUser(User targetUser, ClaimsPrincipal currentUserPrincipal)
 	{
 		Guid currentUserId = currentUserPrincipal.GetUserId()
@@ -439,5 +546,15 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 				["Only SuperAdmins can modify SuperAdmin accounts."]
 			);
 		}
+	}
+
+	private static bool IsValidEmail(string email)
+	{
+		try
+		{
+			var addr = new System.Net.Mail.MailAddress(email);
+			return addr.Address == email;
+		}
+		catch { return false; }
 	}
 }
