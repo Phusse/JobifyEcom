@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobifyEcom.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250821165123_UserPassword")]
-    partial class UserPassword
+    [Migration("20250822164024_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
