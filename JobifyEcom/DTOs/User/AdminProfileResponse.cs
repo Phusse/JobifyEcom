@@ -9,27 +9,22 @@ namespace JobifyEcom.DTOs.User;
 public class AdminProfileResponse : ProfileResponse
 {
 	/// <summary>
-	/// Indicates whether the user's email has been confirmed.
+	/// Indicates whether the user's email has been confirmed. (Admin only).
 	/// </summary>
-	public bool IsEmailConfirmed { get; set; }
+	public required bool IsEmailConfirmed { get; set; }
 
 	/// <summary>
-	/// Indicates whether the user account is currently locked.
+	/// Indicates whether the user account is currently locked. (Admin only).
 	/// </summary>
-	public bool IsLocked { get; set; }
+	public required bool IsLocked { get; set; }
 
 	/// <summary>
-	/// The UTC datetime when the account was locked, if applicable.
+	/// The UTC datetime when the account was locked, if applicable. (Admin only).
 	/// </summary>
-	public DateTime? LockedAt { get; set; }
+	public required DateTime? LockedAt { get; set; }
 
 	/// <summary>
-	/// The UTC datetime when the user was last updated.
+	/// The UTC datetime when the user was last updated. (Admin only).
 	/// </summary>
-	public DateTime UpdatedAt { get; set; }
-
-	/// <summary>
-	/// Whether the user has a worker profile.
-	/// </summary>
-	public bool IsWorker { get; set; }
+	public required DateTime UpdatedAt { get; set; }
 }

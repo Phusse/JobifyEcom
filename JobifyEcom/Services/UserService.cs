@@ -81,7 +81,10 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 				Bio = user.Bio ?? string.Empty,
 				Roles = user.GetUserRoles(),
 				CreatedAt = user.CreatedAt,
+				IsEmailConfirmed = user.IsEmailConfirmed,
 				IsLocked = user.IsLocked,
+				LockedAt = user.LockedAt,
+				UpdatedAt = user.UpdatedAt,
 			},
 			_ => new ProfileResponse
 			{
