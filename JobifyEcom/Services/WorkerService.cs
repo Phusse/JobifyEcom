@@ -1,26 +1,28 @@
 using JobifyEcom.Data;
-using JobifyEcom.Models;
 using JobifyEcom.DTOs;
-using Microsoft.EntityFrameworkCore;
+using JobifyEcom.DTOs.Worker;
 
 namespace JobifyEcom.Services;
 
-public class WorkerService(AppDbContext db) : IWorkerService
+public class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IWorkerService
 {
-    public async Task<Worker> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto)
-    {
-        if (await db.Workers.AnyAsync(w => w.UserId == userId))
-            throw new Exception("Profile already exists");
+	public Task<ServiceResult<object>> CreateProfileAsync()
+	{
+		throw new NotImplementedException();
+	}
 
-        var profile = new Worker();
+	public Task<ServiceResult<object>> DeleteProfileAsync()
+	{
+		throw new NotImplementedException();
+	}
 
-        db.Workers.Add(profile);
-        await db.SaveChangesAsync();
-        return profile;
-    }
+	public Task<ServiceResult<ProfileResponse>> GetMyProfileAsync()
+	{
+		throw new NotImplementedException();
+	}
 
-    public async Task<Worker?> GetMyProfileAsync(Guid userId)
-    {
-        return await db.Workers.FirstOrDefaultAsync(p => p.UserId == userId);
-    }
+	public Task<ServiceResult<ProfileResponse>> GetProfileByIdAsync(Guid workerId)
+	{
+		throw new NotImplementedException();
+	}
 }

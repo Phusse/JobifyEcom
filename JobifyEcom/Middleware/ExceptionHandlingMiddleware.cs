@@ -56,7 +56,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 		if (ex is AppException appEx)
 		{
 			context.Response.StatusCode = appEx.StatusCode;
-			
+
 			// Show the developer message in development, otherwise just the user-friendly errors
 			response = ApiResponse<object>.Fail(
 				null,

@@ -1,52 +1,39 @@
+using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
+using JobifyEcom.DTOs.Worker;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace JobifyEcom.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
 public class WorkerController(IWorkerService workerService) : ControllerBase
 {
-    [HttpPost("profile")]
-    public async Task<IActionResult> CreateProfile(CreateWorkerProfileDto dto)
+    [HttpPost(ApiRoutes.Worker.Post.CreateProfile)]
+    public async Task<IActionResult> CreateProfile()
     {
-        try
-        {
-            var userId = GetUserId();
-            var profile = await workerService.CreateProfileAsync(userId, dto);
-            return Ok(ApiResponse<object>.Ok(profile, "Worker profile created successfully."));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<object>.Fail(null, null, [ex.Message]));
-        }
+        ServiceResult<object> result = await workerService.CreateProfileAsync();
+        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 
-    [HttpGet("profiledetails")]
-    public async Task<IActionResult> GetProfile()
+    [HttpGet(ApiRoutes.Worker.Get.Me)]
+    public async Task<IActionResult> GetMyProfile()
     {
-        try
-        {
-            var userId = GetUserId();
-            var profile = await workerService.GetMyProfileAsync(userId);
-
-            if (profile == null)
-                return NotFound(ApiResponse<object>.Fail(null, "No profile found."));
-
-            return Ok(ApiResponse<object>.Ok(profile, "Worker profile retrived."));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<object>.Fail(null, null, [ex.Message]));
-        }
+        ServiceResult<ProfileResponse> result = await workerService.GetMyProfileAsync();
+        return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
     }
 
-    private Guid GetUserId()
+    [HttpGet(ApiRoutes.Worker.Get.ById)]
+    public async Task<IActionResult> GetProfileById([FromRoute] Guid workerId)
     {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(claim)) throw new Exception("Invalid token. User ID not found.");
-        return Guid.Parse(claim);
+        ServiceResult<ProfileResponse> result = await workerService.GetProfileByIdAsync(workerId);
+        return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
+    }
+
+    [HttpDelete(ApiRoutes.Worker.Delete.Profile)]
+    public async Task<IActionResult> DeleteProfile()
+    {
+        ServiceResult<object> result = await workerService.DeleteProfileAsync();
+        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 }

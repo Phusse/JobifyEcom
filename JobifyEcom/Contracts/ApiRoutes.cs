@@ -94,4 +94,36 @@ public static class ApiRoutes
             public const string ById = $"{Base}/{{id}}";
         }
     }
+
+    /// <summary>
+    /// Routes related to Worker operations.
+    /// </summary>
+    public static class Worker
+    {
+        private const string Base = $"{Root}/{Version}/worker";
+
+        /// <summary>GET endpoints for Worker.</summary>
+        public static class Get
+        {
+            /// <summary>Get current authenticated worker profile.</summary>
+            public const string Me = $"{Base}/me";
+
+            /// <summary>Get worker profile by ID (public view).</summary>
+            public const string ById = $"{Base}/{{id}}";
+        }
+
+        /// <summary>POST endpoints for Worker.</summary>
+        public static class Post
+        {
+            /// <summary>Create a worker profile for the current user.</summary>
+            public const string CreateProfile = $"{Base}/me/create";
+        }
+
+        /// <summary>DELETE endpoints for Workers.</summary>
+        public static class Delete
+        {
+            /// <summary>Delete the current worker profile.</summary>
+            public const string Profile = $"{Base}/me/delete";
+        }
+    }
 }
