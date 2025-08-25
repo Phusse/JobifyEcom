@@ -1,5 +1,3 @@
-using JobifyEcom.Enums;
-
 namespace JobifyEcom.DTOs.User;
 
 /// <summary>

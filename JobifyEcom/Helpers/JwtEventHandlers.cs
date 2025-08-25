@@ -18,6 +18,7 @@ public static class JwtEventHandlers
 {
 	private const string AuthMessageKey = "AuthMessage";
 	private const string AuthErrorKey = "AuthError";
+	private const string AuthStatusCodeKey = "AuthStatusCode";
 
 	/// <summary>
 	/// Creates a <see cref="JwtBearerEvents"/> instance configured with:
@@ -91,7 +92,7 @@ public static class JwtEventHandlers
 
 		if (!ValidateRoles(userRoles, tokenRoles, out string? error))
 		{
-			FailWithReason(context, "Role mismatch", error);
+			FailWithReason(context, "Role mismatch", error, StatusCodes.Status403Forbidden);
 			return;
 		}
 
@@ -129,10 +130,13 @@ public static class JwtEventHandlers
 
 		string? userMessage = context.HttpContext.Items[AuthMessageKey] as string;
 		string? errorReason = context.HttpContext.Items[AuthErrorKey] as string;
+		int statusCode = context.HttpContext.Items[AuthStatusCodeKey] is int code && code >= 400 && code < 600
+			? code
+			: StatusCodes.Status401Unauthorized;
 
 		return WriteJsonErrorAsync(
 			context.Response,
-			StatusCodes.Status401Unauthorized,
+			statusCode,
 			userMessage ?? "You need to be signed in to access this feature.",
 			errorReason is not null ? [errorReason] : null,
 			jsonOptions
@@ -161,7 +165,7 @@ public static class JwtEventHandlers
 		tokenType = principal?.GetTokenType();
 	}
 
-	private static void FailWithReason(TokenValidatedContext context, string? message = null, string? reason = null)
+	private static void FailWithReason(TokenValidatedContext context, string? message = null, string? reason = null, int statusCode = StatusCodes.Status401Unauthorized)
 	{
 		context.HttpContext.Items[AuthMessageKey] = string.IsNullOrWhiteSpace(message)
 			? "Your session is no longer valid. Please sign in again."
@@ -172,6 +176,7 @@ public static class JwtEventHandlers
 			: reason;
 
 		context.HttpContext.Items[AuthErrorKey] = failReason;
+		context.HttpContext.Items[AuthStatusCodeKey] = statusCode;
 		context.Fail(failReason);
 	}
 
