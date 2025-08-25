@@ -2,10 +2,12 @@ using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Worker;
 using JobifyEcom.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobifyEcom.Controllers;
 
+[Authorize]
 [ApiController]
 public class WorkerController(IWorkerService workerService) : ControllerBase
 {
@@ -20,13 +22,6 @@ public class WorkerController(IWorkerService workerService) : ControllerBase
     public async Task<IActionResult> GetMyProfile()
     {
         ServiceResult<ProfileResponse> result = await workerService.GetMyProfileAsync();
-        return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
-    }
-
-    [HttpGet(ApiRoutes.Worker.Get.ById)]
-    public async Task<IActionResult> GetProfileById([FromRoute] Guid workerId)
-    {
-        ServiceResult<ProfileResponse> result = await workerService.GetProfileByIdAsync(workerId);
         return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
     }
 

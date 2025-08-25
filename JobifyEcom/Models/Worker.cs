@@ -20,7 +20,7 @@ public class Worker
     /// The foreign key linking this worker profile to the <see cref="Models.User"/> account.
     /// </summary>
     [Required]
-    public Guid UserId { get; set; }
+    public required Guid UserId { get; set; }
 
     /// <summary>
     /// Navigation property to the associated <see cref="Models.User"/> account.

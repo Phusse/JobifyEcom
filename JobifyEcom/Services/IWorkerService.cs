@@ -19,11 +19,6 @@ public interface IWorkerService
     Task<ServiceResult<ProfileResponse>> GetMyProfileAsync();
 
     /// <summary>
-    /// Get a public worker profile by worker ID.
-    /// </summary>
-    Task<ServiceResult<ProfileResponse>> GetProfileByIdAsync(Guid workerId);
-
-    /// <summary>
     /// Delete the worker profile for the given user.
     /// </summary>
     Task<ServiceResult<object>> DeleteProfileAsync();

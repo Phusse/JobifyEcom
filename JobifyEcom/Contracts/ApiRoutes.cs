@@ -107,9 +107,6 @@ public static class ApiRoutes
         {
             /// <summary>Get current authenticated worker profile.</summary>
             public const string Me = $"{Base}/me";
-
-            /// <summary>Get worker profile by ID (public view).</summary>
-            public const string ById = $"{Base}/{{id}}";
         }
 
         /// <summary>POST endpoints for Worker.</summary>
