@@ -9,6 +9,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobifyEcom.Services;
 
+/// <summary>
+/// Service for managing worker profiles.
+/// </summary>
+/// <param name="db">The database context.</param>
+/// <param name="httpContextAccessor">The HTTP context accessor.</param>
 internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IWorkerService
 {
     private readonly AppDbContext _db = db;
@@ -18,21 +23,24 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
     {
         ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
             ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
+                "Authentication required.",
+                ["You must be signed in to create a worker profile."]
             );
 
         Guid currentUserId = currentUserPrincipal.GetUserId()
             ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
+                "Authentication required.",
+                ["You must be signed in to create a worker profile."]
             );
 
-        Worker? worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId);
+        Worker? existingWorker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId);
 
-        if (worker is not null)
+        if (existingWorker is not null)
         {
-            throw new ConflictException("You are alreasy a worker", [$"You already have a worker profile. {worker.Id}"]);
+            throw new ConflictException(
+                "Worker profile already exists.",
+                [$"A worker profile with ID {existingWorker.Id} is already associated with this account."]
+            );
         }
 
         Worker newWorker = new()
@@ -43,53 +51,53 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
         _db.Workers.Add(newWorker);
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "Worker profile created successfully.");
+        return ServiceResult<object>.Create(null, "Your worker profile has been created successfully.");
     }
 
     public async Task<ServiceResult<object>> DeleteProfileAsync()
     {
         ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
             ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
+                "Authentication required.",
+                ["You must be signed in to delete a worker profile."]
             );
 
         Guid currentUserId = currentUserPrincipal.GetUserId()
             ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
+                "Authentication required.",
+                ["You must be signed in to delete a worker profile."]
             );
 
         Worker worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId)
             ?? throw new NotFoundException(
-                "Worker not found",
-                ["Sorry we can find your user account."]
+                "Worker profile not found.",
+                ["No worker profile could be found for this user."]
             );
 
         _db.Workers.Remove(worker);
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "Worker profile deleted successfully.");
+        return ServiceResult<object>.Create(null, "Your worker profile has been deleted successfully.");
     }
 
     public async Task<ServiceResult<ProfileResponse>> GetMyProfileAsync()
     {
         ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
             ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
+                "Authentication required.",
+                ["You must be signed in to view your worker profile."]
             );
 
         Guid currentUserId = currentUserPrincipal.GetUserId()
             ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
+                "Authentication required.",
+                ["You must be signed in to view your worker profile."]
             );
 
         Worker worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId)
             ?? throw new NotFoundException(
-                "Worker not found",
-                ["Sorry we can find your user account."]
+                "Worker profile not found.",
+                ["No worker profile could be found for this user."]
             );
 
         ProfileResponse response = new()
@@ -99,6 +107,6 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
             CreatedAt = worker.CreatedAt,
         };
 
-        return ServiceResult<ProfileResponse>.Create(response, "Worker profile retrieved successfully.");
+        return ServiceResult<ProfileResponse>.Create(response, "Your worker profile has been retrieved successfully.");
     }
 }
