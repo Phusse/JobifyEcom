@@ -9,8 +9,8 @@ namespace JobifyEcom.Models;
 public class Tag
 {
 	/// <summary>
-	/// The unique identifier for the tag.
-	/// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+	/// The unique identifier for this tag.
+	/// <para>Automatically generated and cannot be modified externally.</para>
 	/// </summary>
 	[Key]
 	public Guid Id { get; private set; } = Guid.NewGuid();
@@ -24,8 +24,8 @@ public class Tag
 	public required string Name { get; set; } = string.Empty;
 
 	/// <summary>
-	/// A collection of entity-tag mappings that associate this tag with specific entities.
-	/// This enables polymorphic tagging across different types of models.
+	/// Collection of entity-tag mappings linking this tag to various entities.
+	/// Enables polymorphic tagging across different entity types <see cref="Enums.EntityType"/>.
 	/// </summary>
-	public ICollection<EntityTag> EntityTags { get; set; } = [];
+	public ICollection<EntityTag> TaggedEntities { get; set; } = [];
 }

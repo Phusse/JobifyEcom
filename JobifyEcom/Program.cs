@@ -13,13 +13,14 @@ using JobifyEcom.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 using JobifyEcom.Security;
+using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 //--------------- Global JsonSerializerOptions ---------------
 JsonSerializerOptions globalJsonOptions = JsonOptionsFactory.Create();
 
-// Register as singleton so it’s available everywhere
+// Register as singleton so it's available everywhere
 builder.Services.AddSingleton(globalJsonOptions);
 
 //--------------- Database connection ---------------
@@ -73,8 +74,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 );
 
 //--------------- Services & Auth ---------------
-builder.Services.AddScoped<JwtTokenGenerator>();
+builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddSingleton<CursorProtector>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
@@ -102,6 +105,15 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
+        string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "OpenApiDescription.md"));
+
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "JobifyEcom",
+            Version = "1.0",
+            Description = apiDescription,
+        });
+
         string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
         options.IncludeXmlComments(xmlPath, true);
@@ -113,7 +125,7 @@ if (builder.Environment.IsDevelopment())
             Scheme = "Bearer",
             BearerFormat = "JWT",
             In = ParameterLocation.Header,
-            Description = "Enter the token you are given after you login.\n\nExample: \"token eyJhbGciOiJIUzI1NiIsInR5cCI6...\"",
+            Description = "Enter the access token you are given after you login.",
         });
 
         options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -135,8 +147,18 @@ WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger(options =>
+    {
+        options.RouteTemplate = "openapi/{documentName}.json";
+    });
+
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "JobifyEcom API";
+        options.AddServer("http://localhost:5122", "Development");
+        options.AddServer("https://localhost:5122", "Production");
+        options.DefaultHttpClient = new(ScalarTarget.Node, ScalarClient.Fetch);
+    });
 }
 else
 {
@@ -144,10 +166,8 @@ else
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

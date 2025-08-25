@@ -4,7 +4,6 @@ using JobifyEcom.Contracts;
 using JobifyEcom.DTOs.Auth;
 using JobifyEcom.DTOs;
 using JobifyEcom.Services;
-using JobifyEcom.Extensions;
 
 namespace JobifyEcom.Controllers;
 
@@ -53,7 +52,8 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// </remarks>
     /// <param name="request">The refresh token request containing the refresh token string.</param>
     /// <returns>
-    /// A new access token and refresh token pair, or an error if the request is invalid or unauthorized.
+    /// A new access token along with its expiry, while the provided refresh token remains unchanged.
+    /// Throws an error if the request is invalid or unauthorized.
     /// </returns>
     /// <response code="200">Token successfully refreshed.</response>
     /// <response code="400">Invalid request payload or failed validation.</response>
@@ -79,13 +79,13 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// <returns>Confirmation of successful registration or an error indicating conflict.</returns>
     /// <response code="201">User successfully registered.</response>
     /// <response code="409">Registration failed because the email is already registered.</response>
-    [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
     [HttpPost(ApiRoutes.Auth.Post.Register)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        ServiceResult<RegisterResponse> result = await _authService.RegisterAsync(request);
-        return Created(string.Empty, ApiResponse<RegisterResponse>.Ok(result.Data, result.Message, result.Errors));
+        ServiceResult<object> result = await _authService.RegisterAsync(request);
+        return Created(string.Empty, ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 
     /// <summary>
@@ -104,8 +104,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPatch(ApiRoutes.Auth.Patch.Logout)]
     public async Task<IActionResult> Logout()
     {
-        User.TryGetUserId(out Guid userId);
-        ServiceResult<object> result = await _authService.LogoutAsync(userId);
+        ServiceResult<object> result = await _authService.LogoutAsync();
         return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 }

@@ -33,7 +33,7 @@ public static class JsonOptionsFactory
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 			PropertyNameCaseInsensitive = true,
-			ReferenceHandler = ReferenceHandler.IgnoreCycles
+			ReferenceHandler = ReferenceHandler.IgnoreCycles,
 		};
 
 		options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));

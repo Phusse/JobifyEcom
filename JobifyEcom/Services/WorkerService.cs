@@ -7,27 +7,20 @@ namespace JobifyEcom.Services;
 
 public class WorkerService(AppDbContext db) : IWorkerService
 {
-	public async Task<WorkerProfile> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto)
+    public async Task<Worker> CreateProfileAsync(Guid userId, CreateWorkerProfileDto dto)
     {
-        if (await db.WorkerProfiles.AnyAsync(w => w.UserId == userId))
+        if (await db.Workers.AnyAsync(w => w.UserId == userId))
             throw new Exception("Profile already exists");
 
-        var profile = new WorkerProfile
-        {
-            Name = "remove",
-            Email = "remove",
-            UserId = userId,
-            Bio = dto.Bio,
-            // Skills = dto.Skills
-        };
+        var profile = new Worker();
 
-        db.WorkerProfiles.Add(profile);
+        db.Workers.Add(profile);
         await db.SaveChangesAsync();
         return profile;
     }
 
-    public async Task<WorkerProfile?> GetMyProfileAsync(Guid userId)
+    public async Task<Worker?> GetMyProfileAsync(Guid userId)
     {
-        return await db.WorkerProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+        return await db.Workers.FirstOrDefaultAsync(p => p.UserId == userId);
     }
 }

@@ -4,13 +4,13 @@ using JobifyEcom.Enums;
 namespace JobifyEcom.Models;
 
 /// <summary>
-/// Represents a registered user of the platform, including login credentials, role, and email verification status.
+/// Represents a user in the system who can post jobs, submit ratings, and optionally have a worker profile.
 /// </summary>
 public class User
 {
     /// <summary>
-    /// The unique identifier for the user.
-    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+    /// The unique identifier for this user.
+    /// <para>Automatically generated and cannot be modified externally.</para>
     /// </summary>
     [Key]
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -18,17 +18,14 @@ public class User
     /// <summary>
     /// The full name of the user.
     /// </summary>
-    [Required]
-    [MinLength(2)]
-    [StringLength(100)]
+    [Required, MinLength(2), StringLength(100)]
     public required string Name { get; set; }
 
     /// <summary>
-    /// The user's email address. Must be unique and lowercase.
+    /// The user's email address.
+    /// Must be unique (enforced in DB context).
     /// </summary>
-    [Required]
-    [EmailAddress]
-    [StringLength(100)]
+    [Required, EmailAddress, StringLength(100)]
     public required string Email { get; set; }
 
     /// <summary>
@@ -38,43 +35,101 @@ public class User
     public required string PasswordHash { get; set; }
 
     /// <summary>
-    /// The role assigned to the user, determining access permissions (e.g., Admin, Customer, Worker).
-    /// <br>Defaults to <see cref="UserRole.Customer"/>.</br>
+    /// Optional token used for password reset.
     /// </summary>
-    [Required]
-    public required UserRole Role { get; set; } = UserRole.Customer;
+    public Guid? PasswordResetToken { get; set; }
 
     /// <summary>
-    /// Indicates whether the user's email address has been confirmed.
+    /// Optional expiry date for the password reset token.
+    /// </summary>
+    public DateTime? PasswordResetTokenExpiry { get; set; }
+
+    /// <summary>
+    /// A short biography or description for the user.
+    /// </summary>
+    [StringLength(250)]
+    public string? Bio { get; set; }
+
+    /// <summary>
+    /// Backing field for the <see cref="StaffRole"/> property.
+    /// </summary>
+    private SystemRole? _staffRole;
+
+    /// <summary>
+    /// Optional staff role of the user (<see cref="SystemRole.Admin"/> or <see cref="SystemRole.SuperAdmin"/>). <c>Null</c> if regular user.
+    /// </summary>
+    public SystemRole? StaffRole
+    {
+        get => _staffRole;
+        set
+        {
+            if (value is not (null or SystemRole.Admin or SystemRole.SuperAdmin))
+            {
+                throw new ArgumentException($"Staff Role can only be {SystemRole.Admin}, {SystemRole.SuperAdmin}, or null.");
+            }
+
+            _staffRole = value;
+        }
+    }
+
+    /// <summary>
+    /// Indicates whether the user's email has been confirmed.
     /// </summary>
     public bool IsEmailConfirmed { get; set; } = false;
 
     /// <summary>
-    /// A unique token used for verifying the user's email address.
+    /// Optional token used for email confirmation.
     /// </summary>
     public Guid? EmailConfirmationToken { get; set; }
 
     /// <summary>
-    /// A unique identifier that changes whenever the user's security credentials are updated or tokens are invalidated.
-    /// Used to validate JWT tokens and ensure tokens issued before this value are rejected.
+    /// Indicates whether the user account is locked.
+    /// </summary>
+    public bool IsLocked { get; set; } = false;
+
+    /// <summary>
+    /// The UTC datetime when the account was locked.
+    /// </summary>
+    public DateTime? LockedAt { get; set; }
+
+    /// <summary>
+    /// Security stamp used for authentication validation.
     /// </summary>
     [Required]
     public Guid SecurityStamp { get; set; } = Guid.Empty;
 
     /// <summary>
-    /// The UTC date and time when the user was created.
-    /// <br>This value is automatically set by the backend and cannot be modified externally.</br>
+    /// UTC datetime when the user was created.
+    /// <para>Automatically generated and cannot be modified externally.</para>
     /// </summary>
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// The UTC date and time when the user was last updated.
+    /// UTC datetime when the user was last updated.
     /// </summary>
     [Required]
     public required DateTime UpdatedAt { get; set; }
 
     /// <summary>
-    /// The worker profile associated with this user, if the user is a worker.
+    /// Gets a value indicating whether the user has a worker profile.
+    /// <c>True</c> if the user has an associated <see cref="WorkerProfile"/>, otherwise <c>False</c>.
+    /// <para>Note: Ensure that the <see cref="WorkerProfile"/> entity is included when querying the user;
+    /// otherwise, this property will always return <c>False</c>.</para>
     /// </summary>
-    public WorkerProfile? WorkerProfile { get; set; }
+    public bool IsWorker => WorkerProfile is not null;
+
+    /// <summary>
+    /// Optional associated worker profile if the user is also a worker.
+    /// </summary>
+    public Worker? WorkerProfile { get; set; }
+
+    /// <summary>
+    /// Jobs posted by this user.
+    /// </summary>
+    public ICollection<JobPost> JobsPosted { get; set; } = [];
+
+    /// <summary>
+    /// Ratings submitted by this user.
+    /// </summary>
+    public ICollection<Rating> RatingsSubmitted { get; set; } = [];
 }
