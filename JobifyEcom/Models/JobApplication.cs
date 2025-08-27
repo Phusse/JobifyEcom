@@ -4,7 +4,7 @@ using JobifyEcom.Enums;
 namespace JobifyEcom.Models;
 
 /// <summary>
-/// Represents an application submitted by a <see cref="Worker"/> for a specific <see cref="JobPost"/>.
+/// Represents an application submitted by a <see cref="Worker"/> for a specific <see cref="Models.Job"/>.
 /// Tracks the status and submission date.
 /// </summary>
 public class JobApplication
@@ -34,9 +34,9 @@ public class JobApplication
     public required Guid JobPostId { get; set; }
 
     /// <summary>
-    /// Navigation property to the <see cref="JobPost"/> this application is for.
+    /// Navigation property to the <see cref="Models.Job"/> this application is for.
     /// </summary>
-    public JobPost Job { get; set; } = null!;
+    public Job Job { get; set; } = null!;
 
     /// <summary>
     /// The current status of the application (e.g., Pending, Accepted, Rejected).

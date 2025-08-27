@@ -5,7 +5,7 @@ namespace JobifyEcom.DTOs.User;
 /// <summary>
 /// Represents search and filter options for querying user profiles.
 /// </summary>
-public class ProfileFilterRequest
+public class UserProfileFilterRequest
 {
 	/// <summary>
 	/// Search term to match against user profile fields (e.g., ID, email, or name).

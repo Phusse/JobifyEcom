@@ -3,7 +3,7 @@ namespace JobifyEcom.DTOs.Worker;
 /// <summary>
 /// Represents the response for creating a worker profile.
 /// </summary>
-public class ProfileResponse
+public class WorkerProfileResponse
 {
 	/// <summary>
 	/// Gets or sets the unique identifier for the worker.

@@ -16,7 +16,7 @@ public interface IWorkerService
     /// <summary>
     /// Get the worker profile for the current authenticated user.
     /// </summary>
-    Task<ServiceResult<ProfileResponse>> GetMyProfileAsync();
+    Task<ServiceResult<WorkerProfileResponse>> GetMyProfileAsync();
 
     /// <summary>
     /// Delete the worker profile for the given user.

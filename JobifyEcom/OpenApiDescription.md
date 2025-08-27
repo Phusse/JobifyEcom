@@ -1,75 +1,48 @@
-# 🚀 JobifyEcom API – Quick Overview
+# 🚀 JobifyEcom API — Quick Guide
 
-JobifyEcom provides **JWT auth**, user management, worker profiles, job postings, and applications.
+## 🌐 Base URLs
 
-**🌐 Base URLs**
+* **Development**: `http://localhost:5122`
+* **Production**: `https://localhost:5000`
 
-* Development: `http://localhost:5122`
-* Production: `https://localhost:5000`
+## 🔐 Authentication
 
-**🔑 Auth & Roles**
+* **Method**: Bearer JWT via `Authorization` header
 
-* Scheme: `Bearer <access_token>`
-* Roles: `Worker` needed for some endpoints
+## 👥 Roles
 
-**📦 Standard Response**
+* **`user`** 👤 → Standard account for individuals who can **post and manage jobs**.
+* **`worker`** 🧑‍🏭 → Accounts for professionals who can **create worker profiles, showcase skills, and apply to jobs**.
+* **`admin`** 🛡️ → Elevated privileges, able to **manage users, jobs, and applications** across the platform.
+* **`superadmin`** 👑 → Full system access, including **management of admins and superadmins**.
+
+## 🧾 Standard Response
+
 ```json
 {
-	"traceId": "12345",
-	"success": true,
-	"message": "Success",
-	"errors": [],
-	"timestamp": "2023-04-01T12:34:56Z",
-	"data": {}
+  "traceId": "12345",
+  "success": true,
+  "message": "Success",
+  "errors": [],
+  "timestamp": "2023-04-01T12:34:56Z",
+  "data": {}
 }
 ```
 
----
+## ✨ Features Overview
 
-## **Endpoints**
+* **🔑 Authentication**: Register, log in, refresh, and log out sessions.
+* **👤 Users**: Manage profiles, search/browse other users, update or delete accounts, and handle credentials.
+* **💼 Jobs (User role)**: Post, update, delete, and browse job listings.
+* **🧑‍🏭 Workers (Worker role)**: Create/manage worker profiles, browse jobs, apply, and track applications.
+* **📄 Applications**: Workers can apply to jobs; users can view, accept, or reject applications.
 
-### **🛡 Auth (v1)**
+## ⚠️ Errors & Validation
 
-* `POST /api/v1/auth/register` – Register
-* `POST /api/v1/auth/login` – Login → access/refresh tokens
-* `POST /api/v1/auth/refresh` – Refresh token
-* `PATCH /api/v1/auth/logout` – Logout (auth required)
+* Validation issues are returned in `errors[]`
+* Unexpected errors include a `traceId` for easier troubleshooting
 
-### **👤 Users (v1)**
+## 📚 API Docs
 
-* `GET /api/v1/users/me` – Current profile
-* `GET /api/v1/users` – List/search users
-* `GET /api/v1/users/{id}` – Get user
-* `PATCH /api/v1/users/{id}` – Update
-* `DELETE /api/v1/users/{id}` – Delete
-* Email & password management endpoints
-
-### **💼 Jobs**
-
-* `POST /api/job` – Create job (Worker only)
-* `GET /api/job` – List all jobs
-* `GET /api/job/mine` – My jobs (Worker only)
-
-### **🧑‍🏭 Worker**
-
-* `POST /api/worker/profile` – Create profile
-* `GET /api/worker/profiledetails` – Get own profile
-
-### **📄 Job Applications**
-
-* `POST /api/jobapplication` – Apply
-* `GET /api/jobapplication/{id}` – Get application
-* `PUT /api/jobapplication/{id}/accept` – Accept
-* `PUT /api/jobapplication/{id}/reject` – Reject
-
----
-
-**⚠ Errors & Validation**
-
-* Aggregated `errors[]` for validation issues
-* Middleware handles unhandled exceptions with `traceId`
-
-**📚 Docs**
-
-* OpenAPI JSON: `/openapi/v1.json`
-* Interactive explorer: Dev only
+* Auto-generated **OpenAPI spec**
+* Interactive explorer available in **development**

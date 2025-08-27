@@ -12,7 +12,7 @@ public interface IUserService
 	/// Retrieves the profile of the currently authenticated user.
 	/// </summary>
 	/// <returns>A service result containing the authenticated user's profile.</returns>
-	Task<ServiceResult<ProfileResponse>> GetCurrentUserAsync();
+	Task<ServiceResult<UserProfileResponse>> GetCurrentUserAsync();
 
 	/// <summary>
 	/// Retrieves the public profile of a specific user by their unique identifier.
@@ -26,14 +26,14 @@ public interface IUserService
 	/// </summary>
 	/// <param name="request">The pagination and filter criteria.</param>
 	/// <returns>A paginated list of user summaries.</returns>
-	Task<ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>>> SearchUsersAsync(CursorPaginationRequest<ProfileFilterRequest> request);
+	Task<ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>> SearchUsersAsync(CursorPaginationRequest<UserProfileFilterRequest> request);
 
 	/// <summary>
 	/// Updates the profile information of a specific user.
 	/// </summary>
 	/// <param name="request">The new profile values to update.</param>
 	/// <returns>The updated user profile.</returns>
-	Task<ServiceResult<ProfileResponse>> UpdateCurrentUserAsync(ProfileUpdateRequest request);
+	Task<ServiceResult<UserProfileResponse>> UpdateCurrentUserAsync(UserProfileUpdateRequest request);
 
 	/// <summary>
 	/// Confirms a user's email address using a verification token.

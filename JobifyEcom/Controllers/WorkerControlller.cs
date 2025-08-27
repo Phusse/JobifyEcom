@@ -45,13 +45,13 @@ public class WorkerController(IWorkerService workerService) : ControllerBase
     /// <returns>The worker profile details.</returns>
     /// <response code="200">Worker profile retrieved successfully.</response>
     /// <response code="404">No worker profile found for this user.</response>
-    [ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<WorkerProfileResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [HttpGet(ApiRoutes.Worker.Get.Me)]
     public async Task<IActionResult> GetMyProfile()
     {
-        ServiceResult<ProfileResponse> result = await workerService.GetMyProfileAsync();
-        return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
+        ServiceResult<WorkerProfileResponse> result = await workerService.GetMyProfileAsync();
+        return Ok(ApiResponse<WorkerProfileResponse>.Ok(result.Data, result.Message, result.Errors));
     }
 
     /// <summary>

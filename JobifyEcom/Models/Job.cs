@@ -7,7 +7,7 @@ namespace JobifyEcom.Models;
 /// Represents a job posted by a <see cref="User"/>.
 /// Workers can apply to this job, and optionally leave ratings after completion.
 /// </summary>
-public class JobPost
+public class Job
 {
     /// <summary>
     /// The unique identifier for this job post.
@@ -59,6 +59,11 @@ public class JobPost
 	/// <para>Automatically generated and cannot be modified externally.</para>
     /// </summary>
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The UTC timestamp when this job was last updated.
+    /// </summary>
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// The collection of applications submitted to this job.

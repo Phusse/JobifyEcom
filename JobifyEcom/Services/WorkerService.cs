@@ -80,7 +80,7 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
         return ServiceResult<object>.Create(null, "Your worker profile has been deleted successfully.");
     }
 
-    public async Task<ServiceResult<ProfileResponse>> GetMyProfileAsync()
+    public async Task<ServiceResult<WorkerProfileResponse>> GetMyProfileAsync()
     {
         ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
             ?? throw new UnauthorizedException(
@@ -100,13 +100,13 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
                 ["No worker profile could be found for this user."]
             );
 
-        ProfileResponse response = new()
+        WorkerProfileResponse response = new()
         {
             WorkerId = worker.Id,
             UserId = worker.UserId,
             CreatedAt = worker.CreatedAt,
         };
 
-        return ServiceResult<ProfileResponse>.Create(response, "Your worker profile has been retrieved successfully.");
+        return ServiceResult<WorkerProfileResponse>.Create(response, "Your worker profile has been retrieved successfully.");
     }
 }

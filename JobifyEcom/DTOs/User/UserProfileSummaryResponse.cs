@@ -4,7 +4,7 @@ namespace JobifyEcom.DTOs.User;
 /// Represents a lightweight view of a user's profile,
 /// intended for list or summary displays in paginated results.
 /// </summary>
-public class ProfileSummaryResponse
+public class UserProfileSummaryResponse
 {
 	/// <summary>
 	/// The unique identifier of the user.

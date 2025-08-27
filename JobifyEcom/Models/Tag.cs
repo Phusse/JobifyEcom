@@ -4,7 +4,7 @@ namespace JobifyEcom.Models;
 
 /// <summary>
 /// Represents a reusable tag or category that can be linked to various entities
-/// such as skills, job posts, and potentially other models.
+/// such as skills, jobs, and potentially other models.
 /// </summary>
 public class Tag
 {

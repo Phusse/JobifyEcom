@@ -4,7 +4,7 @@ namespace JobifyEcom.DTOs.User;
 /// Represents detailed information about a user for administrative purposes.
 /// Excludes sensitive authentication details like password hashes or tokens.
 /// </summary>
-public class AdminProfileResponse : ProfileResponse
+public class AdminUserProfileResponse : UserProfileResponse
 {
 	/// <summary>
 	/// Indicates whether the user's email has been confirmed. (Admin only).

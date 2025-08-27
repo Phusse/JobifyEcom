@@ -25,7 +25,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	private readonly CursorProtector _cursorProtector = cursorProtector;
 	private const int MaxCursorDepth = 20;
 
-	public async Task<ServiceResult<ProfileResponse>> GetCurrentUserAsync()
+	public async Task<ServiceResult<UserProfileResponse>> GetCurrentUserAsync()
 	{
 		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
 			?? throw new UnauthorizedException(
@@ -47,7 +47,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 				["We couldn't find your account. Please contact support if this issue continues."]
 			);
 
-		ProfileResponse response = new()
+		UserProfileResponse response = new()
 		{
 			Id = user.Id,
 			Name = user.Name,
@@ -57,7 +57,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 			CreatedAt = user.CreatedAt
 		};
 
-		return ServiceResult<ProfileResponse>.Create(response, "User retrieved successfully.");
+		return ServiceResult<UserProfileResponse>.Create(response, "User retrieved successfully.");
 	}
 
 	public async Task<ServiceResult<object>> GetUserByIdAsync(Guid userId)
@@ -71,9 +71,9 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		IReadOnlyList<string> roles = currentUser.GetRoles();
 		bool isAdmin = roles.Contains(SystemRole.Admin.ToString()) || roles.Contains(SystemRole.SuperAdmin.ToString());
 
-		ProfileResponse response = isAdmin switch
+		UserProfileResponse response = isAdmin switch
 		{
-			true => new AdminProfileResponse
+			true => new AdminUserProfileResponse
 			{
 				Id = user.Id,
 				Name = user.Name,
@@ -86,7 +86,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 				LockedAt = user.LockedAt,
 				UpdatedAt = user.UpdatedAt,
 			},
-			_ => new ProfileResponse
+			_ => new UserProfileResponse
 			{
 				Id = user.Id,
 				Name = user.Name,
@@ -281,10 +281,10 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		return ServiceResult<object>.Create(null, "Your password has been updated. You can now sign in with your new password.");
 	}
 
-	public async Task<ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>>> SearchUsersAsync(CursorPaginationRequest<ProfileFilterRequest> request)
+	public async Task<ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>> SearchUsersAsync(CursorPaginationRequest<UserProfileFilterRequest> request)
 	{
 		CursorState? cursorState = null;
-		CursorPaginationResponse<ProfileSummaryResponse> response;
+		CursorPaginationResponse<UserProfileSummaryResponse> response;
 
 		// If cursor provided, decode it and use its state
 		if (!string.IsNullOrEmpty(request.Cursor))
@@ -294,14 +294,14 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 			// Stop if max depth reached
 			if (cursorState.Depth >= MaxCursorDepth)
 			{
-				response = new CursorPaginationResponse<ProfileSummaryResponse>()
+				response = new CursorPaginationResponse<UserProfileSummaryResponse>()
 				{
 					NextCursor = null,
 					HasMore = false,
 					Items = [],
 				};
 
-				return ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>>.Create(response, "No more results.");
+				return ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>.Create(response, "No more results.");
 			}
 
 			request.Filter = cursorState.Filter;
@@ -387,7 +387,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		// Fetch Page
 		List<User> users = await query.Take(request.PageSize).ToListAsync();
 
-		List<ProfileSummaryResponse> items = [.. users.Select(u => new ProfileSummaryResponse
+		List<UserProfileSummaryResponse> items = [.. users.Select(u => new UserProfileSummaryResponse
 		{
 			Id = u.Id,
 			Name = u.Name,
@@ -407,7 +407,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 				LastId = lastUser.Id,
 				SortBy = request.Filter?.SortBy ?? UserSortField.CreatedAt,
 				SortDescending = request.Filter?.SortDescending ?? false,
-				Filter = request.Filter ?? new ProfileFilterRequest(),
+				Filter = request.Filter ?? new UserProfileFilterRequest(),
 				Depth = (cursorState?.Depth ?? 0) + 1
 			};
 
@@ -418,14 +418,14 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 			}
 		}
 
-		response = new CursorPaginationResponse<ProfileSummaryResponse>()
+		response = new CursorPaginationResponse<UserProfileSummaryResponse>()
 		{
 			NextCursor = nextCursor,
 			HasMore = hasMore,
 			Items = items,
 		};
 
-		return ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>>.Create(response, "Users found.");
+		return ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>.Create(response, "Users found.");
 	}
 
 	public async Task<ServiceResult<object>> UnlockUserAsync(Guid id)
@@ -455,7 +455,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		return ServiceResult<object>.Create(null, "User account has been unlocked.");
 	}
 
-	public async Task<ServiceResult<ProfileResponse>> UpdateCurrentUserAsync(ProfileUpdateRequest request)
+	public async Task<ServiceResult<UserProfileResponse>> UpdateCurrentUserAsync(UserProfileUpdateRequest request)
 	{
 		if (request is null)
 		{
@@ -491,7 +491,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		user.UpdatedAt = DateTime.UtcNow;
 		await _db.SaveChangesAsync();
 
-		return ServiceResult<ProfileResponse>.Create(new ProfileResponse
+		return ServiceResult<UserProfileResponse>.Create(new UserProfileResponse
 		{
 			Id = user.Id,
 			Name = user.Name,

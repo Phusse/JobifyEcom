@@ -6,7 +6,7 @@ namespace JobifyEcom.DTOs.User;
 /// Represents the public profile information of a user,
 /// excluding sensitive authentication details.
 /// </summary>
-public class ProfileResponse
+public class UserProfileResponse
 {
 	/// <summary>
 	/// The unique identifier of the user.

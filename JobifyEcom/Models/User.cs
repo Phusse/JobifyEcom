@@ -126,7 +126,7 @@ public class User
     /// <summary>
     /// Jobs posted by this user.
     /// </summary>
-    public ICollection<JobPost> JobsPosted { get; set; } = [];
+    public ICollection<Job> JobsPosted { get; set; } = [];
 
     /// <summary>
     /// Ratings submitted by this user.
