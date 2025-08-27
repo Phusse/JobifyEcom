@@ -1,41 +1,174 @@
+using System.Security.Claims;
 using JobifyEcom.Data;
-using JobifyEcom.Models;
 using JobifyEcom.DTOs;
-using Microsoft.EntityFrameworkCore;
+using JobifyEcom.DTOs.Job;
 using JobifyEcom.Enums;
+using JobifyEcom.Exceptions;
+using JobifyEcom.Extensions;
+using JobifyEcom.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobifyEcom.Services;
 
-public class JobService(AppDbContext db) : IJobService
+/// <summary>
+/// Service for managing job-related operations.
+/// </summary>
+internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IJobService
 {
-    public async Task<Job> CreateJobAsync(Guid userId, CreateJobDto dto)
-    {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId)
-            ?? throw new Exception("User profile not found");
+    private readonly AppDbContext _db = db;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
-        var job = new Job
+    public async Task<ServiceResult<JobResponse>> CreateJobAsync(JobCreateRequest request)
+    {
+        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
+            ?? throw new UnauthorizedException(
+                "Sign in required.",
+                ["You need to be signed in to access your account."]
+            );
+
+        Guid currentUserId = currentUserPrincipal.GetUserId()
+            ?? throw new UnauthorizedException(
+                "Sign in required.",
+                ["You need to be signed in to access your account."]
+            );
+
+        Job createdJob = new()
         {
-            PostedByUserId = user.Id,
-            Title = dto.Title,
-            Description = dto.Description,
-            Price = dto.Price,
+            PostedByUserId = currentUserId,
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Price = request.Price,
             Status = JobStatus.Open,
         };
 
-        db.Jobs.Add(job);
-        await db.SaveChangesAsync();
-        return job;
+        _db.Jobs.Add(createdJob);
+        await _db.SaveChangesAsync();
+
+        JobResponse response = ToResponse(createdJob);
+
+        return ServiceResult<JobResponse>.Create(response, "Job created successfully.");
     }
 
-    public async Task<List<Job>> GetAllJobsAsync()
+    public async Task<ServiceResult<JobResponse?>> GetJobByIdAsync(Guid jobId)
     {
-        return await db.Jobs.Include(j => j.PostedBy).ToListAsync();
+        Job? job = await _db.Jobs.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId)
+            ?? throw new NotFoundException(
+                "Job not found.",
+                [$"No job exists with the specified ID.({jobId})"]
+            );
+
+        JobResponse response = ToResponse(job);
+
+        return ServiceResult<JobResponse?>.Create(response, "Job retrieved successfully.");
     }
 
-    public async Task<List<Job>> GetJobsByUserAsync(Guid userId)
+    public async Task<ServiceResult<JobResponse>> UpdateJobAsync(Guid jobId, JobUpdateRequest request)
     {
-        return await db.Jobs
-            .Where(j => j.PostedByUserId == userId)
-            .ToListAsync();
+        Job job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == jobId)
+            ?? throw new NotFoundException(
+                "Job not found.",
+                [$"No job exists with the specified ID. ({jobId})"]
+            );
+
+        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
+            ?? throw new UnauthorizedException(
+                "Sign in required.",
+                ["You need to be signed in to access your account."]
+            );
+
+        Guid currentUserId = currentUserPrincipal.GetUserId()
+            ?? throw new UnauthorizedException(
+                "Sign in required.",
+                ["You need to be signed in to access your account."]
+            );
+
+        if (job.PostedByUserId != currentUserId)
+        {
+            throw new ForbiddenException(
+                "Access denied.",
+                ["You do not have permission to update this job."]
+            );
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Title))
+        {
+            job.Title = request.Title.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Description))
+        {
+            job.Description = request.Description.Trim();
+        }
+
+        if (request.Price.HasValue)
+        {
+            job.Price = request.Price.Value;
+        }
+
+        if (request.Status.HasValue)
+        {
+            job.Status = request.Status.Value;
+        }
+
+        await _db.SaveChangesAsync();
+        JobResponse response = ToResponse(job);
+
+        return ServiceResult<JobResponse>.Create(response, "Job updated successfully.");
     }
+
+    public async Task<ServiceResult<object>> DeleteJobAsync(Guid jobId)
+    {
+        Job? job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == jobId)
+            ?? throw new NotFoundException(
+                "Job not found.",
+                [$"No job exists with the specified ID. ({jobId})"]
+            );
+
+        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
+            ?? throw new UnauthorizedException(
+                "Sign in required.",
+                ["You need to be signed in to access your account."]
+            );
+
+        Guid currentUserId = currentUserPrincipal.GetUserId()
+            ?? throw new UnauthorizedException(
+                "Sign in required.",
+                ["You need to be signed in to access your account."]
+            );
+
+        User? currentUser = await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == currentUserId)
+            ?? throw new UnauthorizedException(
+                "Sign in required.",
+                ["You need to be signed in to access your account."]
+            );
+
+        bool isOwner = job.PostedByUserId == currentUserId;
+        bool isStaff = currentUser.StaffRole is SystemRole.Admin or SystemRole.SuperAdmin;
+
+        if (!isOwner && !isStaff)
+        {
+            throw new ForbiddenException(
+                "Access denied.",
+                ["You do not have permission to delete this job."]
+            );
+        }
+
+        _db.Jobs.Remove(job);
+        await _db.SaveChangesAsync();
+
+        return ServiceResult<object>.Create(null, "Job deleted successfully.");
+    }
+
+    private static JobResponse ToResponse(Job job) => new()
+    {
+        Id = job.Id,
+        Title = job.Title,
+        Description = job.Description,
+        Price = job.Price,
+        Status = job.Status,
+        CreatedAt = job.CreatedAt,
+        PostedByUserId = job.PostedByUserId,
+    };
 }

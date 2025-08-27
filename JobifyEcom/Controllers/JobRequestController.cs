@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using JobifyEcom.Enums;
 using JobifyEcom.Services;
-using JobifyEcom.DTOs;
 
 namespace JobifyEcom.Controllers;
 
