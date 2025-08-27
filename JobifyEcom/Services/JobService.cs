@@ -110,6 +110,8 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
             job.Status = request.Status.Value;
         }
 
+        job.UpdatedAt = DateTime.UtcNow;
+
         await _db.SaveChangesAsync();
         JobResponse response = ToResponse(job);
 

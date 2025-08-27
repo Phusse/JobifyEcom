@@ -1,4 +1,5 @@
 using JobifyEcom.Data;
+using JobifyEcom.DTOs;
 using JobifyEcom.Enums;
 using JobifyEcom.Models;
 

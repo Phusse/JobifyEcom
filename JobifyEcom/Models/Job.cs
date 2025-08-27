@@ -61,6 +61,11 @@ public class Job
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
     /// <summary>
+    /// The UTC timestamp when this job was last updated.
+    /// </summary>
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
     /// The collection of applications submitted to this job.
     /// </summary>
     public ICollection<JobApplication> ApplicationsReceived { get; set; } = [];

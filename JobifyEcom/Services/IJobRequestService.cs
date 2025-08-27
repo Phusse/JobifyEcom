@@ -1,3 +1,4 @@
+using JobifyEcom.DTOs;
 using JobifyEcom.Enums;
 
 namespace JobifyEcom.Services;
