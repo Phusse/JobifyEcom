@@ -3,12 +3,14 @@ using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Job;
 using JobifyEcom.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobifyEcom.Controllers;
 
 /// <summary>
 /// Handles job-related operations such as creating, retrieving, updating, and deleting jobs.
 /// </summary>
+[Authorize]
 [ApiController]
 public class JobController(IJobService jobService) : ControllerBase
 {
@@ -33,23 +35,23 @@ public class JobController(IJobService jobService) : ControllerBase
     /// <summary>
     /// Retrieves a job by its unique identifier.
     /// </summary>
-    /// <param name="jobId">The unique identifier of the job.</param>
+    /// <param name="id">The unique identifier of the job.</param>
     /// <returns>The job details.</returns>
     /// <response code="200">Job successfully retrieved.</response>
     /// <response code="404">Job not found.</response>
     [ProducesResponseType(typeof(ApiResponse<JobResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [HttpGet(ApiRoutes.Job.Get.ById)]
-    public async Task<IActionResult> GetById(Guid jobId)
+    public async Task<IActionResult> GetById([FromRoute]Guid id)
     {
-        ServiceResult<JobResponse?> result = await _jobService.GetJobByIdAsync(jobId);
+        ServiceResult<JobResponse?> result = await _jobService.GetJobByIdAsync(id);
         return Ok(ApiResponse<JobResponse?>.Ok(result.Data, result.Message, result.Errors));
     }
 
     /// <summary>
     /// Updates an existing job.
     /// </summary>
-    /// <param name="jobId">The unique identifier of the job to update.</param>
+    /// <param name="id">The unique identifier of the job to update.</param>
     /// <param name="request">The job update request payload.</param>
     /// <returns>The updated job details.</returns>
     /// <response code="200">Job successfully updated.</response>
@@ -59,25 +61,25 @@ public class JobController(IJobService jobService) : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [HttpPatch(ApiRoutes.Job.Patch.Update)]
-    public async Task<IActionResult> Update(Guid jobId, [FromBody] JobUpdateRequest request)
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] JobUpdateRequest request)
     {
-        ServiceResult<JobResponse> result = await _jobService.UpdateJobAsync(jobId, request);
+        ServiceResult<JobResponse> result = await _jobService.UpdateJobAsync(id, request);
         return Ok(ApiResponse<JobResponse>.Ok(result.Data, result.Message, result.Errors));
     }
 
     /// <summary>
     /// Deletes a job by its unique identifier.
     /// </summary>
-    /// <param name="jobId">The unique identifier of the job.</param>
+    /// <param name="id">The unique identifier of the job.</param>
     /// <returns>A confirmation message upon successful deletion.</returns>
     /// <response code="200">Job successfully deleted.</response>
     /// <response code="404">Job not found.</response>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [HttpDelete(ApiRoutes.Job.Delete.ById)]
-    public async Task<IActionResult> Delete(Guid jobId)
+    public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
-        ServiceResult<object> result = await _jobService.DeleteJobAsync(jobId);
+        ServiceResult<object> result = await _jobService.DeleteJobAsync(id);
         return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 }
