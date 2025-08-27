@@ -6,7 +6,7 @@ namespace JobifyEcom.DTOs.User;
 /// Represents the request to update a user's profile.
 /// All fields are optional — only non-null values will be updated.
 /// </summary>
-public class ProfileUpdateRequest
+public class UserProfileUpdateRequest
 {
 	/// <summary>
 	/// The new name for the user.
