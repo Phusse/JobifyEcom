@@ -41,7 +41,7 @@ public static class ApiRoutes
     /// <summary>
     /// Routes related to User Management operations.
     /// </summary>
-    public static class Users
+    public static class User
     {
         private const string Base = $"{Root}/{Version}/users";
 
@@ -122,5 +122,10 @@ public static class ApiRoutes
             /// <summary>Delete the current worker profile.</summary>
             public const string Profile = $"{Base}/me/delete";
         }
+    }
+
+    public static class Job
+    {
+
     }
 }

@@ -4,7 +4,7 @@ namespace JobifyEcom.Models;
 
 /// <summary>
 /// Represents a rating given by a <see cref="User"/> (Reviewer) to a <see cref="Models.Worker"/>.
-/// Optionally linked to a specific <see cref="JobPost"/>.
+/// Optionally linked to a specific <see cref="Models.Job"/>.
 /// </summary>
 public class Rating
 {
@@ -56,12 +56,12 @@ public class Rating
 	public Worker? Worker { get; set; }
 
 	/// <summary>
-	/// Optional ID of the <see cref="JobPost"/> associated with this rating.
+	/// Optional ID of the <see cref="Models.Job"/> associated with this rating.
 	/// </summary>
 	public Guid? JobPostId { get; set; }
 
 	/// <summary>
-	/// Navigation property to the optional <see cref="JobPost"/> associated with this rating.
+	/// Navigation property to the optional <see cref="Models.Job"/> associated with this rating.
 	/// </summary>
-	public JobPost? Job { get; set; }
+	public Job? Job { get; set; }
 }

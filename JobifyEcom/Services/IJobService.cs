@@ -5,7 +5,7 @@ namespace JobifyEcom.Services;
 
 public interface IJobService
 {
-    Task<JobPost> CreateJobAsync(Guid userId, CreateJobDto dto);
-    Task<List<JobPost>> GetAllJobsAsync();
-    Task<List<JobPost>> GetJobsByUserAsync(Guid workerId);
+    Task<Job> CreateJobAsync(Guid userId, CreateJobDto dto);
+    Task<List<Job>> GetAllJobsAsync();
+    Task<List<Job>> GetJobsByUserAsync(Guid workerId);
 }

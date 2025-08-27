@@ -7,7 +7,7 @@ namespace JobifyEcom.Models;
 /// Represents a job posted by a <see cref="User"/>.
 /// Workers can apply to this job, and optionally leave ratings after completion.
 /// </summary>
-public class JobPost
+public class Job
 {
     /// <summary>
     /// The unique identifier for this job post.

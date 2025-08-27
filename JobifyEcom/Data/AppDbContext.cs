@@ -25,9 +25,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Skill> Skills { get; set; }
 
     /// <summary>
-    /// Gets or sets the JobPosts table.
+    /// Gets or sets the Job table.
     /// </summary>
-    public DbSet<JobPost> JobPosts { get; set; }
+    public DbSet<Job> Jobs { get; set; }
 
     /// <summary>
     /// Gets or sets the JobApplications table.
@@ -157,7 +157,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     private static void ConfigureJobPost(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<JobPost>(entity =>
+        modelBuilder.Entity<Job>(entity =>
         {
             // Convert JobStatus enum to string
             entity.Property(j => j.Status)
