@@ -25,14 +25,14 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <returns>The current user's profile.</returns>
 	/// <response code="200">Profile retrieved successfully.</response>
 	/// <response code="401">User is not authenticated.</response>
-	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(ApiResponse<UserProfileResponse>), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
 	[Authorize]
-	[HttpGet(ApiRoutes.Users.Get.Me)]
+	[HttpGet(ApiRoutes.User.Get.Me)]
 	public async Task<IActionResult> GetCurrentUser()
 	{
-		ServiceResult<ProfileResponse> result = await _userService.GetCurrentUserAsync();
-		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
+		ServiceResult<UserProfileResponse> result = await _userService.GetCurrentUserAsync();
+		return Ok(ApiResponse<UserProfileResponse>.Ok(result.Data, result.Message, result.Errors));
 	}
 
 	/// <summary>
@@ -46,11 +46,11 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <response code="200">User profile retrieved successfully.</response>
 	/// <response code="401">User is not authenticated.</response>
 	/// <response code="404">User not found.</response>
-	[ProducesResponseType(typeof(ApiResponse<AdminProfileResponse>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(ApiResponse<AdminUserProfileResponse>), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
 	[Authorize]
-	[HttpGet(ApiRoutes.Users.Get.ById)]
+	[HttpGet(ApiRoutes.User.Get.ById)]
 	public async Task<IActionResult> GetUserById([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.GetUserByIdAsync(id);
@@ -63,13 +63,13 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <param name="request">Pagination and filter parameters.</param>
 	/// <returns>Paged list of user summaries.</returns>
 	/// <response code="200">Users retrieved successfully.</response>
-	[ProducesResponseType(typeof(ApiResponse<CursorPaginationResponse<ProfileSummaryResponse>>), StatusCodes.Status200OK)]
-	[HttpGet(ApiRoutes.Users.Get.List)]
+	[ProducesResponseType(typeof(ApiResponse<CursorPaginationResponse<UserProfileSummaryResponse>>), StatusCodes.Status200OK)]
+	[HttpGet(ApiRoutes.User.Get.List)]
 	[Authorize]
-	public async Task<IActionResult> SearchUsers([FromQuery] CursorPaginationRequest<ProfileFilterRequest> request)
+	public async Task<IActionResult> SearchUsers([FromQuery] CursorPaginationRequest<UserProfileFilterRequest> request)
 	{
-		ServiceResult<CursorPaginationResponse<ProfileSummaryResponse>> result = await _userService.SearchUsersAsync(request);
-		return Ok(ApiResponse<CursorPaginationResponse<ProfileSummaryResponse>>.Ok(result.Data, result.Message, result.Errors));
+		ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>> result = await _userService.SearchUsersAsync(request);
+		return Ok(ApiResponse<CursorPaginationResponse<UserProfileSummaryResponse>>.Ok(result.Data, result.Message, result.Errors));
 	}
 
 	/// <summary>
@@ -80,15 +80,15 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <response code="200">Profile updated successfully.</response>
 	/// <response code="400">Invalid update request.</response>
 	/// <response code="401">User is not authenticated.</response>
-	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(ApiResponse<UserProfileResponse>), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
 	[Authorize]
-	[HttpPatch(ApiRoutes.Users.Patch.Update)]
-	public async Task<IActionResult> UpdateUser([FromBody] ProfileUpdateRequest request)
+	[HttpPatch(ApiRoutes.User.Patch.Update)]
+	public async Task<IActionResult> UpdateUser([FromBody] UserProfileUpdateRequest request)
 	{
-		ServiceResult<ProfileResponse> result = await _userService.UpdateCurrentUserAsync(request);
-		return Ok(ApiResponse<ProfileResponse>.Ok(result.Data, result.Message, result.Errors));
+		ServiceResult<UserProfileResponse> result = await _userService.UpdateCurrentUserAsync(request);
+		return Ok(ApiResponse<UserProfileResponse>.Ok(result.Data, result.Message, result.Errors));
 	}
 
 	/// <summary>
@@ -99,7 +99,7 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <response code="200">Email confirmed successfully.</response>
 	/// <response code="400">Invalid or expired confirmation link.</response>
 	/// <response code="404">User not found.</response>
-	[HttpGet(ApiRoutes.Users.Patch.ConfirmEmail)]
+	[HttpGet(ApiRoutes.User.Patch.ConfirmEmail)]
 	public async Task<IActionResult> ConfirmEmailLink([FromQuery] EmailConfirmRequest request)
 		=> await ConfirmEmailInternal(request);
 
@@ -111,10 +111,10 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <response code="200">Email confirmed successfully.</response>
 	/// <response code="400">Invalid or expired confirmation link.</response>
 	/// <response code="404">User not found.</response>
-	[ProducesResponseType(typeof(ApiResponse<ProfileResponse>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(ApiResponse<UserProfileResponse>), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-	[HttpPatch(ApiRoutes.Users.Patch.ConfirmEmail)]
+	[HttpPatch(ApiRoutes.User.Patch.ConfirmEmail)]
 	public async Task<IActionResult> ConfirmEmail([FromQuery] EmailConfirmRequest request)
 		=> await ConfirmEmailInternal(request);
 
@@ -143,7 +143,7 @@ public class UserController(IUserService userService) : ControllerBase
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
 	[Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
-	[HttpPatch(ApiRoutes.Users.Patch.Lock)]
+	[HttpPatch(ApiRoutes.User.Patch.Lock)]
 	public async Task<IActionResult> LockUser([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.LockUserAsync(id);
@@ -164,7 +164,7 @@ public class UserController(IUserService userService) : ControllerBase
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
 	[Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
-	[HttpPatch(ApiRoutes.Users.Patch.Unlock)]
+	[HttpPatch(ApiRoutes.User.Patch.Unlock)]
 	public async Task<IActionResult> UnlockUser([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.UnlockUserAsync(id);
@@ -180,7 +180,7 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <response code="404">User not found.</response>
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-	[HttpPost(ApiRoutes.Users.Post.PasswordResetRequest)]
+	[HttpPost(ApiRoutes.User.Post.PasswordResetRequest)]
 	public async Task<IActionResult> RequestPasswordReset([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.RequestPasswordResetAsync(id);
@@ -199,7 +199,7 @@ public class UserController(IUserService userService) : ControllerBase
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-	[HttpPost(ApiRoutes.Users.Post.PasswordResetConfirm)]
+	[HttpPost(ApiRoutes.User.Post.PasswordResetConfirm)]
 	public async Task<IActionResult> ResetPassword([FromRoute] Guid id, [FromBody] PasswordResetRequest request)
 	{
 		ServiceResult<object> result = await _userService.ResetPasswordAsync(id, request);
@@ -217,7 +217,7 @@ public class UserController(IUserService userService) : ControllerBase
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
 	[Authorize]
-	[HttpDelete(ApiRoutes.Users.Delete.Me)]
+	[HttpDelete(ApiRoutes.User.Delete.Me)]
 	public async Task<IActionResult> DeleteCurrentUser()
 	{
 		ServiceResult<object> result = await _userService.DeleteCurrentUserAsync();
@@ -238,7 +238,7 @@ public class UserController(IUserService userService) : ControllerBase
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
 	[Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
-	[HttpDelete(ApiRoutes.Users.Delete.ById)]
+	[HttpDelete(ApiRoutes.User.Delete.ById)]
 	public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.DeleteUserAsync(id);

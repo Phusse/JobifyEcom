@@ -291,7 +291,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
             baseUrl = $"{requestHttp.Scheme}://{requestHttp.Host.Value}";
         }
 
-        confirmationLink = $"{baseUrl}/{ApiRoutes.Users.Patch.ConfirmEmail}?email={Uri.EscapeDataString(email)}&token={token}";
+        confirmationLink = $"{baseUrl}/{ApiRoutes.User.Patch.ConfirmEmail}?email={Uri.EscapeDataString(email)}&token={token}";
     }
 
     #endregion

@@ -36,7 +36,7 @@ public class CursorState
 	/// The search and filter criteria that were applied when generating this cursor.
 	/// Ensures pagination continues with the same filters applied.
 	/// </summary>
-	public required ProfileFilterRequest Filter { get; set; }
+	public required UserProfileFilterRequest Filter { get; set; }
 
 	/// <summary>
 	/// Tracks how many times this cursor has been used to request subsequent pages.

@@ -41,7 +41,7 @@ public static class ApiRoutes
     /// <summary>
     /// Routes related to User Management operations.
     /// </summary>
-    public static class Users
+    public static class User
     {
         private const string Base = $"{Root}/{Version}/users";
 
@@ -121,6 +121,42 @@ public static class ApiRoutes
         {
             /// <summary>Delete the current worker profile.</summary>
             public const string Profile = $"{Base}/me/delete";
+        }
+    }
+
+    /// <summary>
+    /// Routes related to Job operations.
+    /// </summary>
+    public static class Job
+    {
+        private const string Base = $"{Root}/{Version}/jobs";
+
+        /// <summary>POST endpoints for Jobs.</summary>
+        public static class Post
+        {
+            /// <summary>Create a new job.</summary>
+            public const string Create = $"{Base}/create";
+        }
+
+        /// <summary>GET endpoints for Jobs.</summary>
+        public static class Get
+        {
+            /// <summary>Get job by ID.</summary>
+            public const string ById = $"{Base}/{{id}}";
+        }
+
+        /// <summary>PATCH endpoints for Jobs.</summary>
+        public static class Patch
+        {
+            /// <summary>Update a job by ID.</summary>
+            public const string Update = $"{Base}/{{id}}/update";
+        }
+
+        /// <summary>DELETE endpoints for Jobs.</summary>
+        public static class Delete
+        {
+            /// <summary>Delete a job by ID.</summary>
+            public const string ById = $"{Base}/{{id}}/delete";
         }
     }
 }
