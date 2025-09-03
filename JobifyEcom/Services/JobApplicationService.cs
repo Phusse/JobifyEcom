@@ -156,44 +156,48 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
         ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
             ?? throw new UnauthorizedException(
                 "Sign in required.",
-                ["You need to be signed in to access your account."]
+                ["You must be signed in to manage job applications."]
             );
 
         Guid currentUserId = currentUserPrincipal.GetUserId()
             ?? throw new UnauthorizedException(
                 "Sign in required.",
-                ["You need to be signed in to access your account."]
+                ["You must be signed in to manage job applications."]
             );
 
-        // Load job with its poster info
         Job job = await _db.Jobs
             .AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException($"The job with ID '{jobId}' was not found.");
+            ?? throw new NotFoundException($"No job found with ID '{jobId}'.");
 
-        // Load application
         JobApplication application = await _db.JobApplications
             .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPostId == jobId)
-            ?? throw new NotFoundException($"Application with ID '{applicationId}' not found for job '{jobId}'.");
+            ?? throw new NotFoundException($"No application found with ID '{applicationId}' for this job.");
 
         // Authorization: only the job poster can accept/reject
         if (job.PostedByUserId != currentUserId)
         {
             throw new ForbiddenException(
-                "You are not authorized to update this application.",
-                ["Only the job poster can accept or reject applications."]
+                "Access denied.",
+                ["Only the job poster can update the status of applications."]
             );
         }
 
         // Idempotency: if status is already the same, just return success
         if (application.Status == status)
         {
-            return ServiceResult<object>.Create(null, $"Application is already {status.ToString().ToLower()}.");
+            return ServiceResult<object>.Create(
+                null,
+                $"The application is already marked as '{status.ToString().ToLower()}'."
+            );
         }
 
         application.Status = status;
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, $"Application {status.ToString().ToLower()} successfully.");
+        return ServiceResult<object>.Create(
+            null,
+            $"The application has been successfully marked as '{status.ToString().ToLower()}'."
+        );
     }
 }
