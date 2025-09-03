@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using JobifyEcom.Models;
 
-namespace JobifyEcom.Helpers;
+namespace JobifyEcom.Services;
 
 /// <summary>
 /// Provides functionality to protect and validate cursor-based pagination state.

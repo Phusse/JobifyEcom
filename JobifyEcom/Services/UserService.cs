@@ -5,7 +5,6 @@ using JobifyEcom.DTOs.User;
 using JobifyEcom.Enums;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Extensions;
-using JobifyEcom.Helpers;
 using JobifyEcom.Models;
 using JobifyEcom.Security;
 using Microsoft.EntityFrameworkCore;
