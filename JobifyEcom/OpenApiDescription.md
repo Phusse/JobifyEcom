@@ -36,6 +36,7 @@
 * **💼 Jobs (User role)**: Post, update, delete, and browse job listings.
 * **🧑‍🏭 Workers (Worker role)**: Create/manage worker profiles, browse jobs, apply, and track applications.
 * **📄 Applications**: Workers can apply to jobs; users can view, accept, or reject applications.
+* **🗂️ Metadata**: Retrieve system enums (e.g., roles, statuses, verification states) for use in dropdowns, filters, and validation without hardcoding values.
 
 ## ⚠️ Errors & Validation
 
