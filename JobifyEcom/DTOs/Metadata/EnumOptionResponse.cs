@@ -8,11 +8,11 @@ public class EnumOptionResponse
 	/// <summary>
 	/// The enum key name as defined in code (used as the value in the DB).
 	/// </summary>
-	public required string Key { get; init; }
+	public required string Key { get; set; }
 
 	/// <summary>
 	/// A human-friendly display name for the enum value.
 	/// Falls back to <see cref="Key"/> if no <c>[Display(Name = "...")]</c> attribute is set.
 	/// </summary>
-	public required string DisplayName { get; init; }
+	public required string DisplayName { get; set; }
 }

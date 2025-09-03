@@ -85,33 +85,32 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
         return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 
+    [Authorize(Roles = nameof(SystemRole.Worker))]
     [HttpPost(ApiRoutes.Job.Post.Apply)]
-    public async Task<IActionResult> Apply([FromRoute] Guid jobId, [FromBody] RequestJobDto dto)
+    public async Task<IActionResult> Apply([FromRoute] Guid jobId)
     {
-        dto.JobPostId = jobId; // enforce job context
-        var result = await _jobApplicationService.CreateApplicationAsync(dto);
-        return CreatedAtAction(nameof(GetApplicationById), new { jobId, applicationId = result.Id }, result);
+        var result = await _jobApplicationService.CreateApplicationAsync(jobId);
+        return Created(string.Empty, ApiResponse<JobApplicationResponse>.Ok(result.Data, result.Message, result.Errors));
     }
 
     [HttpGet(ApiRoutes.Job.Get.ApplicationById)]
     public async Task<IActionResult> GetApplicationById([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
     {
-        var request = await _jobApplicationService.GetByIdAsync(applicationId);
-        if (request == null || request.JobPostId != jobId) return NotFound();
-        return Ok(request);
+        var result = await _jobApplicationService.GetByIdAsync(jobId, applicationId);
+        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 
     [HttpPatch(ApiRoutes.Job.Patch.AcceptApplication)]
     public async Task<IActionResult> AcceptApplication([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
     {
-        var success = await _jobApplicationService.UpdateStatusAsync(applicationId, JobApplicationStatus.Accepted);
-        return success ? Ok("Request accepted") : NotFound();
+        var result = await _jobApplicationService.UpdateStatusAsync(jobId, applicationId, JobApplicationStatus.Accepted);
+        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 
     [HttpPatch(ApiRoutes.Job.Patch.RejectApplication)]
     public async Task<IActionResult> RejectApplication([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
     {
-        var success = await _jobApplicationService.UpdateStatusAsync(applicationId, JobApplicationStatus.Rejected);
-        return success ? Ok("Request rejected") : NotFound();
+        var result = await _jobApplicationService.UpdateStatusAsync(jobId, applicationId, JobApplicationStatus.Rejected);
+        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
     }
 }
