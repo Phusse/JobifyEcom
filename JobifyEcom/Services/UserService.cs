@@ -26,13 +26,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 
 	public async Task<ServiceResult<UserProfileResponse>> GetCurrentUserAsync()
 	{
-		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new UnauthorizedException(
-				"Sign in required.",
-				["You need to be signed in to access your account."]
-			);
-
-		Guid currentUserId = currentUserPrincipal.GetUserId()
+		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
 			?? throw new UnauthorizedException(
 				"Sign in required.",
 				["You need to be signed in to access your account."]
@@ -64,10 +58,10 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		User? user = await _db.Users.FindAsync(userId)
 			?? throw new NotFoundException("User not found.", ["No user exists with the specified ID."]);
 
-		ClaimsPrincipal currentUser = _httpContextAccessor.HttpContext?.User
+		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
 			?? throw new UnauthorizedException("Authentication required.", ["You must be signed in."]);
 
-		IReadOnlyList<string> roles = currentUser.GetRoles();
+		IReadOnlyList<string> roles = currentUserPrincipal.GetRoles();
 		bool isAdmin = roles.Contains(SystemRole.Admin.ToString()) || roles.Contains(SystemRole.SuperAdmin.ToString());
 
 		UserProfileResponse response = isAdmin switch
@@ -149,13 +143,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 
 	public async Task<ServiceResult<object>> DeleteCurrentUserAsync()
 	{
-		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new UnauthorizedException(
-				"Sign in required.",
-				["You need to be signed in to delete your account."]
-			);
-
-		Guid currentUserId = currentUserPrincipal.GetUserId()
+		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
 			?? throw new UnauthorizedException(
 				"Sign in required.",
 				["You need to be signed in to delete your account."]
@@ -464,13 +452,12 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 			);
 		}
 
-		ClaimsPrincipal claimsPrincipal = _httpContextAccessor.HttpContext?.User
+		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
 			?? throw new UnauthorizedException(
 				"Authentication required.",
 				["You must be signed in to perform this action."]
 			);
 
-		Guid? currentUserId = claimsPrincipal.GetUserId();
 		User user = await _db.Users.FindAsync(currentUserId)
 			?? throw new NotFoundException(
 				"User not found.",

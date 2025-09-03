@@ -148,13 +148,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
 
     public async Task<ServiceResult<object>> UpdateStatusAsync(Guid jobId, Guid applicationId, JobApplicationStatus status)
     {
-        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-            ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You must be signed in to manage job applications."]
-            );
-
-        Guid currentUserId = currentUserPrincipal.GetUserId()
+        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Sign in required.",
                 ["You must be signed in to manage job applications."]

@@ -20,13 +20,7 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
 
     public async Task<ServiceResult<JobResponse>> CreateJobAsync(JobCreateRequest request)
     {
-        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-            ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
-            );
-
-        Guid currentUserId = currentUserPrincipal.GetUserId()
+        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Sign in required.",
                 ["You need to be signed in to access your account."]
@@ -70,13 +64,7 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
                 [$"No job exists with the specified ID. ({jobId})"]
             );
 
-        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-            ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
-            );
-
-        Guid currentUserId = currentUserPrincipal.GetUserId()
+        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Sign in required.",
                 ["You need to be signed in to access your account."]
@@ -126,13 +114,7 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
                 [$"No job exists with the specified ID. ({jobId})"]
             );
 
-        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-            ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
-            );
-
-        Guid currentUserId = currentUserPrincipal.GetUserId()
+        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Sign in required.",
                 ["You need to be signed in to access your account."]
