@@ -130,33 +130,46 @@ public static class ApiRoutes
     public static class Job
     {
         private const string Base = $"{Root}/{Version}/jobs";
+        private const string ApplicationsBase = $"{Base}/{{jobId}}/applications";
 
         /// <summary>POST endpoints for Jobs.</summary>
         public static class Post
         {
             /// <summary>Create a new job.</summary>
-            public const string Create = $"{Base}/create";
+            public const string Create = Base;
+
+            /// <summary>Submit a job application for a specific job.</summary>
+            public const string Apply = ApplicationsBase;
         }
 
         /// <summary>GET endpoints for Jobs.</summary>
         public static class Get
         {
-            /// <summary>Get job by ID.</summary>
+            /// <summary>Get a job by ID.</summary>
             public const string ById = $"{Base}/{{id}}";
+
+            /// <summary>Get a job application by ID (scoped under job).</summary>
+            public const string ApplicationById = $"{ApplicationsBase}/{{applicationId}}";
         }
 
         /// <summary>PATCH endpoints for Jobs.</summary>
         public static class Patch
         {
             /// <summary>Update a job by ID.</summary>
-            public const string Update = $"{Base}/{{id}}/update";
+            public const string Update = $"{Base}/{{id}}";
+
+            /// <summary>Accept a job application.</summary>
+            public const string AcceptApplication = $"{ApplicationsBase}/{{applicationId}}/accept";
+
+            /// <summary>Reject a job application.</summary>
+            public const string RejectApplication = $"{ApplicationsBase}/{{applicationId}}/reject";
         }
 
         /// <summary>DELETE endpoints for Jobs.</summary>
         public static class Delete
         {
             /// <summary>Delete a job by ID.</summary>
-            public const string ById = $"{Base}/{{id}}/delete";
+            public const string ById = $"{Base}/{{id}}";
         }
     }
 

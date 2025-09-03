@@ -4,6 +4,7 @@ using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Job;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
+using JobifyEcom.Enums;
 
 namespace JobifyEcom.Controllers;
 
@@ -12,9 +13,10 @@ namespace JobifyEcom.Controllers;
 /// </summary>
 [Authorize]
 [ApiController]
-public class JobController(IJobService jobService) : ControllerBase
+public class JobController(IJobDomainService jobDomain) : ControllerBase
 {
-    private readonly IJobService _jobService = jobService;
+    private readonly IJobService _jobService = jobDomain.JobService;
+    private readonly IJobApplicationService _jobApplicationService = jobDomain.JobApplicationService;
 
     /// <summary>
     /// Creates a new job post.
@@ -42,7 +44,7 @@ public class JobController(IJobService jobService) : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<JobResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [HttpGet(ApiRoutes.Job.Get.ById)]
-    public async Task<IActionResult> GetById([FromRoute]Guid id)
+    public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
         ServiceResult<JobResponse?> result = await _jobService.GetJobByIdAsync(id);
         return Ok(ApiResponse<JobResponse?>.Ok(result.Data, result.Message, result.Errors));
@@ -81,5 +83,35 @@ public class JobController(IJobService jobService) : ControllerBase
     {
         ServiceResult<object> result = await _jobService.DeleteJobAsync(id);
         return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+    }
+
+    [HttpPost(ApiRoutes.Job.Post.Apply)]
+    public async Task<IActionResult> Apply([FromRoute] Guid jobId, [FromBody] RequestJobDto dto)
+    {
+        dto.JobPostId = jobId; // enforce job context
+        var result = await _jobApplicationService.CreateApplicationAsync(dto);
+        return CreatedAtAction(nameof(GetApplicationById), new { jobId, applicationId = result.Id }, result);
+    }
+
+    [HttpGet(ApiRoutes.Job.Get.ApplicationById)]
+    public async Task<IActionResult> GetApplicationById([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
+    {
+        var request = await _jobApplicationService.GetByIdAsync(applicationId);
+        if (request == null || request.JobPostId != jobId) return NotFound();
+        return Ok(request);
+    }
+
+    [HttpPatch(ApiRoutes.Job.Patch.AcceptApplication)]
+    public async Task<IActionResult> AcceptApplication([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
+    {
+        var success = await _jobApplicationService.UpdateStatusAsync(applicationId, JobApplicationStatus.Accepted);
+        return success ? Ok("Request accepted") : NotFound();
+    }
+
+    [HttpPatch(ApiRoutes.Job.Patch.RejectApplication)]
+    public async Task<IActionResult> RejectApplication([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
+    {
+        var success = await _jobApplicationService.UpdateStatusAsync(applicationId, JobApplicationStatus.Rejected);
+        return success ? Ok("Request rejected") : NotFound();
     }
 }
