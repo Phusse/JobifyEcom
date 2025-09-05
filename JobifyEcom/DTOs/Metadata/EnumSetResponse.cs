@@ -9,10 +9,10 @@ public class EnumSetResponse
 	/// <summary>
 	/// The name of the enum type (e.g., <c>"SystemRole"</c>, <c>"JobStatus"</c>).
 	/// </summary>
-	public required string Name { get; init; }
+	public required string Name { get; set; }
 
 	/// <summary>
 	/// The list of values available in the enum, including their keys and display names.
 	/// </summary>
-	public required IReadOnlyList<EnumOptionResponse> Values { get; init; }
+	public required IReadOnlyList<EnumOptionResponse> Values { get; set; }
 }

@@ -29,7 +29,8 @@ internal class MetadataService(EnumCache enumCache) : IMetadataService
 		{
 			response = ServiceResult<EnumSetResponse?>.Create(
 				null,
-				$"Enum '{typeName}' not found. Check available enums at '{ApiRoutes.Metadata.Get.AllEnums}'."
+				$"We couldn't find an enum named '{typeName}'.",
+				[$"Please check the list of available enums at '{ApiRoutes.Metadata.Get.AllEnums}'."]
 			);
 		}
 		else

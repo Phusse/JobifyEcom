@@ -4,7 +4,6 @@ namespace JobifyEcom.Enums;
 
 /// <summary>
 /// Defines user roles for authorization and access control across the platform.
-/// Enum values are code-friendly; Display(Name) values are UX-friendly for frontend.
 /// </summary>
 public enum SystemRole
 {

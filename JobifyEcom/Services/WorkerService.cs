@@ -21,13 +21,7 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
 
     public async Task<ServiceResult<object>> CreateProfileAsync()
     {
-        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-            ?? throw new UnauthorizedException(
-                "Authentication required.",
-                ["You must be signed in to create a worker profile."]
-            );
-
-        Guid currentUserId = currentUserPrincipal.GetUserId()
+        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Authentication required.",
                 ["You must be signed in to create a worker profile."]
@@ -56,13 +50,7 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
 
     public async Task<ServiceResult<object>> DeleteProfileAsync()
     {
-        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-            ?? throw new UnauthorizedException(
-                "Authentication required.",
-                ["You must be signed in to delete a worker profile."]
-            );
-
-        Guid currentUserId = currentUserPrincipal.GetUserId()
+        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Authentication required.",
                 ["You must be signed in to delete a worker profile."]
@@ -82,13 +70,7 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
 
     public async Task<ServiceResult<WorkerProfileResponse>> GetMyProfileAsync()
     {
-        ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-            ?? throw new UnauthorizedException(
-                "Authentication required.",
-                ["You must be signed in to view your worker profile."]
-            );
-
-        Guid currentUserId = currentUserPrincipal.GetUserId()
+        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
             ?? throw new UnauthorizedException(
                 "Authentication required.",
                 ["You must be signed in to view your worker profile."]

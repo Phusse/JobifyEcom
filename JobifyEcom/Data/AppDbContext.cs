@@ -63,7 +63,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureUser(modelBuilder);
-        ConfigureWorkerProfile(modelBuilder);
+        ConfigureWorker(modelBuilder);
         ConfigureSkill(modelBuilder);
         ConfigureJobPost(modelBuilder);
         ConfigureJobApplication(modelBuilder);
@@ -105,7 +105,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         });
     }
 
-    private static void ConfigureWorkerProfile(ModelBuilder modelBuilder)
+    private static void ConfigureWorker(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Worker>(entity =>
         {

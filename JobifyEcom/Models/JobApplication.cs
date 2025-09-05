@@ -41,8 +41,7 @@ public class JobApplication
     /// <summary>
     /// The current status of the application (e.g., Pending, Accepted, Rejected).
     /// </summary>
-    [Required]
-    public required JobApplicationStatus Status { get; set; } = JobApplicationStatus.Pending;
+    public JobApplicationStatus Status { get; set; } = JobApplicationStatus.Pending;
 
     /// <summary>
     /// The UTC datetime when this application was submitted.
