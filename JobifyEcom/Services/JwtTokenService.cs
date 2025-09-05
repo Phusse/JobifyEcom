@@ -1,12 +1,13 @@
 using JobifyEcom.Enums;
 using JobifyEcom.Extensions;
 using JobifyEcom.Models;
+using JobifyEcom.Security;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace JobifyEcom.Security;
+namespace JobifyEcom.Services;
 
 /// <summary>
 /// Provides functionality for generating and validating JSON Web Tokens (JWT).

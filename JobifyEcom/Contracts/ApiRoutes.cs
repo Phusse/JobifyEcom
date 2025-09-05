@@ -159,4 +159,22 @@ public static class ApiRoutes
             public const string ById = $"{Base}/{{id}}/delete";
         }
     }
+
+    /// <summary>
+    /// Routes related to Metadata (enums, lookup tables, etc.).
+    /// </summary>
+    public static class Metadata
+    {
+        private const string Base = $"{Root}/{Version}/metadata";
+
+        /// <summary>GET endpoints for Metadata.</summary>
+        public static class Get
+        {
+            /// <summary>Get all enums.</summary>
+            public const string AllEnums = $"{Base}/enums";
+
+            /// <summary>Get a specific enum type by its type name.</summary>
+            public const string EnumByType = $"{Base}/enums/{{id}}";
+        }
+    }
 }
