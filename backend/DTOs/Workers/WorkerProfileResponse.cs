@@ -1,4 +1,4 @@
-namespace JobifyEcom.DTOs.Worker;
+namespace JobifyEcom.DTOs.Workers;
 
 /// <summary>
 /// Represents the response for creating a worker profile.

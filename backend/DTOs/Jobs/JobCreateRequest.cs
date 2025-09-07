@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JobifyEcom.DTOs.Job;
+namespace JobifyEcom.DTOs.Jobs;
 
 /// <summary>
 /// Request payload for creating a new Job.

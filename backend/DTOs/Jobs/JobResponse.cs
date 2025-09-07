@@ -1,6 +1,6 @@
 using JobifyEcom.Enums;
 
-namespace JobifyEcom.DTOs.Job;
+namespace JobifyEcom.DTOs.Jobs;
 
 /// <summary>
 /// Represents the data returned to clients when a job is retrieved or created.

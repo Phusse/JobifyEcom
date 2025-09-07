@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
-using JobifyEcom.DTOs.Job;
+using JobifyEcom.DTOs.Jobs;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using JobifyEcom.Enums;

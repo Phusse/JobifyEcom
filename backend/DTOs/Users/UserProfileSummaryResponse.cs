@@ -1,4 +1,4 @@
-namespace JobifyEcom.DTOs.User;
+namespace JobifyEcom.DTOs.Users;
 
 /// <summary>
 /// Represents a lightweight view of a user's profile,

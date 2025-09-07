@@ -1,5 +1,5 @@
 using JobifyEcom.DTOs;
-using JobifyEcom.DTOs.Job;
+using JobifyEcom.DTOs.Jobs;
 
 namespace JobifyEcom.Services;
 

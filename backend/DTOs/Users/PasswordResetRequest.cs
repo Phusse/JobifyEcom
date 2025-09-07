@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JobifyEcom.DTOs.User;
+namespace JobifyEcom.DTOs.Users;
 
 /// <summary>
 /// Represents the information required to reset a user's password

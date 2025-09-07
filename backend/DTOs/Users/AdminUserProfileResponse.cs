@@ -1,4 +1,4 @@
-namespace JobifyEcom.DTOs.User;
+namespace JobifyEcom.DTOs.Users;
 
 /// <summary>
 /// Represents detailed information about a user for administrative purposes.

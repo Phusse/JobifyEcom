@@ -1,6 +1,6 @@
 using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
-using JobifyEcom.DTOs.Worker;
+using JobifyEcom.DTOs.Workers;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

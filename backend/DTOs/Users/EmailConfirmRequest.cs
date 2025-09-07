@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JobifyEcom.DTOs.User;
+namespace JobifyEcom.DTOs.Users;
 
 /// <summary>
 /// Represents the request needed to confirm a user's email address.

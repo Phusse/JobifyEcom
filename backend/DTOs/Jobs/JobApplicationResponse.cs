@@ -1,6 +1,6 @@
 using JobifyEcom.Enums;
 
-namespace JobifyEcom.DTOs.Job;
+namespace JobifyEcom.DTOs.Jobs;
 
 /// <summary>
 /// Response DTO for a job application.

@@ -1,4 +1,4 @@
-using JobifyEcom.DTOs.User;
+using JobifyEcom.DTOs.Users;
 using JobifyEcom.Enums;
 
 namespace JobifyEcom.Models;

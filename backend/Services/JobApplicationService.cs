@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
-using JobifyEcom.DTOs.Job;
+using JobifyEcom.DTOs.Jobs;
 using JobifyEcom.Enums;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Extensions;

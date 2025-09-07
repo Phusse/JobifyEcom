@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using JobifyEcom.Enums;
 
-namespace JobifyEcom.DTOs.Job;
+namespace JobifyEcom.DTOs.Jobs;
 
 /// <summary>
 /// Request payload for updating an existing Job.

@@ -1,6 +1,6 @@
 using JobifyEcom.Enums;
 
-namespace JobifyEcom.DTOs.User;
+namespace JobifyEcom.DTOs.Users;
 
 /// <summary>
 /// Represents the public profile information of a user,
