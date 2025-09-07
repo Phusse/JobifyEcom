@@ -285,6 +285,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Verification>(entity =>
         {
             // Convert enum to string
+            entity.Property(v => v.EntityType)
+                .HasConversion<string>();
+
             entity.Property(v => v.Status)
                 .HasConversion<string>();
 

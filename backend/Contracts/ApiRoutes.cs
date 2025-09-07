@@ -100,13 +100,17 @@ public static class ApiRoutes
     /// </summary>
     public static class Worker
     {
-        private const string Base = $"{Root}/{Version}/worker";
+        private const string Base = $"{Root}/{Version}/workers";
+        private const string SkillsBase = $"{Base}/{{workerId}}/skills";
 
         /// <summary>GET endpoints for Worker.</summary>
         public static class Get
         {
             /// <summary>Get current authenticated worker profile.</summary>
             public const string Me = $"{Base}/me";
+
+            /// <summary>Get a specific skill by ID (scoped under worker).</summary>
+            public const string SkillById = $"{SkillsBase}/{{skillId}}";
         }
 
         /// <summary>POST endpoints for Worker.</summary>
@@ -114,6 +118,12 @@ public static class ApiRoutes
         {
             /// <summary>Create a worker profile for the current user.</summary>
             public const string CreateProfile = $"{Base}/me/create";
+
+            /// <summary>Add a new skill to the current worker.</summary>
+            public const string AddSkill = $"{Base}/me/skills";
+
+            /// <summary>Verify a worker’s skill (admin only).</summary>
+            public const string VerifySkill = $"{SkillsBase}/{{skillId}}/verify";
         }
 
         /// <summary>DELETE endpoints for Workers.</summary>
@@ -121,9 +131,12 @@ public static class ApiRoutes
         {
             /// <summary>Delete the current worker profile.</summary>
             public const string Profile = $"{Base}/me/delete";
+
+            /// <summary>Remove a skill from the current worker.</summary>
+            public const string RemoveSkill = $"{Base}/me/skills/{{skillId}}";
         }
     }
-
+    
     /// <summary>
     /// Routes related to Job operations.
     /// </summary>

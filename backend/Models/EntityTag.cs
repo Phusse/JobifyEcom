@@ -37,5 +37,5 @@ public class EntityTag
 	/// <summary>
 	/// Navigation property to the associated <see cref="Models.Tag"/>.
 	/// </summary>
-	public Tag? Tag { get; set; }
+	public Tag Tag { get; set; } = null!;
 }

@@ -79,6 +79,8 @@ builder.Services.AddSingleton<EnumCache>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
+builder.Services.AddScoped<IWorkerSkillService, WorkerSkillService>();
+builder.Services.AddScoped<IWorkerDomainService, WorkerDomainService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
 builder.Services.AddScoped<IJobDomainService, JobDomainService>();
