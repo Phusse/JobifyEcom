@@ -41,7 +41,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         ServiceResult<TokenResponse> result = await _authService.LoginAsync(request);
-        return Ok(ApiResponse<TokenResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         ServiceResult<TokenResponse> result = await _authService.RefreshTokenAsync(request);
-        return Ok(ApiResponse<TokenResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         ServiceResult<object> result = await _authService.RegisterAsync(request);
-        return Created(string.Empty, ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Created(string.Empty, result.MapToApiResponse());
     }
 
     /// <summary>
@@ -106,6 +106,6 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Logout()
     {
         ServiceResult<object> result = await _authService.LogoutAsync();
-        return Ok(result.ToApiResponse());
+        return Ok(result.MapToApiResponse());
     }
 }

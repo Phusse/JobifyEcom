@@ -15,7 +15,7 @@ public static class ServiceResultExtensions
 	/// <param name="success">Whether the operation succeeded (defaults to true).</param>
 	/// <param name="traceId">Optional trace identifier.</param>
 	/// <returns>An <see cref="ApiResponse{T}"/> with the mapped data, message, and errors.</returns>
-	public static ApiResponse<T> ToApiResponse<T>(this ServiceResult<T> result, bool success = true, string? traceId = null)
+	public static ApiResponse<T> MapToApiResponse<T>(this ServiceResult<T> result, bool success = true, string? traceId = null)
 	{
 		return success
 			? ApiResponse<T>.Ok(result.Data, result.Message, result.Errors, traceId)

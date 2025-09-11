@@ -2,6 +2,7 @@ using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Users;
 using JobifyEcom.Enums;
+using JobifyEcom.Extensions;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> GetCurrentUser()
 	{
 		ServiceResult<UserProfileResponse> result = await _userService.GetCurrentUserAsync();
-		return Ok(ApiResponse<UserProfileResponse>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -54,7 +55,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> GetUserById([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.GetUserByIdAsync(id);
-		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -69,7 +70,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> SearchUsers([FromQuery] CursorPaginationRequest<UserProfileFilterRequest> request)
 	{
 		ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>> result = await _userService.SearchUsersAsync(request);
-		return Ok(ApiResponse<CursorPaginationResponse<UserProfileSummaryResponse>>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -88,7 +89,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> UpdateUser([FromBody] UserProfileUpdateRequest request)
 	{
 		ServiceResult<UserProfileResponse> result = await _userService.UpdateCurrentUserAsync(request);
-		return Ok(ApiResponse<UserProfileResponse>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -126,7 +127,7 @@ public class UserController(IUserService userService) : ControllerBase
 	private async Task<IActionResult> ConfirmEmailInternal(EmailConfirmRequest request)
 	{
 		ServiceResult<object> result = await _userService.ConfirmEmailAsync(request);
-		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -147,7 +148,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> LockUser([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.LockUserAsync(id);
-		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -168,7 +169,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> UnlockUser([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.UnlockUserAsync(id);
-		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -184,7 +185,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> RequestPasswordReset([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.RequestPasswordResetAsync(id);
-		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -203,7 +204,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> ResetPassword([FromRoute] Guid id, [FromBody] PasswordResetRequest request)
 	{
 		ServiceResult<object> result = await _userService.ResetPasswordAsync(id, request);
-		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -221,7 +222,7 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> DeleteCurrentUser()
 	{
 		ServiceResult<object> result = await _userService.DeleteCurrentUserAsync();
-		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -242,6 +243,6 @@ public class UserController(IUserService userService) : ControllerBase
 	public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
 	{
 		ServiceResult<object> result = await _userService.DeleteUserAsync(id);
-		return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 }

@@ -2,6 +2,7 @@ using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Workers;
 using JobifyEcom.Enums;
+using JobifyEcom.Extensions;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,7 +37,7 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     public async Task<IActionResult> CreateProfile()
     {
         ServiceResult<object> result = await _workerService.CreateProfileAsync();
-        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -55,7 +56,7 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     public async Task<IActionResult> GetMyProfile()
     {
         ServiceResult<WorkerProfileResponse> result = await _workerService.GetMyProfileAsync();
-        return Ok(ApiResponse<WorkerProfileResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -74,7 +75,7 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     public async Task<IActionResult> DeleteProfile()
     {
         ServiceResult<object> result = await _workerService.DeleteProfileAsync();
-        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -96,7 +97,7 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     public async Task<IActionResult> AddSkill([FromBody] AddWorkerSkillRequest request)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.AddSkillAsync(request);
-        return Ok(ApiResponse<WorkerSkillResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -115,7 +116,7 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     public async Task<IActionResult> RemoveSkill([FromRoute] Guid skillId)
     {
         ServiceResult<object> result = await _workerSkillService.RemoveSkillAsync(skillId);
-        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -135,7 +136,7 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     public async Task<IActionResult> GetSkillById([FromRoute] Guid workerId, [FromRoute] Guid skillId)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.GetSkillByIdAsync(skillId);
-        return Ok(ApiResponse<WorkerSkillResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -155,12 +156,9 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     [HttpPost(ApiRoutes.Worker.Post.VerifySkill)]
     [ProducesResponseType(typeof(ApiResponse<WorkerSkillResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> VerifySkill(
-        [FromRoute] Guid workerId,
-        [FromRoute] Guid skillId,
-        [FromBody] VerifySkillRequest request)
+    public async Task<IActionResult> VerifySkill([FromRoute] Guid workerId, [FromRoute] Guid skillId, [FromBody] VerifySkillRequest request)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.VerifySkillAsync(skillId, request);
-        return Ok(ApiResponse<WorkerSkillResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 }

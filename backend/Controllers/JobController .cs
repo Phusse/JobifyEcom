@@ -5,6 +5,7 @@ using JobifyEcom.DTOs.Jobs;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using JobifyEcom.Enums;
+using JobifyEcom.Extensions;
 
 namespace JobifyEcom.Controllers;
 
@@ -33,7 +34,7 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> Create([FromBody] JobCreateRequest request)
     {
         ServiceResult<JobResponse> result = await _jobService.CreateJobAsync(request);
-        return Created(string.Empty, ApiResponse<JobResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Created(string.Empty, result.MapToApiResponse());
     }
 
     /// <summary>
@@ -49,7 +50,7 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
         ServiceResult<JobResponse?> result = await _jobService.GetJobByIdAsync(id);
-        return Ok(ApiResponse<JobResponse?>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -68,7 +69,7 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] JobUpdateRequest request)
     {
         ServiceResult<JobResponse> result = await _jobService.UpdateJobAsync(id, request);
-        return Ok(ApiResponse<JobResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -84,7 +85,7 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
         ServiceResult<object> result = await _jobService.DeleteJobAsync(id);
-        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -111,7 +112,7 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> Apply([FromRoute] Guid jobId)
     {
         ServiceResult<JobApplicationResponse> result = await _jobApplicationService.CreateApplicationAsync(jobId);
-        return Created(string.Empty, ApiResponse<JobApplicationResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Created(string.Empty, result.MapToApiResponse());
     }
 
     /// <summary>
@@ -135,7 +136,7 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> GetApplicationById([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
     {
         ServiceResult<JobApplicationResponse> result = await _jobApplicationService.GetByIdAsync(jobId, applicationId);
-        return Ok(ApiResponse<JobApplicationResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -160,7 +161,7 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> AcceptApplication([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
     {
         ServiceResult<object> result = await _jobApplicationService.UpdateStatusAsync(jobId, applicationId, JobApplicationStatus.Accepted);
-        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
@@ -185,6 +186,6 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> RejectApplication([FromRoute] Guid jobId, [FromRoute] Guid applicationId)
     {
         ServiceResult<object> result = await _jobApplicationService.UpdateStatusAsync(jobId, applicationId, JobApplicationStatus.Rejected);
-        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 }

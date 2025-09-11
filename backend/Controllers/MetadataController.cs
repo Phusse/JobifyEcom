@@ -2,6 +2,7 @@ using JobifyEcom.Contracts;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Metadata;
 using JobifyEcom.Enums;
+using JobifyEcom.Extensions;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,7 +39,7 @@ public class MetadataController(IMetadataService metadataService) : ControllerBa
 	public async Task<IActionResult> GetAllEnums()
 	{
 		ServiceResult<List<EnumSetResponse>> result = await _metadataService.GetAllEnums();
-		return Ok(ApiResponse<List<EnumSetResponse>>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
@@ -62,6 +63,6 @@ public class MetadataController(IMetadataService metadataService) : ControllerBa
 	public async Task<IActionResult> GetEnumByType([FromRoute] string id)
 	{
 		ServiceResult<EnumSetResponse?> result = await _metadataService.GetEnumByType(id);
-		return Ok(ApiResponse<EnumSetResponse?>.Ok(result.Data, result.Message, result.Errors));
+		return Ok(result.MapToApiResponse());
 	}
 }
