@@ -4,6 +4,7 @@ using JobifyEcom.Contracts;
 using JobifyEcom.DTOs.Auth;
 using JobifyEcom.DTOs;
 using JobifyEcom.Services;
+using JobifyEcom.Extensions;
 
 namespace JobifyEcom.Controllers;
 
@@ -105,6 +106,6 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Logout()
     {
         ServiceResult<object> result = await _authService.LogoutAsync();
-        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.ToApiResponse());
     }
 }
