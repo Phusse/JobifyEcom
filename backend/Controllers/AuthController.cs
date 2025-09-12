@@ -94,7 +94,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         ServiceResult<RegisterResponse> result = await _authService.RegisterAsync(request);
 
         string? location = result.Data?.ConfirmationLink;
-        result.Data = null; // strip data if only included in Location header
+        result.Data = null; // strip data to only included in Location header
 
         return Created(location, result.MapToApiResponse());
     }
