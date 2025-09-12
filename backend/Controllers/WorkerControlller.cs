@@ -32,15 +32,26 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     /// and other worker-related operations.
     /// </remarks>
     /// <returns>A confirmation message indicating success or failure.</returns>
-    /// <response code="200">Worker profile created successfully.</response>
+    /// <response code="201">Worker profile created successfully.</response>
     /// <response code="409">A worker profile already exists for this user.</response>
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
     [HttpPost(ApiRoutes.Worker.Post.Create)]
     public async Task<IActionResult> CreateProfile()
     {
         ServiceResult<object> result = await _workerService.CreateProfileAsync();
-        return Ok(result.MapToApiResponse());
+        string locationUri = BuildWorkerResourceUrl();
+        return Created(locationUri, result.MapToApiResponse());
+    }
+
+    /// <summary>
+    /// Builds the full URL to access a specific job resource.
+    /// </summary>
+    /// <returns>The fully qualified URL to the newly created worker resource.</returns>
+    private string BuildWorkerResourceUrl()
+    {
+        string path = ApiRoutes.Worker.Get.Me;
+        return $"{Request.Scheme}://{Request.Host}/{path}";
     }
 
     /// <summary>
@@ -106,8 +117,8 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     public async Task<IActionResult> AddSkill([FromBody] AddWorkerSkillRequest request)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.AddSkillAsync(request);
-        string location = BuildSkillResourceUrl(result.Data);
-        return Created(location, result.MapToApiResponse());
+        string locationUri = BuildSkillResourceUrl(result.Data);
+        return Created(locationUri, result.MapToApiResponse());
     }
 
     /// <summary>
