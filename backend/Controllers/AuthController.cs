@@ -30,12 +30,6 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// </list>
     /// </remarks>
     /// <param name="request">The login credentials, including <c>email</c> and <c>password</c>.</param>
-    /// <example>
-    /// {
-    ///   "email": "jane.doe@example.com",
-    ///   "password": "StrongP@ssword123"
-    /// }
-    /// </example>
     /// <returns>A response containing both access and refresh tokens along with their expiration times.</returns>
     /// <response code="200">Login successful. Tokens are returned in the response body.</response>
     /// <response code="400">Invalid login payload or failed validation.</response>
@@ -58,11 +52,6 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// The provided refresh token must be valid, not expired, and not revoked.
     /// </remarks>
     /// <param name="request">The refresh token request containing the <c>refreshToken</c> string.</param>
-    /// <example>
-    /// {
-    ///   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    /// }
-    /// </example>
     /// <returns>A new access token along with its expiry time.</returns>
     /// <response code="200">Access token successfully refreshed.</response>
     /// <response code="400">Invalid refresh token payload or failed validation.</response>
@@ -81,19 +70,13 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// Registers a new user account with the provided information.
     /// </summary>
     /// <remarks>
-    /// This endpoint creates a new user if the provided <c>email</c> is not already in use.
-    /// After registration, an email confirmation link is generated.
-    /// In production, this link would be emailed to the user — but for development/testing purposes,
-    /// it is returned in the <c>Location</c> header of the response.
+    /// This endpoint registers a new user if the specified <c>email</c> is not already in use.
+    /// After successful registration, an email confirmation link is generated and returned in the
+    /// <c>Location</c> header of the response.
+    /// <para> In production, this link would typically also be sent via email to the user,
+    /// but for development and testing purposes, it can be retrieved directly from the response header. </para>
     /// </remarks>
     /// <param name="request">User registration details including <c>name</c>, <c>email</c>, and <c>password</c>.</param>
-    /// <example>
-    /// {
-    ///   "name": "Jane Doe",
-    ///   "email": "jane.doe@example.com",
-    ///   "password": "StrongP@ssword123"
-    /// }
-    /// </example>
     /// <returns>
     /// A response confirming registration.
     /// The <c>Location</c> header contains the confirmation link the user must visit to activate their account.
@@ -114,7 +97,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     /// <summary>
-    /// Logs out the currently authenticated user by invalidating their session or token.
+    /// Logs out the currently authenticated user by invalidating their session and token.
     /// </summary>
     /// <remarks>
     /// This endpoint requires the user to be authenticated (valid access token in the <c>Authorization</c> header).
