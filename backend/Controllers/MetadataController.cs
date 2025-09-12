@@ -1,7 +1,6 @@
 using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Metadata;
-using JobifyEcom.Enums;
 using JobifyEcom.Extensions;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Mvc;

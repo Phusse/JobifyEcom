@@ -11,6 +11,13 @@ internal static partial class ErrorCatalog
 		Details: []
 	);
 
+	internal static readonly ErrorDefinition InvalidStaffRole = new(
+		Code: "USER_INVALID_STAFF_ROLE",
+		HttpStatus: StatusCodes.Status400BadRequest,
+		Title: "Staff Role is invalid.",
+		Details: ["Staff Role can only be Admin, SuperAdmin, or null."]
+	);
+
 	internal static readonly ErrorDefinition WorkerProfileMissing = new(
 		Code: "WORKER_PROFILE_MISSING",
 		HttpStatus: StatusCodes.Status404NotFound,

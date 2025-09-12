@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using JobifyEcom.Contracts.Errors;
 using JobifyEcom.Enums;
+using JobifyEcom.Exceptions;
 
 namespace JobifyEcom.Models;
 
@@ -65,7 +67,7 @@ public class User
         {
             if (value is not (null or SystemRole.Admin or SystemRole.SuperAdmin))
             {
-                throw new ArgumentException($"Staff Role can only be {SystemRole.Admin}, {SystemRole.SuperAdmin}, or null.");
+                throw new AppException(ErrorCatalog.InvalidStaffRole);
             }
 
             _staffRole = value;

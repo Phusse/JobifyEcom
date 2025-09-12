@@ -31,6 +31,7 @@ public class AppException : Exception
 	/// If null or empty, <see cref="Errors"/> will remain null.
 	/// </param>
 	/// <param name="code">An optional unique error code.</param>
+	[Obsolete("Depreacted, Use the other constructor that accepts error definition.")]
 	public AppException(int statusCode, string message, List<string>? errors = null, string? code = null) : base(message)
 	{
 		StatusCode = statusCode;
@@ -41,11 +42,10 @@ public class AppException : Exception
 	/// <summary>
 	/// Initializes a new instance of <see cref="AppException"/> using an <see cref="ErrorDefinition"/>.
 	/// </summary>
-	/// <param name="statusCode">The HTTP status code to return.</param>
 	/// <param name="error">The predefined error definition.</param>
-	public AppException(int statusCode, ErrorDefinition error) : base(error.Title)
+	public AppException(ErrorDefinition error) : base(error.Title)
 	{
-		StatusCode = statusCode;
+		StatusCode = error.HttpStatus;
 		Code = error.Code;
 		Errors = (error.Details.Length > 0) ? [.. error.Details] : null;
 	}

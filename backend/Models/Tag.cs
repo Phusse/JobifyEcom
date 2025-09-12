@@ -21,7 +21,7 @@ public class Tag
 	[Required]
 	[MinLength(1)]
 	[StringLength(100)]
-	public required string Name { get; set; } = string.Empty;
+	public required string Name { get; set; }
 
 	/// <summary>
 	/// Collection of entity-tag mappings linking this tag to various entities.
