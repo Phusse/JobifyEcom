@@ -48,7 +48,7 @@ public class MetadataController(IMetadataService metadataService) : ControllerBa
 	/// - `SystemRole` : roles assigned to users in the system
 	/// - `SkillLevel` : level of expertise or skill
 	/// - `JobStatus` : status of a job posting
-	/// - `VerificationStatus` : verification state of a user or entity
+	/// - `VerificationStatus` : verification state of an entity
 	/// - `UserSortField` : fields available for sorting user lists
 	/// - `UserSearchField` : fields that can be searched for filtering users
 	/// </remarks>
