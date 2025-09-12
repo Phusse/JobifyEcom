@@ -11,6 +11,7 @@ namespace JobifyEcom.Controllers;
 /// <summary>
 /// Provides endpoints for user authentication operations, including login, token refresh, registration, and logout.
 /// </summary>
+
 [ApiController]
 public class AuthController(IAuthService authService) : ControllerBase
 {

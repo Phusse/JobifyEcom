@@ -14,10 +14,10 @@ namespace JobifyEcom.Controllers;
 /// </summary>
 [Authorize]
 [ApiController]
-public class WorkerController(IWorkerDomainService workerDomainService) : ControllerBase
+public class WorkerController(IWorkerService workerService, IWorkerSkillService workerSkillService) : ControllerBase
 {
-    private readonly IWorkerService _workerService = workerDomainService.WorkerService;
-    private readonly IWorkerSkillService _workerSkillService = workerDomainService.WorkerSkillService;
+    private readonly IWorkerService _workerService = workerService;
+    private readonly IWorkerSkillService _workerSkillService = workerSkillService;
 
     /// <summary>
     /// Creates a new worker profile for the currently authenticated user.

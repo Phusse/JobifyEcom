@@ -16,10 +16,10 @@ namespace JobifyEcom.Controllers;
 /// </summary>
 [Authorize]
 [ApiController]
-public class JobController(IJobDomainService jobDomain) : ControllerBase
+public class JobController(IJobService jobService, IJobApplicationService jobApplicationService) : ControllerBase
 {
-    private readonly IJobService _jobService = jobDomain.JobService;
-    private readonly IJobApplicationService _jobApplicationService = jobDomain.JobApplicationService;
+    private readonly IJobService _jobService = jobService;
+    private readonly IJobApplicationService _jobApplicationService = jobApplicationService;
 
     /// <summary>
     /// Creates a new job post.
@@ -34,9 +34,23 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> Create([FromBody] JobCreateRequest request)
     {
         ServiceResult<JobResponse> result = await _jobService.CreateJobAsync(request);
-        return Created(string.Empty, result.MapToApiResponse());
+        string locationUri = BuildJobResourceUrl(result.Data);
+        return Created(locationUri, result.MapToApiResponse());
     }
 
+    /// <summary>
+    /// Builds the full absolute URL for a job resource.
+    /// Returns empty string if data is null.
+    /// </summary>
+    private string BuildJobResourceUrl(JobResponse? data)
+    {
+        if (data is null) return string.Empty;
+
+        string path = ApiRoutes.Job.Get.ById
+            .Replace("{{id}}", data.Id.ToString());
+
+        return $"{Request.Scheme}://{Request.Host}/{path}";
+    }
     /// <summary>
     /// Retrieves a job by its unique identifier.
     /// </summary>
@@ -112,7 +126,28 @@ public class JobController(IJobDomainService jobDomain) : ControllerBase
     public async Task<IActionResult> Apply([FromRoute] Guid jobId)
     {
         ServiceResult<JobApplicationResponse> result = await _jobApplicationService.CreateApplicationAsync(jobId);
-        return Created(string.Empty, result.MapToApiResponse());
+        // Let the URL builder decide what to do if Data is null
+        string locationUri = BuildApplicationResourceUrl(jobId, result.Data);
+
+        return Created(locationUri, result.MapToApiResponse());
+    }
+
+    /// <summary>
+    /// Builds the full absolute URL for a job application resource.
+    /// If data is null, returns empty string.
+    /// </summary>
+    private string BuildApplicationResourceUrl(Guid jobId, JobApplicationResponse? data)
+    {
+        if (data == null)
+        {
+            return string.Empty; // no location if resource is null
+        }
+
+        string path = ApiRoutes.Job.Get.ApplicationById
+            .Replace("{jobId}", jobId.ToString())
+            .Replace("{applicationId}", data.Id.ToString());
+
+        return $"{Request.Scheme}://{Request.Host}/{path}";
     }
 
     /// <summary>
