@@ -1,4 +1,4 @@
-using JobifyEcom.Contracts;
+using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Users;
 using JobifyEcom.Enums;
@@ -65,7 +65,7 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <returns>Paged list of user summaries.</returns>
 	/// <response code="200">Users retrieved successfully.</response>
 	[ProducesResponseType(typeof(ApiResponse<CursorPaginationResponse<UserProfileSummaryResponse>>), StatusCodes.Status200OK)]
-	[HttpGet(ApiRoutes.User.Get.List)]
+	[HttpGet(ApiRoutes.User.Get.All)]
 	[Authorize]
 	public async Task<IActionResult> SearchUsers([FromQuery] CursorPaginationRequest<UserProfileFilterRequest> request)
 	{
@@ -85,7 +85,7 @@ public class UserController(IUserService userService) : ControllerBase
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
 	[Authorize]
-	[HttpPatch(ApiRoutes.User.Patch.Update)]
+	[HttpPatch(ApiRoutes.User.Patch.Me)]
 	public async Task<IActionResult> UpdateUser([FromBody] UserProfileUpdateRequest request)
 	{
 		ServiceResult<UserProfileResponse> result = await _userService.UpdateCurrentUserAsync(request);

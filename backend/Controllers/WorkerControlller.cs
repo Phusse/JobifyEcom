@@ -1,4 +1,4 @@
-using JobifyEcom.Contracts;
+using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Workers;
 using JobifyEcom.Enums;
@@ -33,7 +33,7 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     /// <response code="409">A worker profile already exists for this user.</response>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
-    [HttpPost(ApiRoutes.Worker.Post.CreateProfile)]
+    [HttpPost(ApiRoutes.Worker.Post.Create)]
     public async Task<IActionResult> CreateProfile()
     {
         ServiceResult<object> result = await _workerService.CreateProfileAsync();
@@ -71,7 +71,7 @@ public class WorkerController(IWorkerDomainService workerDomainService) : Contro
     /// <response code="404">No worker profile found for this user.</response>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    [HttpDelete(ApiRoutes.Worker.Delete.Profile)]
+    [HttpDelete(ApiRoutes.Worker.Delete.Me)]
     public async Task<IActionResult> DeleteProfile()
     {
         ServiceResult<object> result = await _workerService.DeleteProfileAsync();

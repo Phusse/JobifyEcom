@@ -5,7 +5,7 @@ using JobifyEcom.Models;
 using JobifyEcom.DTOs.Auth;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Security;
-using JobifyEcom.Contracts;
+using JobifyEcom.Contracts.Routes;
 using System.Security.Claims;
 using JobifyEcom.Extensions;
 

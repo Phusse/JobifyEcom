@@ -1,3 +1,5 @@
+using JobifyEcom.DTOs;
+
 namespace JobifyEcom.Exceptions;
 
 /// <summary>
@@ -12,5 +14,12 @@ public record ErrorDefinition(
 	string Code,
 	int HttpStatus,
 	string Title,
-	string[]? Details = null
-);
+	string[] Details
+)
+{
+	public ErrorDefinition WithDetails(params string[] details)
+		=> this with { Details = details };
+
+	public ErrorDefinition AppendDetails(params string[] additionalDetails)
+		=> this with { Details = Details.Concat(additionalDetails).ToArray() };
+}

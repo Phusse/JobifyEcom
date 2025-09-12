@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using JobifyEcom.Contracts;
+using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Jobs;
 using JobifyEcom.Services;
