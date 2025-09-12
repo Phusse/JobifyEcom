@@ -10,8 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace JobifyEcom.Controllers;
 
 /// <summary>
-/// Handles operations related to worker profiles, such as creation, retrieval, and deletion.
+/// Provides endpoints to manage worker profiles and skills, including creation, retrieval, deletion,
+/// and skill verification.
 /// </summary>
+/// <param name="workerService">Service for handling worker profile operations.</param>
+/// <param name="workerSkillService">Service for managing worker skills and verification.</param>
 [Authorize]
 [ApiController]
 public class WorkerController(IWorkerService workerService, IWorkerSkillService workerSkillService) : ControllerBase
@@ -24,11 +27,11 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     /// </summary>
     /// <remarks>
     /// This endpoint allows an authenticated user to create their worker profile.
-    /// If the user already has a worker profile, a conflict error is returned.
+    /// If a profile already exists, the request will fail with a conflict error.
+    /// The profile stores information that may be used for job applications, skill tracking,
+    /// and other worker-related operations.
     /// </remarks>
-    /// <returns>
-    /// A confirmation message upon successful creation, or an error if the profile already exists.
-    /// </returns>
+    /// <returns>A confirmation message indicating success or failure.</returns>
     /// <response code="200">Worker profile created successfully.</response>
     /// <response code="409">A worker profile already exists for this user.</response>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
@@ -44,12 +47,14 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     /// Retrieves the worker profile of the currently authenticated user.
     /// </summary>
     /// <remarks>
-    /// This endpoint returns the details of the worker profile associated with the authenticated user.
-    /// If no profile exists, a not found error is returned.
+    /// Returns detailed information about the worker profile associated with the authenticated user.
+    /// This includes personal information, skills, and other profile-related data that can be used
+    /// for job applications, skill verification, and internal tracking.
+    /// If the user does not have a profile, a not found error is returned.
     /// </remarks>
-    /// <returns>The worker profile details.</returns>
+    /// <returns>The full worker profile details for the authenticated user.</returns>
     /// <response code="200">Worker profile retrieved successfully.</response>
-    /// <response code="404">No worker profile found for this user.</response>
+    /// <response code="404">No worker profile exists for the authenticated user.</response>
     [ProducesResponseType(typeof(ApiResponse<WorkerProfileResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [HttpGet(ApiRoutes.Worker.Get.Me)]
@@ -63,12 +68,14 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     /// Deletes the worker profile of the currently authenticated user.
     /// </summary>
     /// <remarks>
-    /// This endpoint removes the worker profile associated with the authenticated user.
-    /// If no profile exists, a not found error is returned.
+    /// Removes all data associated with the authenticated user's worker profile,
+    /// including personal details, skills, and any related information.
+    /// This operation is irreversible. If the user does not have a worker profile,
+    /// a not found error is returned.
     /// </remarks>
-    /// <returns>A confirmation message upon successful deletion.</returns>
+    /// <returns>A confirmation message indicating the profile has been deleted.</returns>
     /// <response code="200">Worker profile deleted successfully.</response>
-    /// <response code="404">No worker profile found for this user.</response>
+    /// <response code="404">No worker profile exists for the authenticated user.</response>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [HttpDelete(ApiRoutes.Worker.Delete.Me)]
@@ -82,34 +89,55 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     /// Adds a new skill to the currently authenticated worker profile.
     /// </summary>
     /// <remarks>
-    /// Requires the worker to already have a profile.
-    /// The skill will be submitted with associated tags and placed under verification status.
+    /// The worker must already have a profile to add a skill.
+    /// Each new skill is submitted with its associated tags and is placed under a verification workflow,
+    /// ensuring that only approved skills are recognized in the system.
+    /// If required fields or tags are missing, the request will be rejected.
     /// </remarks>
-    /// <param name="request">The details of the skill to add, including name, level, experience, and tags.</param>
-    /// <returns>The newly created skill with verification status set to <c>Pending</c>.</returns>
+    /// <param name="request">Details of the skill to add, including <c>name</c>, <c>level</c>, <c>experience</c>, and <c>tags</c>.</param>
+    /// <returns>The newly created skill, including its verification status set to <c>Pending</c>.</returns>
     /// <response code="200">Skill successfully added and submitted for verification.</response>
-    /// <response code="400">The request is invalid (e.g., missing required fields or tags).</response>
-    /// <response code="404">No worker profile exists for the authenticated user.</response>
-    [HttpPost(ApiRoutes.Worker.Post.AddSkill)]
+    /// <response code="400">Invalid request due to missing or malformed fields.</response>
+    /// <response code="404">The authenticated user does not have a worker profile.</response>
     [ProducesResponseType(typeof(ApiResponse<WorkerSkillResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [HttpPost(ApiRoutes.Worker.Post.AddSkill)]
     public async Task<IActionResult> AddSkill([FromBody] AddWorkerSkillRequest request)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.AddSkillAsync(request);
-        return Ok(result.MapToApiResponse());
+        string location = BuildSkillResourceUrl(result.Data);
+        return Created(location, result.MapToApiResponse());
+    }
+
+    /// <summary>
+    /// Builds the full URL to access a specific worker skill resource.
+    /// </summary>
+    /// <param name="data">The skill response data containing worker and skill IDs.</param>
+    /// <returns>The fully qualified URL to the newly created skill resource.</returns>
+    private string BuildSkillResourceUrl(WorkerSkillResponse? data)
+    {
+        if (data is null) return string.Empty;
+
+        string path = ApiRoutes.Worker.Get.SkillById
+            .Replace("{{workerId}}", data.WorkerId.ToString())
+            .Replace("{{skillId}}", data.Id.ToString());
+
+        return $"{Request.Scheme}://{Request.Host}/{path}";
     }
 
     /// <summary>
     /// Removes an existing skill from the currently authenticated worker profile.
     /// </summary>
     /// <remarks>
-    /// The skill must belong to the authenticated worker; otherwise, an error is returned.
+    /// The skill must belong to the authenticated worker.
+    /// If the skill does not exist, a not found error is returned.
+    /// This endpoint ensures that a worker can only remove skills from their own profile.
     /// </remarks>
-    /// <param name="skillId">The unique identifier of the skill to be removed.</param>
+    /// <param name="skillId">The unique identifier of the skill to remove.</param>
     /// <returns>A confirmation message upon successful deletion.</returns>
     /// <response code="200">Skill successfully removed.</response>
-    /// <response code="404">The skill does not exist or does not belong to the current worker.</response>
+    /// <response code="404">The skill does not exist in the authenticated user's profile.</response>
     [HttpDelete(ApiRoutes.Worker.Delete.RemoveSkill)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
@@ -120,20 +148,20 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     }
 
     /// <summary>
-    /// Retrieves a specific skill by its identifier.
+    /// Retrieves a specific skill from the currently authenticated worker profile.
     /// </summary>
     /// <remarks>
-    /// This endpoint returns the skill details along with its tags and current verification status.
+    /// Returns the skill details along with its tags and current verification status.
+    /// The skill must belong to the authenticated user.
     /// </remarks>
-    /// <param name="workerId">The worker’s unique identifier (not currently used in lookup).</param>
     /// <param name="skillId">The unique identifier of the skill to retrieve.</param>
     /// <returns>The requested skill details.</returns>
     /// <response code="200">Skill retrieved successfully.</response>
-    /// <response code="404">The specified skill does not exist.</response>
-    [HttpGet(ApiRoutes.Worker.Get.SkillById)]
+    /// <response code="404">The specified skill does not exist or does not belong to the current user.</response>
     [ProducesResponseType(typeof(ApiResponse<WorkerSkillResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSkillById([FromRoute] Guid workerId, [FromRoute] Guid skillId)
+    [HttpGet(ApiRoutes.Worker.Get.SkillById)]
+    public async Task<IActionResult> GetSkillById([FromRoute] Guid skillId)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.GetSkillByIdAsync(skillId);
         return Ok(result.MapToApiResponse());
@@ -146,16 +174,17 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     /// Only admins (<c>Admin</c> or <c>SuperAdmin</c> roles) can perform this operation.
     /// Verification updates the status of the skill and records reviewer comments.
     /// </remarks>
-    /// <param name="workerId">The worker’s unique identifier (not currently used in lookup).</param>
+    /// <param name="workerId">The worker’s unique identifier who owns the skill.</param>
     /// <param name="skillId">The unique identifier of the skill to verify.</param>
     /// <param name="request">The verification decision, including status and reviewer comments.</param>
     /// <returns>The updated skill with its new verification status.</returns>
     /// <response code="200">Skill successfully verified or rejected.</response>
-    /// <response code="404">Verification record not found for this skill.</response>
-    [Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
-    [HttpPost(ApiRoutes.Worker.Post.VerifySkill)]
+    /// <response code="404">Verification record not found for this skill or skill does not belong to the specified worker.</response>
     [ProducesResponseType(typeof(ApiResponse<WorkerSkillResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
+    [HttpPost(ApiRoutes.Worker.Post.VerifySkill)]
+    [Obsolete("This endpoint is deprecated. A new controller will be made to call it properly.")]
     public async Task<IActionResult> VerifySkill([FromRoute] Guid workerId, [FromRoute] Guid skillId, [FromBody] VerifySkillRequest request)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.VerifySkillAsync(skillId, request);
