@@ -21,7 +21,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
     public async Task<ServiceResult<JobApplicationResponse>> CreateApplicationAsync(Guid jobId)
     {
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Sign in required.",
                 ["You need to be signed in to access your account."]
             );
@@ -29,7 +29,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
         User user = await _db.Users.Include(w => w.WorkerProfile)
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == currentUserId)
-            ?? throw new NotFoundException(
+            ?? throw new AppException(404,
                 "Account not found.",
                 ["We couldn't find your account. Please contact support if this issue continues."]
             );
@@ -39,12 +39,12 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
         // but we check defensively to guard against data corruption or misconfiguration.
         if (user.WorkerProfile is null)
         {
-            throw new UnauthorizedException("Your worker profile is missing. Please complete your profile before applying.");
+            throw new AppException(401, "Your worker profile is missing. Please complete your profile before applying.");
         }
 
         Job job = await _db.Jobs.AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException($"No job was found with ID '{jobId}'.");
+            ?? throw new AppException(404, $"No job was found with ID '{jobId}'.");
 
         // Prevent duplicate applications
         bool alreadyApplied = await _db.JobApplications
@@ -52,13 +52,13 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
 
         if (alreadyApplied)
         {
-            throw new ConflictException("You have already applied for this job.");
+            throw new AppException(409, "You have already applied for this job.");
         }
 
         // Prevent users from applying to their own jobs
         if (user.Id == job.PostedByUserId)
         {
-            throw new ConflictException("You cannot apply to a job you posted.");
+            throw new AppException(409, "You cannot apply to a job you posted.");
         }
 
         JobApplication newApplication = new()
@@ -88,7 +88,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
     public async Task<ServiceResult<JobApplicationResponse>> GetByIdAsync(Guid jobId, Guid applicationId)
     {
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Sign in required.",
                 ["Please sign in to view job applications."]
             );
@@ -98,7 +98,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
             .Include(u => u.WorkerProfile)
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == currentUserId)
-            ?? throw new NotFoundException(
+            ?? throw new AppException(404,
                 "Account not found.",
                 ["We couldn't find your account. Contact support if the issue persists."]
             );
@@ -106,7 +106,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
         // Load the job (needed for job poster check)
         Job job = await _db.Jobs.AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException($"Job with ID '{jobId}' was not found.");
+            ?? throw new AppException(404, $"Job with ID '{jobId}' was not found.");
 
         // Load the application with Applicant + Applicant.User
         JobApplication application = await _db.JobApplications
@@ -114,7 +114,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
             .ThenInclude(w => w.User)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPostId == jobId)
-            ?? throw new NotFoundException($"Application with ID '{applicationId}' does not exist for job '{jobId}'.");
+            ?? throw new AppException(404, $"Application with ID '{applicationId}' does not exist for job '{jobId}'.");
 
         // Authorization check
         bool isApplicant = currentUser.WorkerProfile is not null
@@ -124,7 +124,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
 
         if (!isApplicant && !isJobPoster)
         {
-            throw new ForbiddenException(
+            throw new AppException(403,
                 "Access denied.",
                 ["Only the applicant or the job poster can view this application."]
             );
@@ -148,7 +148,7 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
     public async Task<ServiceResult<object>> UpdateStatusAsync(Guid jobId, Guid applicationId, JobApplicationStatus status)
     {
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Sign in required.",
                 ["You must be signed in to manage job applications."]
             );
@@ -156,16 +156,16 @@ internal class JobApplicationService(AppDbContext context, IHttpContextAccessor 
         Job job = await _db.Jobs
             .AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException($"No job found with ID '{jobId}'.");
+            ?? throw new AppException(404, $"No job found with ID '{jobId}'.");
 
         JobApplication application = await _db.JobApplications
             .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPostId == jobId)
-            ?? throw new NotFoundException($"No application found with ID '{applicationId}' for this job.");
+            ?? throw new AppException(404, $"No application found with ID '{applicationId}' for this job.");
 
         // Authorization: only the job poster can accept/reject
         if (job.PostedByUserId != currentUserId)
         {
-            throw new ForbiddenException(
+            throw new AppException(403,
                 "Access denied.",
                 ["Only the job poster can update the status of applications."]
             );

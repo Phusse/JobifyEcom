@@ -21,7 +21,7 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 	private Guid GetCurrentUserId()
 	{
 		return _httpContextAccessor.HttpContext?.User.GetUserId()
-			?? throw new UnauthorizedException(
+			?? throw new AppException(401,
 				"Authentication required.",
 				["You must be signed in to perform this action."]
 			);
@@ -33,14 +33,14 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 
 		Worker worker = await _db.Workers
 			.FirstOrDefaultAsync(w => w.UserId == currentUserId)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"Worker profile not found.",
 				["You must create a worker profile before adding skills."]
 			);
 
 		if (request.Tags is null || request.Tags.Count == 0)
 		{
-			throw new ValidationException("At least one tag is required for a skill.");
+			throw new AppException(400, "At least one tag is required for a skill.");
 		}
 
 		Skill skill = new()
@@ -121,13 +121,13 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 		Guid currentUserId = GetCurrentUserId();
 
 		Worker worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"Worker profile not found.",
 				["You must create a worker profile before removing skills."]
 			);
 
 		Skill skill = await _db.Skills.FirstOrDefaultAsync(s => s.Id == skillId && s.WorkerId == worker.Id)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"Skill not found.",
 				["This skill does not exist or does not belong to you."]
 			);
@@ -141,7 +141,7 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 	public async Task<ServiceResult<WorkerSkillResponse>> GetSkillByIdAsync(Guid skillId)
 	{
 		Skill skill = await _db.Skills.FirstOrDefaultAsync(s => s.Id == skillId)
-			?? throw new NotFoundException("Skill not found.");
+			?? throw new AppException(404, "Skill not found.");
 
 		List<string> tags = await _db.EntityTags
 			.Where(et => et.EntityId == skill.Id && et.EntityType == EntityType.Skill)
@@ -172,7 +172,7 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 	{
 		Verification verification = await _db.Verifications
 			.FirstOrDefaultAsync(v => v.EntityId == skillId && v.EntityType == EntityType.Skill)
-			?? throw new NotFoundException("Verification record not found for this skill.");
+			?? throw new AppException(404, "Verification record not found for this skill.");
 
 		verification.Status = request.Status;
 		verification.ReviewerComment = request.ReviewerComment;

@@ -20,7 +20,7 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
     public async Task<ServiceResult<JobResponse>> CreateJobAsync(JobCreateRequest request)
     {
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Sign in required.",
                 ["You need to be signed in to access your account."]
             );
@@ -45,7 +45,7 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
     public async Task<ServiceResult<JobResponse?>> GetJobByIdAsync(Guid jobId)
     {
         Job? job = await _db.Jobs.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException(
+            ?? throw new AppException(404,
                 "Job not found.",
                 [$"No job exists with the specified ID.({jobId})"]
             );
@@ -58,20 +58,20 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
     public async Task<ServiceResult<JobResponse>> UpdateJobAsync(Guid jobId, JobUpdateRequest request)
     {
         Job job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException(
+            ?? throw new AppException(404,
                 "Job not found.",
                 [$"No job exists with the specified ID. ({jobId})"]
             );
 
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Sign in required.",
                 ["You need to be signed in to access your account."]
             );
 
         if (job.PostedByUserId != currentUserId)
         {
-            throw new ForbiddenException(
+            throw new AppException(403,
                 "Access denied.",
                 ["You do not have permission to update this job."]
             );
@@ -108,13 +108,13 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
     public async Task<ServiceResult<object>> DeleteJobAsync(Guid jobId)
     {
         Job? job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException(
+            ?? throw new AppException(404,
                 "Job not found.",
                 [$"No job exists with the specified ID. ({jobId})"]
             );
 
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Sign in required.",
                 ["You need to be signed in to access your account."]
             );
@@ -122,7 +122,7 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
         User? currentUser = await _db.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == currentUserId)
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Sign in required.",
                 ["You need to be signed in to access your account."]
             );
@@ -132,7 +132,7 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
 
         if (!isOwner && !isStaff)
         {
-            throw new ForbiddenException(
+            throw new AppException(403,
                 "Access denied.",
                 ["You do not have permission to delete this job."]
             );

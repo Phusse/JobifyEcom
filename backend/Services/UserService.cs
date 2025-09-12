@@ -27,7 +27,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	public async Task<ServiceResult<UserProfileResponse>> GetCurrentUserAsync()
 	{
 		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-			?? throw new UnauthorizedException(
+			?? throw new AppException(401,
 				"Sign in required.",
 				["You need to be signed in to access your account."]
 			);
@@ -35,7 +35,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		// Include the WorkerProfile data else roles wont get populated properly
 		// This is necessary to ensure the user's roles are correctly retrieved
 		User? user = await _db.Users.Include(w => w.WorkerProfile).FirstOrDefaultAsync(u => u.Id == currentUserId)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"Account not found.",
 				["We couldn't find your account. Please contact support if this issue continues."]
 			);
@@ -56,10 +56,10 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	public async Task<ServiceResult<object>> GetUserByIdAsync(Guid userId)
 	{
 		User? user = await _db.Users.FindAsync(userId)
-			?? throw new NotFoundException("User not found.", ["No user exists with the specified ID."]);
+			?? throw new AppException(404, "User not found.", ["No user exists with the specified ID."]);
 
 		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new UnauthorizedException("Authentication required.", ["You must be signed in."]);
+			?? throw new AppException(401, "Authentication required.", ["You must be signed in."]);
 
 		IReadOnlyList<string> roles = currentUserPrincipal.GetRoles();
 		bool isAdmin = roles.Contains(SystemRole.Admin.ToString()) || roles.Contains(SystemRole.SuperAdmin.ToString());
@@ -97,7 +97,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	{
 		if (string.IsNullOrWhiteSpace(request?.Email))
 		{
-			throw new ValidationException(
+			throw new AppException(400,
 				"Unable to confirm email.",
 				["Please provide a valid email address to continue."]
 			);
@@ -105,7 +105,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 
 		if (request.Token is null)
 		{
-			throw new ValidationException(
+			throw new AppException(400,
 				"Unable to confirm email.",
 				["The confirmation link is missing or invalid. Please request a new link and try again."]
 			);
@@ -114,7 +114,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		string normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
 		User user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"Unable to confirm email.",
 				["No account found with this email address. Please check and try again."]
 			);
@@ -126,7 +126,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 
 		if (user.EmailConfirmationToken is null || user.EmailConfirmationToken != request.Token)
 		{
-			throw new ValidationException(
+			throw new AppException(400,
 				"Unable to confirm email.",
 				["This confirmation link is no longer valid. Please request a new one."]
 			);
@@ -144,13 +144,13 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	public async Task<ServiceResult<object>> DeleteCurrentUserAsync()
 	{
 		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-			?? throw new UnauthorizedException(
+			?? throw new AppException(401,
 				"Sign in required.",
 				["You need to be signed in to delete your account."]
 			);
 
 		User? user = await _db.Users.FindAsync(currentUserId)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"Account not found.",
 				["We couldn't find your account. Please contact support if this issue continues."]
 			);
@@ -164,13 +164,13 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	public async Task<ServiceResult<object>> DeleteUserAsync(Guid userId)
 	{
 		User? userToRemove = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"User not found.",
 				["No user exists with the specified ID."]
 			);
 
 		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new UnauthorizedException(
+			?? throw new AppException(401,
 				"Authentication required.",
 				["You must be signed in to perform this action."]
 			);
@@ -186,13 +186,13 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	public async Task<ServiceResult<object>> LockUserAsync(Guid id)
 	{
 		User? user = await _db.FindAsync<User>(id)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"User not found.",
 				["No user found with the specified ID."]
 			);
 
 		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new UnauthorizedException(
+			?? throw new AppException(401,
 				"Authentication required.",
 				["You must be signed in to perform this action."]
 			);
@@ -213,11 +213,11 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	public async Task<ServiceResult<object>> RequestPasswordResetAsync(Guid id)
 	{
 		User user = await _db.Users.FindAsync(id)
-			?? throw new NotFoundException("User not found.", ["No account found with this ID."]);
+			?? throw new AppException(404, "User not found.", ["No account found with this ID."]);
 
 		if (user.IsLocked)
 		{
-			throw new ValidationException("Password reset unavailable.", ["This account is locked and cannot reset the password."]);
+			throw new AppException(400, "Password reset unavailable.", ["This account is locked and cannot reset the password."]);
 		}
 
 		user.PasswordResetToken = Guid.NewGuid();
@@ -241,21 +241,21 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	public async Task<ServiceResult<object>> ResetPasswordAsync(Guid id, PasswordResetRequest request)
 	{
 		User user = await _db.Users.FindAsync(id)
-			?? throw new NotFoundException("User not found.", ["No account found with this ID."]);
+			?? throw new AppException(404, "User not found.", ["No account found with this ID."]);
 
 		if (user.PasswordResetToken is null || user.PasswordResetToken != request.Token)
 		{
-			throw new ValidationException("Password reset failed.", ["The reset link is invalid or has already been used."]);
+			throw new AppException(400, "Password reset failed.", ["The reset link is invalid or has already been used."]);
 		}
 
 		if (user.PasswordResetTokenExpiry < DateTime.UtcNow)
 		{
-			throw new ValidationException("Password reset failed.", ["The reset link has expired. Please request a new one."]);
+			throw new AppException(400, "Password reset failed.", ["The reset link has expired. Please request a new one."]);
 		}
 
 		if (string.IsNullOrWhiteSpace(request.NewPassword))
 		{
-			throw new ValidationException("Password reset failed.", ["Please enter a new password."]);
+			throw new AppException(400, "Password reset failed.", ["Please enter a new password."]);
 		}
 
 		user.PasswordHash = PasswordSecurity.HashPassword(request.NewPassword);
@@ -418,13 +418,13 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	public async Task<ServiceResult<object>> UnlockUserAsync(Guid id)
 	{
 		User? user = await _db.FindAsync<User>(id)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"User not found.",
 				["No user found with the specified ID."]
 			);
 
 		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new UnauthorizedException(
+			?? throw new AppException(401,
 				"Authentication required.",
 				["You must be signed in to perform this action."]
 			);
@@ -446,20 +446,20 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	{
 		if (request is null)
 		{
-			throw new ValidationException(
+			throw new AppException(400,
 				"Update failed.",
 				["Update request cannot be empty."]
 			);
 		}
 
 		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-			?? throw new UnauthorizedException(
+			?? throw new AppException(401,
 				"Authentication required.",
 				["You must be signed in to perform this action."]
 			);
 
 		User user = await _db.Users.FindAsync(currentUserId)
-			?? throw new NotFoundException(
+			?? throw new AppException(404,
 				"User not found.",
 				["No user found with the specified ID."]
 			);
@@ -491,7 +491,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 	private static void EnsureCanModifyUser(User targetUser, ClaimsPrincipal currentUserPrincipal)
 	{
 		Guid currentUserId = currentUserPrincipal.GetUserId()
-			?? throw new UnauthorizedException(
+			?? throw new AppException(401,
 				"Authentication required.",
 				["You must be signed in to perform this action."]
 			);
@@ -499,7 +499,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		// Prevent user from modifying themselves
 		if (targetUser.Id == currentUserId)
 		{
-			throw new ForbiddenException(
+			throw new AppException(403,
 				"Operation not permitted.",
 				["You cannot perform this action on your own account using this endpoint."]
 			);
@@ -512,14 +512,14 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		{
 			if (targetUser.StaffRole == SystemRole.SuperAdmin)
 			{
-				throw new ForbiddenException(
+				throw new AppException(403,
 					"Operation not permitted.",
 					["Admins cannot modify SuperAdmin accounts."]
 				);
 			}
 			if (targetUser.StaffRole == SystemRole.Admin)
 			{
-				throw new ForbiddenException(
+				throw new AppException(403,
 					"Operation not permitted.",
 					["Admins cannot modify other Admin accounts."]
 				);
@@ -530,7 +530,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		if (targetUser.StaffRole == SystemRole.SuperAdmin
 			&& !currentUserRoles.Contains(SystemRole.SuperAdmin.ToString()))
 		{
-			throw new ForbiddenException(
+			throw new AppException(403,
 				"Operation not permitted.",
 				["Only SuperAdmins can modify SuperAdmin accounts."]
 			);

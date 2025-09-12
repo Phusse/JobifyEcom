@@ -1,15 +1,12 @@
-using JobifyEcom.DTOs;
-
 namespace JobifyEcom.Exceptions;
 
 /// <summary>
-/// Represents a structured, centralized error used across the application.
-/// Includes a unique code, HTTP status, title, and optional details.
+/// Standardized error model for consistent API responses.
 /// </summary>
-/// <param name="Code">Unique, machine-friendly error code (e.g. "AUTH_INVALID_SESSION").</param>
-/// <param name="HttpStatus">The HTTP status code to return for this error.</param>
-/// <param name="Title">Short, user-facing error message.</param>
-/// <param name="Details">Optional list of extra details (e.g. validation messages).</param>
+/// <param name="Code">Unique machine-readable error code (e.g. <c>"AUTH_INVALID_SESSION"</c>).</param>
+/// <param name="HttpStatus">HTTP status code to return (e.g. 401, 409).</param>
+/// <param name="Title">Short, human-readable error message.</param>
+/// <param name="Details">Optional list of additional context, such as validation messages.</param>
 public record ErrorDefinition(
 	string Code,
 	int HttpStatus,
@@ -17,9 +14,15 @@ public record ErrorDefinition(
 	string[] Details
 )
 {
+	/// <summary>
+	/// Returns a copy with <paramref name="details"/> replacing existing <see cref="Details"/>.
+	/// </summary>
 	public ErrorDefinition WithDetails(params string[] details)
 		=> this with { Details = details };
 
+	/// <summary>
+	/// Returns a copy with <paramref name="additionalDetails"/> appended to <see cref="Details"/>.
+	/// </summary>
 	public ErrorDefinition AppendDetails(params string[] additionalDetails)
 		=> this with { Details = Details.Concat(additionalDetails).ToArray() };
 }

@@ -30,7 +30,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
         {
-            throw new ValidationException(
+            throw new AppException(400,
                 "Missing login details.",
                 ["Please enter both your email address and password to sign in."]
             );
@@ -40,7 +40,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         if (user is null || !PasswordSecurity.VerifyPassword(request.Password, user.PasswordHash))
         {
-            throw new UnauthorizedException(
+            throw new AppException(401,
                 "Login failed.",
                 ["We couldn't find an account with those credentials. Please check your email and password, then try again."]
             );
@@ -48,7 +48,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         if (!user.IsEmailConfirmed)
         {
-            throw new UnauthorizedException(
+            throw new AppException(401,
                 "Email confirmation required.",
                 ["Please confirm your email address before signing in. Check your inbox for the confirmation link."]
             );
@@ -56,7 +56,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         if (user.IsLocked)
         {
-            throw new UnauthorizedException(
+            throw new AppException(401,
                 "Account locked.",
                 ["Your account is currently locked. Contact support if you need help unlocking it."]
             );
@@ -73,7 +73,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
     {
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
         {
-            throw new ValidationException(
+            throw new AppException(400,
                 "No refresh token provided.",
                 ["A refresh token is required to renew your session. Please provide a valid refresh token."]
             );
@@ -85,14 +85,14 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         User user = await _db.Users.AsNoTracking()
             .Include(u => u.WorkerProfile)
             .FirstOrDefaultAsync(u => u.Id == userId)
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Account not found.",
                 ["We couldn't find an account for this session. It may have been deleted or changed."]
             );
 
         if (user.SecurityStamp != tokenSecurityStamp)
         {
-            throw new UnauthorizedException(
+            throw new AppException(401,
                 "Session invalid.",
                 ["Your account security has changed. Please sign in again to continue."]
             );
@@ -100,7 +100,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         if (user.IsLocked)
         {
-            throw new UnauthorizedException(
+            throw new AppException(401,
                 "Account locked.",
                 ["Your account is currently locked. Contact support if you need help unlocking it."]
             );
@@ -126,13 +126,13 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
     public async Task<ServiceResult<object>> LogoutAsync()
     {
         Guid? userId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Authentication required.",
                 ["You must be signed in to log out."]
             );
 
         User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId.Value)
-            ?? throw new NotFoundException(
+            ?? throw new AppException(404,
                 "User not found.",
                 ["We couldn't find your account. If this keeps happening, please contact support."]
             );
@@ -149,7 +149,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         if (await _db.Users.AnyAsync(u => u.Email == normalizedEmail))
         {
-            throw new ConflictException(
+            throw new AppException(409,
                 "Email already registered.",
                 ["An account with this email address already exists. Please sign in or use a different email."]
             );
@@ -245,14 +245,14 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
             if (!string.Equals(tokenTypeClaim, tokenType.ToString(), StringComparison.OrdinalIgnoreCase))
             {
-                throw new UnauthorizedException(
+                throw new AppException(401,
                     "Invalid token type.",
                     [$"The token provided is not a {tokenType} token. Please provide a valid {tokenType} token."]
                 );
             }
         }
 
-        throw new UnauthorizedException(
+        throw new AppException(401,
             "Session expired.",
             ["Your session has expired or is no longer valid. Please sign in again."]
         );
@@ -265,7 +265,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         if (!Guid.TryParse(userIdClaim, out userId) || !Guid.TryParse(securityStampClaim, out securityStamp))
         {
-            throw new UnauthorizedException(
+            throw new AppException(401,
                 "Session data invalid.",
                 ["We couldn't verify your session details. Please login again."]
             );

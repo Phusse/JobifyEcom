@@ -21,7 +21,7 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
     public async Task<ServiceResult<object>> CreateProfileAsync()
     {
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Authentication required.",
                 ["You must be signed in to create a worker profile."]
             );
@@ -30,7 +30,7 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
 
         if (existingWorker is not null)
         {
-            throw new ConflictException(
+            throw new AppException(409,
                 "Worker profile already exists.",
                 [$"A worker profile with ID {existingWorker.Id} is already associated with this account."]
             );
@@ -50,13 +50,13 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
     public async Task<ServiceResult<object>> DeleteProfileAsync()
     {
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Authentication required.",
                 ["You must be signed in to delete a worker profile."]
             );
 
         Worker worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId)
-            ?? throw new NotFoundException(
+            ?? throw new AppException(404,
                 "Worker profile not found.",
                 ["No worker profile could be found for this user."]
             );
@@ -70,13 +70,13 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
     public async Task<ServiceResult<WorkerProfileResponse>> GetMyProfileAsync()
     {
         Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
+            ?? throw new AppException(401,
                 "Authentication required.",
                 ["You must be signed in to view your worker profile."]
             );
 
         Worker worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId)
-            ?? throw new NotFoundException(
+            ?? throw new AppException(404,
                 "Worker profile not found.",
                 ["No worker profile could be found for this user."]
             );
