@@ -2,205 +2,131 @@ namespace JobifyEcom.Contracts;
 
 /// <summary>
 /// Defines all static API route paths used in the application.
-/// Organizes them by domain (Auth, Job, Worker),
-/// and by HTTP verbs (Get, Post, Put, Patch, Delete).
+/// Organized by domain (Auth, User, Worker, Job, Metadata)
+/// and HTTP verbs (GET, POST, PATCH, DELETE).
 /// </summary>
-public static class ApiRoutes
+internal static class ApiRoutes
 {
     private const string Root = "api";
     private const string Version = "v1";
 
-    /// <summary>
-    /// Routes related to Auth operations.
-    /// </summary>
-    public static class Auth
+    /// <summary>Routes related to authentication operations.</summary>
+    internal static class Auth
     {
         private const string Base = $"{Root}/{Version}/auth";
 
-        /// <summary>POST endpoints for Auth.</summary>
-        public static class Post
+        internal static class Post
         {
-            /// <summary>Register a new user.</summary>
-            public const string Register = $"{Base}/register";
-
-            /// <summary>Login a user.</summary>
-            public const string Login = $"{Base}/login";
-
-            /// <summary>Refresh authentication tokens.</summary>
-            public const string Refresh = $"{Base}/refresh";
+            internal const string Register = $"{Base}/register";
+            internal const string Login = $"{Base}/login";
+            internal const string Refresh = $"{Base}/refresh";
         }
 
-        /// <summary>PATCH endpoints for Auth.</summary>
-        public static class Patch
+        internal static class Patch
         {
-            /// <summary>Logout a user.</summary>
-            public const string Logout = $"{Base}/logout";
+            internal const string Logout = $"{Base}/logout";
         }
     }
 
-    /// <summary>
-    /// Routes related to User Management operations.
-    /// </summary>
-    public static class User
+    /// <summary>Routes related to user management.</summary>
+    internal static class User
     {
         private const string Base = $"{Root}/{Version}/users";
 
-        /// <summary>GET endpoints for Users.</summary>
-        public static class Get
+        internal static class Get
         {
-            /// <summary>Get current authenticated user profile.</summary>
-            public const string Me = $"{Base}/me";
-
-            /// <summary>Get public user profile by ID.</summary>
-            public const string ById = $"{Base}/{{id}}";
-
-            /// <summary>list/search users with paging and filtering.</summary>
-            public const string List = $"{Base}";
+            internal const string Me = $"{Base}/me";
+            internal const string ById = $"{Base}/{{id}}";
+            internal const string All = Base;
         }
 
-        /// <summary>POST endpoints for Users.</summary>
-        public static class Post
+        internal static class Post
         {
-            /// <summary>Request password reset.</summary>
-            public const string PasswordResetRequest = $"{Base}/{{id}}/password-reset/request";
-
-            /// <summary>Reset password with token.</summary>
-            public const string PasswordResetConfirm = $"{Base}/{{id}}/password-reset/confirm";
+            internal const string PasswordResetRequest = $"{Base}/{{id}}/password-reset/request";
+            internal const string PasswordResetConfirm = $"{Base}/{{id}}/password-reset/confirm";
         }
 
-        /// <summary>PATCH endpoints for Users.</summary>
-        public static class Patch
+        internal static class Patch
         {
-            /// <summary>Confirm email address via token.</summary>
-            public const string ConfirmEmail = $"{Base}/confirm-email";
-
-            /// <summary>Update user profile.</summary>
-            public const string Update = $"{Base}/me/update";
-
-            /// <summary>Lock user account.</summary>
-            public const string Lock = $"{Base}/{{id}}/lock";
-
-            /// <summary>Unlock user account.</summary>
-            public const string Unlock = $"{Base}/{{id}}/unlock";
+            internal const string ConfirmEmail = $"{Base}/confirm-email";
+            internal const string Me = $"{Base}/me";
+            internal const string Lock = $"{Base}/{{id}}/lock";
+            internal const string Unlock = $"{Base}/{{id}}/unlock";
         }
 
-        /// <summary>DELETE endpoints for Users.</summary>
-        public static class Delete
+        internal static class Delete
         {
-            /// <summary>Delete current authenticated user profile.</summary>
-            public const string Me = $"{Base}/me/delete";
-
-            /// <summary>Delete user profile.</summary>
-            public const string ById = $"{Base}/{{id}}";
+            internal const string Me = $"{Base}/me";
+            internal const string ById = $"{Base}/{{id}}";
         }
     }
 
-    /// <summary>
-    /// Routes related to Worker operations.
-    /// </summary>
-    public static class Worker
+    /// <summary>Routes related to worker operations.</summary>
+    internal static class Worker
     {
         private const string Base = $"{Root}/{Version}/workers";
         private const string SkillsBase = $"{Base}/{{workerId}}/skills";
 
-        /// <summary>GET endpoints for Worker.</summary>
-        public static class Get
+        internal static class Get
         {
-            /// <summary>Get current authenticated worker profile.</summary>
-            public const string Me = $"{Base}/me";
-
-            /// <summary>Get a specific skill by ID (scoped under worker).</summary>
-            public const string SkillById = $"{SkillsBase}/{{skillId}}";
+            internal const string Me = $"{Base}/me";
+            internal const string SkillById = $"{SkillsBase}/{{skillId}}";
         }
 
-        /// <summary>POST endpoints for Worker.</summary>
-        public static class Post
+        internal static class Post
         {
-            /// <summary>Create a worker profile for the current user.</summary>
-            public const string CreateProfile = $"{Base}/me/create";
-
-            /// <summary>Add a new skill to the current worker.</summary>
-            public const string AddSkill = $"{Base}/me/skills";
-
-            /// <summary>Verify a worker’s skill (admin only).</summary>
-            public const string VerifySkill = $"{SkillsBase}/{{skillId}}/verify";
+            internal const string Create = $"{Base}/me";
+            internal const string AddSkill = $"{Base}/me/skills";
+            internal const string VerifySkill = $"{SkillsBase}/{{skillId}}/verify";
         }
 
-        /// <summary>DELETE endpoints for Workers.</summary>
-        public static class Delete
+        internal static class Delete
         {
-            /// <summary>Delete the current worker profile.</summary>
-            public const string Profile = $"{Base}/me/delete";
-
-            /// <summary>Remove a skill from the current worker.</summary>
-            public const string RemoveSkill = $"{Base}/me/skills/{{skillId}}";
+            internal const string Me = $"{Base}/me";
+            internal const string RemoveSkill = $"{Base}/me/skills/{{skillId}}";
         }
     }
 
-    /// <summary>
-    /// Routes related to Job operations.
-    /// </summary>
-    public static class Job
+    /// <summary>Routes related to job operations.</summary>
+    internal static class Job
     {
         private const string Base = $"{Root}/{Version}/jobs";
         private const string ApplicationsBase = $"{Base}/{{jobId}}/applications";
 
-        /// <summary>POST endpoints for Jobs.</summary>
-        public static class Post
+        internal static class Post
         {
-            /// <summary>Create a new job.</summary>
-            public const string Create = Base;
-
-            /// <summary>Submit a job application for a specific job.</summary>
-            public const string Apply = ApplicationsBase;
+            internal const string Create = Base;
+            internal const string Apply = ApplicationsBase;
         }
 
-        /// <summary>GET endpoints for Jobs.</summary>
-        public static class Get
+        internal static class Get
         {
-            /// <summary>Get a job by ID.</summary>
-            public const string ById = $"{Base}/{{id}}";
-
-            /// <summary>Get a job application by ID (scoped under job).</summary>
-            public const string ApplicationById = $"{ApplicationsBase}/{{applicationId}}";
+            internal const string ById = $"{Base}/{{id}}";
+            internal const string ApplicationById = $"{ApplicationsBase}/{{applicationId}}";
         }
 
-        /// <summary>PATCH endpoints for Jobs.</summary>
-        public static class Patch
+        internal static class Patch
         {
-            /// <summary>Update a job by ID.</summary>
-            public const string Update = $"{Base}/{{id}}";
-
-            /// <summary>Accept a job application.</summary>
-            public const string AcceptApplication = $"{ApplicationsBase}/{{applicationId}}/accept";
-
-            /// <summary>Reject a job application.</summary>
-            public const string RejectApplication = $"{ApplicationsBase}/{{applicationId}}/reject";
+            internal const string Update = $"{Base}/{{id}}";
+            internal const string AcceptApplication = $"{ApplicationsBase}/{{applicationId}}/accept";
+            internal const string RejectApplication = $"{ApplicationsBase}/{{applicationId}}/reject";
         }
 
-        /// <summary>DELETE endpoints for Jobs.</summary>
-        public static class Delete
+        internal static class Delete
         {
-            /// <summary>Delete a job by ID.</summary>
-            public const string ById = $"{Base}/{{id}}";
+            internal const string ById = $"{Base}/{{id}}";
         }
     }
 
-    /// <summary>
-    /// Routes related to Metadata (enums, lookup tables, etc.).
-    /// </summary>
-    public static class Metadata
+    /// <summary>Routes related to metadata (enums, lookups, etc.).</summary>
+    internal static class Metadata
     {
         private const string Base = $"{Root}/{Version}/metadata";
 
-        /// <summary>GET endpoints for Metadata.</summary>
-        public static class Get
+        internal static class Get
         {
-            /// <summary>Get all enums.</summary>
-            public const string AllEnums = $"{Base}/enums";
-
-            /// <summary>Get a specific enum type by its type name.</summary>
-            public const string EnumByType = $"{Base}/enums/{{id}}";
+            internal const string AllEnums = $"{Base}/enums";
+            internal const string EnumByType = $"{Base}/enums/{{id}}";
         }
     }
 }
