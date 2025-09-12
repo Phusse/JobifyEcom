@@ -136,7 +136,7 @@ public static class ApiRoutes
             public const string RemoveSkill = $"{Base}/me/skills/{{skillId}}";
         }
     }
-    
+
     /// <summary>
     /// Routes related to Job operations.
     /// </summary>
