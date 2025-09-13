@@ -3,7 +3,7 @@ namespace JobifyEcom.Enums;
 /// <summary>
 /// Represents the types of entities in the system.
 /// </summary>
-internal enum EntityType
+public enum EntityType
 {
 	/// <summary>
 	/// Represents a job post entity.

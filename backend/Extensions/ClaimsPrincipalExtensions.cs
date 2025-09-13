@@ -54,12 +54,16 @@ internal static class ClaimsPrincipalExtensions
 
 	/// <summary>
 	/// Gets all claims as a dictionary for easier debugging/logging.
+	/// Preserves multiple values for the same claim type (e.g., roles).
 	/// </summary>
-	internal static Dictionary<string, string?> GetAllClaims(this ClaimsPrincipal user)
+	internal static Dictionary<string, List<string>> GetAllClaims(this ClaimsPrincipal user)
 	{
 		return user.Claims
 			.GroupBy(c => c.Type)
-			.ToDictionary(g => g.Key, g => g.FirstOrDefault()?.Value);
+			.ToDictionary(
+				g => g.Key,
+				g => g.Select(c => c.Value ?? string.Empty).ToList()
+			);
 	}
 
 	/// <summary>

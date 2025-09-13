@@ -8,11 +8,13 @@ using JobifyEcom.Helpers;
 using System.Text.Json;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
-using JobifyEcom.DTOs;
 using JobifyEcom.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 using Scalar.AspNetCore;
+using JobifyEcom.Security;
+using JobifyEcom.Exceptions;
+using JobifyEcom.Contracts.Errors;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -96,8 +98,10 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
             .SelectMany(e => e.Value!.Errors)
             .Select(e => e.ErrorMessage)];
 
-        var response = ApiResponse<object>.Fail(null, "Some of the provided data is invalid.", errors);
-        return new BadRequestObjectResult(response);
+        ErrorDefinition error = ErrorCatalog.ValidationFailed
+            .AppendDetails([.. errors]);
+
+        throw new AppException(error);
     };
 });
 
