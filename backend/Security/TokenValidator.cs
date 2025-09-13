@@ -13,7 +13,7 @@ namespace JobifyEcom.Security;
 /// Ensures that the token contains the correct claims, that the associated user exists,
 /// and that their security stamp and roles are still valid.
 /// </summary>
-public static class TokenValidator
+internal static class TokenValidator
 {
 	/// <summary>
 	/// Validates the claims contained in a JWT access token against the current database state.
@@ -37,7 +37,7 @@ public static class TokenValidator
 	/// <see cref="ErrorCatalog"/> entry describing the failure, which is handled by
 	/// the global exception middleware to produce a structured JSON error response.
 	/// </exception>
-	public static async Task ValidateAsync(TokenValidatedContext context)
+	internal static async Task ValidateAsync(TokenValidatedContext context)
 	{
 		if (context.Principal is null)
 		{
@@ -79,7 +79,7 @@ public static class TokenValidator
 		if (user.SecurityStamp == Guid.Empty)
 			throw new AppException(ErrorCatalog.SignedOut);
 
-		if (user.SecurityStamp == securityStamp)
+		if (user.SecurityStamp != securityStamp)
 			throw new AppException(ErrorCatalog.SessionExpired);
 	}
 }

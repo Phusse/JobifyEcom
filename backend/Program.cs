@@ -15,6 +15,7 @@ using Scalar.AspNetCore;
 using JobifyEcom.Security;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Contracts.Errors;
+using System.Diagnostics;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -33,46 +34,41 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 //--------------- Controllers use same JSON options ---------------
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
-        options.JsonSerializerOptions.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
-        options.JsonSerializerOptions.ReferenceHandler = globalJsonOptions.ReferenceHandler;
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
+    options.JsonSerializerOptions.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
+    options.JsonSerializerOptions.ReferenceHandler = globalJsonOptions.ReferenceHandler;
 
-        foreach (JsonConverter converter in globalJsonOptions.Converters)
-        {
-            options.JsonSerializerOptions.Converters.Add(converter);
-        }
+    foreach (JsonConverter converter in globalJsonOptions.Converters)
+    {
+        options.JsonSerializerOptions.Converters.Add(converter);
     }
-);
+});
 
 //--------------- JWT Authentication ---------------
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    IConfigurationSection jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
+    string secretKey = jwtSettings["SecretKey"]
+        ?? throw new InvalidOperationException("Missing JWT configuration: 'SecretKey' value is not set in JwtSettings.");
+
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        IConfigurationSection jwtSettings = builder.Configuration.GetSection("JwtSettings");
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ClockSkew = TimeSpan.Zero
+    };
 
-        string secretKey = jwtSettings["SecretKey"]
-            ?? throw new InvalidOperationException("Missing JWT configuration: 'SecretKey' value is not set in JwtSettings.");
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-            ClockSkew = TimeSpan.Zero
-        };
-
-        // Use the global JSON options for JWT events
-        options.Events = JwtEventHandlers.Create(globalJsonOptions);
-    }
-);
+    options.Events = JwtEventHandlers.Create();
+});
 
 //--------------- Services & Auth ---------------
 builder.Services.AddSingleton<JwtTokenService>();
@@ -143,8 +139,7 @@ if (builder.Environment.IsDevelopment())
                     Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
-            },
-            Array.Empty<string>()
+            },[]
         }});
     });
 }

@@ -17,6 +17,12 @@ public class ApiResponse<T>
     public required bool Success { get; set; }
 
     /// <summary>
+    /// A machine-readable code that identifies the response type, allowing clients
+    /// to handle cases (e.g., "ACCOUNT_LOCKED") without parsing message text.
+    /// </summary>
+    public required string MessageId { get; set; }
+
+    /// <summary>
     /// A message describing the outcome of the operation (e.g., success or error message).
     /// </summary>
     public required string Message { get; set; }
@@ -41,9 +47,10 @@ public class ApiResponse<T>
     /// <summary>
     /// Creates a successful API response.
     /// </summary>
-    public static ApiResponse<T> Ok(T? data = default, string? message = null, List<string>? errors = null, string? traceId = null) => new()
+    public static ApiResponse<T> Ok(T? data = default, string? message = null, List<string>? errors = null, string? traceId = null, string messageId = "UNKNOWN") => new()
     {
         TraceId = traceId,
+        MessageId = string.IsNullOrWhiteSpace(messageId) ? "UNKNOWN" : messageId,
         Success = true,
         Message = string.IsNullOrWhiteSpace(message) ? "Operation successful." : message,
         Data = data,
@@ -53,9 +60,10 @@ public class ApiResponse<T>
     /// <summary>
     /// Creates a failed API response.
     /// </summary>
-    public static ApiResponse<T> Fail(T? data = default, string? message = null, List<string>? errors = null, string? traceId = null) => new()
+    public static ApiResponse<T> Fail(T? data = default, string? message = null, List<string>? errors = null, string? traceId = null, string messageId = "UNKNOWN") => new()
     {
         TraceId = traceId,
+        MessageId = string.IsNullOrWhiteSpace(messageId) ? "UNKNOWN" : messageId,
         Success = false,
         Message = string.IsNullOrWhiteSpace(message) ? "Operation failed." : message,
         Data = data,

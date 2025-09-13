@@ -5,30 +5,30 @@ namespace JobifyEcom.Security;
 /// <summary>
 /// Defines custom claim types used in the application.
 /// </summary>
-public static class AppClaimTypes
+internal static class AppClaimTypes
 {
 	/// <summary>
 	/// Claim type for the user's unique identifier.
 	/// </summary>
-	public static readonly string UserId = ClaimTypes.NameIdentifier;
+	internal static readonly string UserId = ClaimTypes.NameIdentifier;
 
 	/// <summary>
 	/// Claim type for the user's email address.
 	/// </summary>
-	public static readonly string Email = ClaimTypes.Email;
+	internal static readonly string Email = ClaimTypes.Email;
 
 	/// <summary>
 	/// Claim type for the user's role.
 	/// </summary>
-	public static readonly string Role = ClaimTypes.Role;
+	internal static readonly string Role = ClaimTypes.Role;
 
 	/// <summary>
 	/// Claim type for the security stamp for token invalidation.
 	/// </summary>
-	public const string SecurityStamp = "security_stamp";
+	internal const string SecurityStamp = "security_stamp";
 
 	/// <summary>
 	/// Claim type for the token type (Access or Refresh).
 	/// </summary>
-	public const string TokenType = "token_type";
+	internal const string TokenType = "token_type";
 }
