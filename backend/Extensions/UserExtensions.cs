@@ -4,34 +4,18 @@ using JobifyEcom.Models;
 namespace JobifyEcom.Extensions;
 
 /// <summary>
-/// Provides extension methods for working with <see cref="User"/> objects.
+/// Internal extension methods for <see cref="User"/> objects.
 /// </summary>
-public static class UserExtensions
+internal static class UserExtensions
 {
 	/// <summary>
-	/// Retrieves the effective system roles assigned to the specified <see cref="User"/>.
+	/// Gets the effective system roles for the <see cref="User"/>.
+	/// Always includes <see cref="SystemRole.User"/>. Adds <see cref="SystemRole.Worker"/> if <see cref="User.IsWorker"/>
+	/// and the staff role if <see cref="User.StaffRole"/> is set.
 	/// </summary>
-	/// <param name="user">
-	/// The <see cref="User"/> instance from which to determine the roles.
-	/// </param>
-	/// <returns>
-	/// A <see cref="List{SystemRole}"/> containing all roles assigned to the user.
-	/// Always includes <see cref="SystemRole.User"/> by default.
-	/// </returns>
-	/// <remarks>
-	/// <list type="bullet">
-	/// <item>
-	/// <see cref="SystemRole.User"/> is always included.
-	/// </item>
-	/// <item>
-	/// If <see cref="User.IsWorker"/> is <c>true</c>, the <see cref="SystemRole.Worker"/> role is included.
-	/// </item>
-	/// <item>
-	/// If <see cref="User.StaffRole"/> is not <c>null</c>, the staff role is included.
-	/// </item>
-	/// </list>
-	/// </remarks>
-	public static List<SystemRole> GetUserRoles(this User user)
+	/// <param name="user">The <see cref="User"/> instance.</param>
+	/// <returns>List of assigned <see cref="SystemRole"/>.</returns>
+	internal static List<SystemRole> GetUserRoles(this User user)
 	{
 		List<SystemRole> userRoles = [SystemRole.User];
 
