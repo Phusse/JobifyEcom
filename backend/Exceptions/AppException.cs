@@ -25,5 +25,5 @@ public class AppException(ErrorResponseDefinition error) : Exception(error.Title
 	/// <summary>
 	/// Gets the list of detailed error messages, if provided.
 	/// </summary>
-	public List<string>? Errors { get; } = [.. error.Details];
+	public List<string>? Details { get; } = [.. error.Details];
 }

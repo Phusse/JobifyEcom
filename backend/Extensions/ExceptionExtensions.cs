@@ -10,7 +10,7 @@ internal static class ExceptionExtensions
 {
 	/// <summary>
 	/// Converts  <see cref="AppException"/> to a failed <see cref="ApiResponse{T}"/> where T is object.
-	/// and <see cref="AppException.Errors"/> as the errors list.
+	/// and <see cref="AppException.Details"/> as the errors list.
 	/// </summary>
 	/// <param name="ex">The <see cref="AppException"/> instance.</param>
 	/// <param name="message">Optional developer message (e.g., exception.Message).</param>
@@ -21,7 +21,7 @@ internal static class ExceptionExtensions
 		return ApiResponse<object>.Fail(
 			data: null,
 			message: string.IsNullOrWhiteSpace(message) ? ex.Message : message,
-			errors: ex.Errors,
+			details: ex.Details,
 			traceId: traceId,
 			messageId: ex.Id
 		);
@@ -44,7 +44,7 @@ internal static class ExceptionExtensions
 		return ApiResponse<object>.Fail(
 			data: null,
 			message: errorMessage,
-			errors: null,
+			details: null,
 			traceId: traceId
 		);
 	}

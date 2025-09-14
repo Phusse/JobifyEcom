@@ -26,7 +26,7 @@ JobifyEcom API provides a robust platform for managing jobs, workers, and applic
   "success": true,
   "messageId": "USER_FOUND",
   "message": "Operation successful",
-  "errors": [],
+  "details": [],
   "timestamp": "2023-04-01T12:34:56Z",
   "data": {}
 }
@@ -38,7 +38,7 @@ JobifyEcom API provides a robust platform for managing jobs, workers, and applic
 * **success** : `true` if the operation succeeded, `false` if it failed.
 * **messageId** : Machine-readable code to identify the response (e.g., `USER_FOUND`, `AUTH_UNAUTHORIZED`).
 * **message** : Human-readable message describing the result.
-* **errors** : List of validation or business errors.
+* **details** : Contextual info such as validation issues, warnings, or hints. Used in both success and failure responses.
 * **timestamp** : UTC timestamp when the response was generated.
 * **data** : The payload returned by the API.
 

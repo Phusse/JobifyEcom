@@ -18,7 +18,7 @@ internal static class ServiceResultExtensions
 	internal static ApiResponse<T> MapToApiResponse<T>(this ServiceResult<T> result, bool success = true, string? traceId = null)
 	{
 		return success
-			? ApiResponse<T>.Ok(result.Data, result.Message, result.Errors, traceId, result.MessageId)
-			: ApiResponse<T>.Fail(result.Data, result.Message, result.Errors, traceId, result.MessageId);
+			? ApiResponse<T>.Ok(result.Data, result.Message, result.Details, traceId, result.MessageId)
+			: ApiResponse<T>.Fail(result.Data, result.Message, result.Details, traceId, result.MessageId);
 	}
 }

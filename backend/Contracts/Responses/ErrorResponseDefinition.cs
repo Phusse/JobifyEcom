@@ -8,4 +8,4 @@ namespace JobifyEcom.Contracts.Responses;
 /// <param name="Title">Short, human-readable error message.</param>
 /// <param name="Details">Optional list of additional context, such as validation messages.</param>
 public record ErrorResponseDefinition(string Id, int HttpStatus, string Title, string[] Details)
-	: ResponseDefinition(Id, Title, Details);
+	: ResponseDefinition<ErrorResponseDefinition>(Id, Title, Details);
