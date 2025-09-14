@@ -64,28 +64,6 @@ public class UserController(IUserService userService) : ControllerBase
 	}
 
 	/// <summary>
-	/// Lists or searches users with optional filtering, sorting, and cursor-based pagination.
-	/// </summary>
-	/// <remarks>
-	/// Use this endpoint to retrieve a paginated list of users. You can provide filter parameters
-	/// such as name, email, role, or status to narrow the results. Pagination is cursor-based,
-	/// meaning you can navigate through large datasets efficiently using the returned cursors.
-	/// Only authenticated users can access this endpoint.
-	/// </remarks>
-	/// <param name="request">Pagination, filtering, and sorting parameters for querying users.</param>
-	/// <returns>A paged list of user summaries matching the query.</returns>
-	/// <response code="200">Users retrieved successfully.</response>
-	[ProducesResponseType(typeof(ApiResponse<CursorPaginationResponse<UserProfileSummaryResponse>>), StatusCodes.Status200OK)]
-	[Authorize]
-	[HttpGet(ApiRoutes.Search.Get.Users)]
-	[Obsolete("Deprecated, this is to reimplement in a new controller.")]
-	public async Task<IActionResult> SearchUsers([FromQuery] CursorPaginationRequest<UserProfileFilterRequest> request)
-	{
-		ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>> result = await _userService.SearchUsersAsync(request);
-		return Ok(result.MapToApiResponse());
-	}
-
-	/// <summary>
 	/// Updates the profile of the currently authenticated user.
 	/// </summary>
 	/// <remarks>

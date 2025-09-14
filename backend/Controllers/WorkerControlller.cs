@@ -1,7 +1,6 @@
 using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Workers;
-using JobifyEcom.Enums;
 using JobifyEcom.Extensions;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -175,30 +174,6 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     public async Task<IActionResult> GetSkillById([FromRoute] Guid skillId)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.GetSkillByIdAsync(skillId);
-        return Ok(result.MapToApiResponse());
-    }
-
-    /// <summary>
-    /// Verifies a worker’s skill by approving or rejecting it.
-    /// </summary>
-    /// <remarks>
-    /// Only admins (<c>Admin</c> or <c>SuperAdmin</c> roles) can perform this operation.
-    /// Verification updates the status of the skill and records reviewer comments.
-    /// </remarks>
-    /// <param name="workerId">The worker’s unique identifier who owns the skill.</param>
-    /// <param name="skillId">The unique identifier of the skill to verify.</param>
-    /// <param name="request">The verification decision, including status and reviewer comments.</param>
-    /// <returns>The updated skill with its new verification status.</returns>
-    /// <response code="200">Skill successfully verified or rejected.</response>
-    /// <response code="404">Verification record not found for this skill or skill does not belong to the specified worker.</response>
-    [ProducesResponseType(typeof(ApiResponse<WorkerSkillResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    [Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
-    [HttpPost(ApiRoutes.Verify.Post.VerifySkill)]
-    [Obsolete("This endpoint is deprecated. A new controller will be made to call it properly.")]
-    public async Task<IActionResult> VerifySkill([FromRoute] Guid workerId, [FromRoute] Guid skillId, [FromBody] VerifySkillRequest request)
-    {
-        ServiceResult<WorkerSkillResponse> result = await _workerSkillService.VerifySkillAsync(skillId, request);
         return Ok(result.MapToApiResponse());
     }
 }
