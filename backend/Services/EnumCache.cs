@@ -21,7 +21,7 @@ namespace JobifyEcom.Services;
 /// as a <c>Singleton</c> in dependency injection without concerns of state changes.
 /// </para>
 /// </remarks>
-public class EnumCache
+internal class EnumCache
 {
 	/// <summary>
 	/// The dictionary mapping enum type names to their corresponding <see cref="EnumSetResponse"/>.
@@ -32,7 +32,7 @@ public class EnumCache
 	/// <summary>
 	/// Initializes the cache with all supported enums that are exposed via the API.
 	/// </summary>
-	public EnumCache()
+	internal EnumCache()
 	{
 		// Explicitly register enums you want exposed to clients.
 		EnumSetResponse[] sets =
@@ -55,7 +55,7 @@ public class EnumCache
 	/// <returns>
 	/// A read-only list of <see cref="EnumSetResponse"/> representing all cached enums.
 	/// </returns>
-	public IReadOnlyList<EnumSetResponse> GetAll() => [.. _cache.Values];
+	internal IReadOnlyList<EnumSetResponse> GetAll() => [.. _cache.Values];
 
 	/// <summary>
 	/// Gets a specific enum by its type name (case-insensitive).
@@ -64,7 +64,7 @@ public class EnumCache
 	/// <returns>
 	/// The <see cref="EnumSetResponse"/> if found; otherwise <c>null</c>.
 	/// </returns>
-	public EnumSetResponse? GetByTypeName(string typeName) => _cache.TryGetValue(typeName, out var set) ? set : null;
+	internal EnumSetResponse? GetByTypeName(string typeName) => _cache.TryGetValue(typeName, out var set) ? set : null;
 
 	/// <summary>
 	/// Builds an <see cref="EnumSetResponse"/> for the given enum type,

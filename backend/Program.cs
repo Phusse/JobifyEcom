@@ -95,7 +95,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
             .SelectMany(e => e.Value!.Errors)
             .Select(e => e.ErrorMessage)];
 
-        ErrorDefinition error = ErrorCatalog.ValidationFailed
+        ErrorResponseDefinition error = ErrorCatalog.ValidationFailed
             .AppendDetails([.. errors]);
 
         throw new AppException(error);
