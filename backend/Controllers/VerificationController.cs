@@ -12,12 +12,12 @@ namespace JobifyEcom.Controllers;
 /// <summary>
 /// Manages verification operations for worker skills. Only admins can perform this operation. Verification updates the status of the data and records reviewer comments.
 /// </summary>
-/// <param name="workerSkillService">Service for managing worker skills and verification.</param>
+/// <param name="verificationService">Service for verification.</param>
 [Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
 [ApiController]
-public class VerificationController(IWorkerSkillService workerSkillService) : ControllerBase
+public class VerificationController(IVerificationService verificationService) : ControllerBase
 {
-	private readonly IWorkerSkillService _workerSkillService = workerSkillService;
+	private readonly IVerificationService _verificationService = verificationService;
 
 	/// <summary>
 	/// Verifies a worker’s skill by approving or rejecting it.
@@ -36,7 +36,7 @@ public class VerificationController(IWorkerSkillService workerSkillService) : Co
 	[HttpPost(ApiRoutes.Verify.Post.VerifySkill)]
 	public async Task<IActionResult> VerifySkill([FromRoute] Guid id, [FromBody] VerifySkillRequest request)
 	{
-		ServiceResult<WorkerSkillResponse> result = await _workerSkillService.VerifySkillAsync(id, request);
+		ServiceResult<WorkerSkillResponse> result = await _verificationService.VerifySkillAsync(id, request);
 		return Ok(result.MapToApiResponse());
 	}
 }

@@ -11,12 +11,12 @@ namespace JobifyEcom.Controllers;
 /// <summary>
 /// Manages search operations for users. This controller provides endpoints to list or search users based on various criteria. Only authenticated users can access this endpoints.
 /// </summary>
-/// <param name="userService">Service for user-related operations.</param>
+/// <param name="searchService">Service for search operations.</param>
 [Authorize]
 [ApiController]
-public class SearchController(IUserService userService) : ControllerBase
+public class SearchController(ISearchService searchService) : ControllerBase
 {
-	private readonly IUserService _userService = userService;
+	private readonly ISearchService _searchService = searchService;
 
 	/// <summary>
 	/// Lists or searches users with optional filtering, sorting, and cursor-based pagination.
@@ -34,7 +34,7 @@ public class SearchController(IUserService userService) : ControllerBase
 	[HttpGet(ApiRoutes.Search.Get.Users)]
 	public async Task<IActionResult> SearchUsers([FromQuery] CursorPaginationRequest<UserProfileFilterRequest> request)
 	{
-		ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>> result = await _userService.SearchUsersAsync(request);
+		ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>> result = await _searchService.SearchUsersAsync(request);
 		return Ok(result.MapToApiResponse());
 	}
 }

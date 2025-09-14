@@ -15,6 +15,7 @@ using Scalar.AspNetCore;
 using JobifyEcom.Security;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Contracts.Errors;
+using JobifyEcom.Contracts.Responses;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -81,6 +82,8 @@ builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IWorkerSkillService, WorkerSkillService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IVerificationService, VerificationService>();
 builder.Services.AddScoped<IMetadataService, MetadataService>();
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();

@@ -167,19 +167,4 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 
 		return ServiceResult<WorkerSkillResponse>.Create(response, "Skill retrieved successfully.");
 	}
-
-	public async Task<ServiceResult<WorkerSkillResponse>> VerifySkillAsync(Guid skillId, VerifySkillRequest request)
-	{
-		Verification verification = await _db.Verifications
-			.FirstOrDefaultAsync(v => v.EntityId == skillId && v.EntityType == EntityType.Skill)
-			?? throw new AppException(404, "Verification record not found for this skill.");
-
-		verification.Status = request.Status;
-		verification.ReviewerComment = request.ReviewerComment;
-		verification.ReviewerId = GetCurrentUserId();
-		verification.ReviewedAt = DateTime.UtcNow;
-
-		await _db.SaveChangesAsync();
-		return await GetSkillByIdAsync(skillId);
-	}
 }
