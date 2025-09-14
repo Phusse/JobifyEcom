@@ -1,7 +1,6 @@
 using JobifyEcom.Contracts.Errors;
 using JobifyEcom.Exceptions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 
 namespace JobifyEcom.Security;
 
@@ -24,27 +23,8 @@ internal static class JwtEventHandlers
 		return new JwtBearerEvents
 		{
 			OnTokenValidated = TokenValidator.ValidateAsync,
-			OnAuthenticationFailed = context =>
-			{
-				// throw new AppException(ErrorCatalog.Unauthorized);
-
-				// If the endpoint does NOT require [Authorize], ignore auth failures.
-				var endpoint = context.HttpContext.GetEndpoint();
-				var hasAuthorize = endpoint?.Metadata?.GetMetadata<IAuthorizeData>() is not null;
-
-				if (hasAuthorize)
-				{
-					throw new AppException(ErrorCatalog.Unauthorized);
-				}
-
-				// Suppress the error so unauthenticated requests still hit public endpoints
-				context.NoResult();
-				return Task.CompletedTask;
-			},
-			OnForbidden = context =>
-			{
-				throw new AppException(ErrorCatalog.Forbidden);
-			},
+			OnAuthenticationFailed = JwtAuthentication.HandleAuthenticationFailedAsync,
+			OnForbidden = context => throw new AppException(ErrorCatalog.Forbidden),
 		};
 	}
 }

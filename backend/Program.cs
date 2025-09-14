@@ -15,7 +15,6 @@ using Scalar.AspNetCore;
 using JobifyEcom.Security;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Contracts.Errors;
-using System.Diagnostics;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -36,10 +35,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //--------------- Controllers use same JSON options ---------------
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    options.JsonSerializerOptions.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
-    options.JsonSerializerOptions.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
-    options.JsonSerializerOptions.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
-    options.JsonSerializerOptions.ReferenceHandler = globalJsonOptions.ReferenceHandler;
+    JsonSerializerOptions jsonSerializer = options.JsonSerializerOptions;
+
+    jsonSerializer.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
+    jsonSerializer.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
+    jsonSerializer.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
+    jsonSerializer.ReferenceHandler = globalJsonOptions.ReferenceHandler;
 
     foreach (JsonConverter converter in globalJsonOptions.Converters)
     {
@@ -64,7 +65,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
     };
 
     options.Events = JwtEventHandlers.Create();
@@ -107,7 +108,7 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
-        string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "OpenApiDescription.md"));
+        string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "README.md"));
 
         options.SwaggerDoc("v1", new OpenApiInfo
         {
@@ -139,7 +140,8 @@ if (builder.Environment.IsDevelopment())
                     Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
-            },[]
+            },
+            Array.Empty<string>()
         }});
     });
 }
@@ -157,7 +159,7 @@ if (app.Environment.IsDevelopment())
     {
         options.Title = "JobifyEcom API";
         options.AddServer("http://localhost:5122", "Development");
-        options.AddServer("https://localhost:5122", "Production");
+        options.AddServer("http://localhost:5122", "Production");
         options.DefaultHttpClient = new(ScalarTarget.Node, ScalarClient.Fetch);
     });
 }
