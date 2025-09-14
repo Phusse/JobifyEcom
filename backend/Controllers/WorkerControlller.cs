@@ -194,7 +194,7 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     [ProducesResponseType(typeof(ApiResponse<WorkerSkillResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [Authorize(Roles = $"{nameof(SystemRole.Admin)}, {nameof(SystemRole.SuperAdmin)}")]
-    [HttpPost(ApiRoutes.Worker.Post.VerifySkill)]
+    [HttpPost(ApiRoutes.Verify.Post.VerifySkill)]
     [Obsolete("This endpoint is deprecated. A new controller will be made to call it properly.")]
     public async Task<IActionResult> VerifySkill([FromRoute] Guid workerId, [FromRoute] Guid skillId, [FromBody] VerifySkillRequest request)
     {

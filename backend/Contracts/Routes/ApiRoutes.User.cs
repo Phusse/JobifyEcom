@@ -11,7 +11,6 @@ internal static partial class ApiRoutes
 		{
 			internal const string Me = $"{Base}/me";
 			internal const string ById = $"{Base}/{{id}}";
-			internal const string All = Base;
 		}
 
 		internal static class Post

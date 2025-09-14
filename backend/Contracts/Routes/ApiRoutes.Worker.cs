@@ -18,7 +18,6 @@ internal static partial class ApiRoutes
 		{
 			internal const string Create = $"{Base}/me";
 			internal const string AddSkill = $"{Base}/me/skills";
-			internal const string VerifySkill = $"{SkillsBase}/{{skillId}}/verify";
 		}
 
 		internal static class Delete

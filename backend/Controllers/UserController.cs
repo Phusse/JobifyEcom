@@ -77,7 +77,7 @@ public class UserController(IUserService userService) : ControllerBase
 	/// <response code="200">Users retrieved successfully.</response>
 	[ProducesResponseType(typeof(ApiResponse<CursorPaginationResponse<UserProfileSummaryResponse>>), StatusCodes.Status200OK)]
 	[Authorize]
-	[HttpGet(ApiRoutes.User.Get.All)]
+	[HttpGet(ApiRoutes.Search.Get.Users)]
 	[Obsolete("Deprecated, this is to reimplement in a new controller.")]
 	public async Task<IActionResult> SearchUsers([FromQuery] CursorPaginationRequest<UserProfileFilterRequest> request)
 	{
