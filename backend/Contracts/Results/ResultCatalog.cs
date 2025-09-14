@@ -1,5 +1,4 @@
 using JobifyEcom.Contracts.Responses;
-using JobifyEcom.Contracts.Routes;
 
 namespace JobifyEcom.Contracts.Results;
 

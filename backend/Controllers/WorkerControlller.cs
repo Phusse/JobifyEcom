@@ -2,6 +2,7 @@ using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Workers;
 using JobifyEcom.Extensions;
+using JobifyEcom.Helpers;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,18 +40,8 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     public async Task<IActionResult> CreateProfile()
     {
         ServiceResult<object> result = await _workerService.CreateProfileAsync();
-        string locationUri = BuildWorkerResourceUrl();
+        string locationUri = ResourceUrlBuilder.BuildWorkerProfileResourceUrl(Request);
         return Created(locationUri, result.MapToApiResponse());
-    }
-
-    /// <summary>
-    /// Builds the full URL to access a specific job resource.
-    /// </summary>
-    /// <returns>The fully qualified URL to the newly created worker resource.</returns>
-    private string BuildWorkerResourceUrl()
-    {
-        string path = ApiRoutes.Worker.Get.Me;
-        return $"{Request.Scheme}://{Request.Host}/{path}";
     }
 
     /// <summary>
@@ -116,24 +107,8 @@ public class WorkerController(IWorkerService workerService, IWorkerSkillService 
     public async Task<IActionResult> AddSkill([FromBody] AddWorkerSkillRequest request)
     {
         ServiceResult<WorkerSkillResponse> result = await _workerSkillService.AddSkillAsync(request);
-        string locationUri = BuildSkillResourceUrl(result.Data);
+        string locationUri = ResourceUrlBuilder.BuildSkillResourceUrl(Request, result.Data);
         return Created(locationUri, result.MapToApiResponse());
-    }
-
-    /// <summary>
-    /// Builds the full URL to access a specific worker skill resource.
-    /// </summary>
-    /// <param name="data">The skill response data containing worker and skill IDs.</param>
-    /// <returns>The fully qualified URL to the newly created skill resource.</returns>
-    private string BuildSkillResourceUrl(WorkerSkillResponse? data)
-    {
-        if (data is null) return string.Empty;
-
-        string path = ApiRoutes.Worker.Get.SkillById
-            .Replace("{{workerId}}", data.WorkerId.ToString())
-            .Replace("{{skillId}}", data.Id.ToString());
-
-        return $"{Request.Scheme}://{Request.Host}/{path}";
     }
 
     /// <summary>

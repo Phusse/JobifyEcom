@@ -6,6 +6,7 @@ using JobifyEcom.Services;
 using Microsoft.AspNetCore.Authorization;
 using JobifyEcom.Enums;
 using JobifyEcom.Extensions;
+using JobifyEcom.Helpers;
 
 namespace JobifyEcom.Controllers;
 
@@ -44,23 +45,8 @@ public class JobController(IJobService jobService, IJobApplicationService jobApp
     public async Task<IActionResult> Create([FromBody] JobCreateRequest request)
     {
         ServiceResult<JobResponse> result = await _jobService.CreateJobAsync(request);
-        string locationUri = BuildJobResourceUrl(result.Data);
+        string locationUri = ResourceUrlBuilder.BuildJobResourceUrl(Request, result.Data);
         return Created(locationUri, result.MapToApiResponse());
-    }
-
-    /// <summary>
-    /// Builds the full URL to access a specific job resource.
-    /// </summary>
-    /// <param name="data">The response containing the id of the job.</param>
-    /// <returns>The fully qualified URL to the newly created job resource.</returns>
-    private string BuildJobResourceUrl(JobResponse? data)
-    {
-        if (data is null) return string.Empty;
-
-        string path = ApiRoutes.Job.Get.ById
-            .Replace("{{id}}", data.Id.ToString());
-
-        return $"{Request.Scheme}://{Request.Host}/{path}";
     }
 
     /// <summary>
@@ -155,24 +141,8 @@ public class JobController(IJobService jobService, IJobApplicationService jobApp
     public async Task<IActionResult> Apply([FromRoute] Guid jobId)
     {
         ServiceResult<JobApplicationResponse> result = await _jobApplicationService.CreateApplicationAsync(jobId);
-        string locationUri = BuildApplicationResourceUrl(result.Data);
+        string locationUri = ResourceUrlBuilder.BuildJobApplicationResourceUrl(Request, result.Data);
         return Created(locationUri, result.MapToApiResponse());
-    }
-
-    /// <summary>
-    /// Builds the full URL to access a specific job application resource.
-    /// </summary>
-    /// <param name="data">The response containing the id of the jobapplication.</param>
-    /// <returns>The fully qualified URL to the newly created job application resource.</returns>
-    private string BuildApplicationResourceUrl(JobApplicationResponse? data)
-    {
-        if (data is null) return string.Empty;
-
-        string path = ApiRoutes.Job.Get.ApplicationById
-            .Replace("{{jobId}}", data.JobPostId.ToString())
-            .Replace("{{applicationId}}", data.Id.ToString());
-
-        return $"{Request.Scheme}://{Request.Host}/{path}";
     }
 
     /// <summary>
