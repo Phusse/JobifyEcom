@@ -8,6 +8,11 @@ namespace JobifyEcom.DTOs;
 public class ServiceResult<T>
 {
 	/// <summary>
+	/// The unique identifier for the message.
+	/// </summary>
+	public string? MessageId { get; set; }
+
+	/// <summary>
 	/// An informational message about the operation.
 	/// </summary>
 	public string? Message { get; set; }
@@ -28,9 +33,11 @@ public class ServiceResult<T>
 	/// <param name="data">The data returned by the service.</param>
 	/// <param name="message">An optional informational message.</param>
 	/// <param name="errors">Optional list of warnings or errors.</param>
+	/// <param name="messageId">The unique identifier for the message.</param>
 	/// <returns>A new <see cref="ServiceResult{T}"/> with the specified data and message.</returns>
-	public static ServiceResult<T> Create(T? data, string? message = null, List<string>? errors = null) => new()
+	public static ServiceResult<T> Create(T? data, string? message = null, List<string>? errors = null, string? messageId = null) => new()
 	{
+		MessageId = null,
 		Data = data,
 		Message = message,
 		Errors = errors,

@@ -26,5 +26,5 @@ public enum JobStatus
 	/// The job has been completed by the assigned worker or team.
 	/// </summary>
 	[Display(Name = "Completed")]
-	Completed
+	Completed,
 }

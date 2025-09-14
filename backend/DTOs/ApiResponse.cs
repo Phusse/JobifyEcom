@@ -47,26 +47,26 @@ public class ApiResponse<T>
     /// <summary>
     /// Creates a successful API response.
     /// </summary>
-    public static ApiResponse<T> Ok(T? data = default, string? message = null, List<string>? errors = null, string? traceId = null, string messageId = "UNKNOWN") => new()
+    public static ApiResponse<T> Ok(T? data = default, string? message = null, List<string>? errors = null, string? traceId = null, string? messageId = null) => new()
     {
         TraceId = traceId,
-        MessageId = string.IsNullOrWhiteSpace(messageId) ? "UNKNOWN" : messageId,
+        MessageId = string.IsNullOrWhiteSpace(messageId) ? "UNKNOWN" : messageId.ToUpperInvariant(),
         Success = true,
         Message = string.IsNullOrWhiteSpace(message) ? "Operation successful." : message,
         Data = data,
-        Errors = errors,
+        Errors = errors is { Count: > 0 } ? errors : null,
     };
 
     /// <summary>
     /// Creates a failed API response.
     /// </summary>
-    public static ApiResponse<T> Fail(T? data = default, string? message = null, List<string>? errors = null, string? traceId = null, string messageId = "UNKNOWN") => new()
+    public static ApiResponse<T> Fail(T? data = default, string? message = null, List<string>? errors = null, string? traceId = null, string? messageId = null) => new()
     {
         TraceId = traceId,
-        MessageId = string.IsNullOrWhiteSpace(messageId) ? "UNKNOWN" : messageId,
+        MessageId = string.IsNullOrWhiteSpace(messageId) ? "UNKNOWN" : messageId.ToUpperInvariant(),
         Success = false,
         Message = string.IsNullOrWhiteSpace(message) ? "Operation failed." : message,
         Data = data,
-        Errors = errors,
+        Errors = errors is { Count: > 0 } ? errors : null,
     };
 }

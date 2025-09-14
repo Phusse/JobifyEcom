@@ -11,7 +11,6 @@ internal static class ExceptionExtensions
 	/// <summary>
 	/// Converts  <see cref="AppException"/> to a failed <see cref="ApiResponse{T}"/> where T is object.
 	/// and <see cref="AppException.Errors"/> as the errors list.
-	/// Falls back to a default message if no errors are provided.
 	/// </summary>
 	/// <param name="ex">The <see cref="AppException"/> instance.</param>
 	/// <param name="message">Optional developer message (e.g., exception.Message).</param>
@@ -19,15 +18,12 @@ internal static class ExceptionExtensions
 	/// <returns>A failed <see cref="ApiResponse{T}"/> where T is object; representing the exception.</returns>
 	internal static ApiResponse<object> MapToApiResponse(this AppException ex, string? message, string? traceId = null)
 	{
-		List<string> errors = ex.Errors?.Count > 0
-			? ex.Errors
-			: ["Something went wrong with your request. Please review the details and try again."];
-
 		return ApiResponse<object>.Fail(
 			data: null,
 			message: string.IsNullOrWhiteSpace(message) ? ex.Message : message,
-			errors: errors,
-			traceId: $"{ex.Code}: {traceId}"
+			errors: ex.Errors,
+			traceId: traceId,
+			messageId: ex.Id
 		);
 	}
 
@@ -47,8 +43,8 @@ internal static class ExceptionExtensions
 
 		return ApiResponse<object>.Fail(
 			data: null,
-			message: null,
-			errors: [errorMessage],
+			message: errorMessage,
+			errors: null,
 			traceId: traceId
 		);
 	}
