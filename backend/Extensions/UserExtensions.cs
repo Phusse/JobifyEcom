@@ -10,11 +10,18 @@ internal static class UserExtensions
 {
 	/// <summary>
 	/// Gets the effective system roles for the <see cref="User"/>.
-	/// Always includes <see cref="SystemRole.User"/>. Adds <see cref="SystemRole.Worker"/> if <see cref="User.IsWorker"/>
+	/// Always includes <see cref="SystemRole.User"/>.
+	/// Adds <see cref="SystemRole.Worker"/> if <see cref="User.IsWorker"/> is true,
 	/// and the staff role if <see cref="User.StaffRole"/> is set.
+	/// <para>
+	/// <b>Important:</b> <see cref="User.WorkerProfile"/> is a navigation property,
+	/// make sure it is eagerly loaded (e.g. with <c>.Include(u =&gt; u.Worker)</c>)
+	/// before calling this method. Otherwise <see cref="User.IsWorker"/> may return
+	/// <c>false</c> even for users that are workers.
+	/// </para>
 	/// </summary>
 	/// <param name="user">The <see cref="User"/> instance.</param>
-	/// <returns>List of assigned <see cref="SystemRole"/>.</returns>
+	/// <returns>A list of assigned <see cref="SystemRole"/> values.</returns>
 	internal static List<SystemRole> GetUserRoles(this User user)
 	{
 		List<SystemRole> userRoles = [SystemRole.User];

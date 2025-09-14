@@ -39,6 +39,12 @@ internal class JwtTokenService(IConfiguration config)
 	/// <item><description>security_stamp – unique GUID for token invalidation.</description></item>
 	/// <item><description>TokenType – indicates whether it's Access or Refresh.</description></item>
 	/// </list>
+	/// <para>
+	///	<b>Important:</b> The <paramref name="user"/> instance must have its related data loaded
+	/// (e.g. <c>User.Worker</c> if using <see cref="UserExtensions.GetUserRoles(User)"/>)
+	/// before calling this method. If the navigation is not loaded, worker roles will be missing
+	/// from the generated token even if the user is a worker.
+	/// </para>
 	/// </remarks>
 	internal string GenerateToken(User user, TimeSpan expiry, TokenType tokenType)
 	{

@@ -18,8 +18,8 @@ internal static partial class ErrorCatalog
 		Details: []
 	);
 
-	internal static readonly ErrorDefinition InvalidSession = new(
-		Id: "AUTH_INVALID_SESSION",
+	internal static readonly ErrorDefinition InvalidTokenType = new(
+		Id: "AUTH_INVALID_TOKEN",
 		HttpStatus: StatusCodes.Status401Unauthorized,
 		Title: "Invalid session.",
 		Details: ["Token type was not 'Access' during JWT validation."]

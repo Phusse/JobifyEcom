@@ -48,7 +48,7 @@ internal static class TokenValidator
 
 		if (!string.Equals(tokenType, TokenType.Access.ToString(), StringComparison.OrdinalIgnoreCase))
 		{
-			throw new AppException(ErrorCatalog.InvalidSession);
+			throw new AppException(ErrorCatalog.InvalidTokenType);
 		}
 
 		Guid? userId = context.Principal.GetUserId();
