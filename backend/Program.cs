@@ -76,6 +76,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<CursorProtector>();
 builder.Services.AddSingleton<EnumCache>();
+builder.Services.AddScoped<AppContextService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using JobifyEcom.Enums;
+using JobifyEcom.Validation;
 
 namespace JobifyEcom.DTOs.Workers;
 
@@ -42,8 +43,17 @@ public class AddWorkerSkillRequest
 
 	/// <summary>
 	/// A list of tags associated with this skill (e.g., "Frontend", "React").
-	/// At least one tag is required for search and categorization.
+	/// <para>Validation ensures that:</para>
+	/// - At least one item exists
+	/// - Maximum of 20 items
+	/// - Each string is 2–50 characters long
+	/// - All items are unique
+	/// - No empty or whitespace-only values
 	/// </summary>
-	[MinLength(1, ErrorMessage = "At least one tag is required.")]
+	[NonEmptyList(ErrorMessage = "You must provide at least one skill tag.")]
+	[MaxListCount(20, ErrorMessage = "You cannot assign more than 20 tags to a skill.")]
+	[StringLengthList(2, 50, ErrorMessage = "Each tag must be 2-50 characters long.")]
+	[UniqueStrings(ErrorMessage = "Duplicate tags are not allowed.")]
+	[AllItemsRequired(ErrorMessage = "Tags cannot be null, empty, or whitespace-only.")]
 	public required List<string> Tags { get; set; } = [];
 }

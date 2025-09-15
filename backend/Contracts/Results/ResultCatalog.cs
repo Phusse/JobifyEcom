@@ -27,4 +27,22 @@ internal static partial class ResultCatalog
 		Title: $"The requested enum could not be found.",
 		Details: ["Please check the list of available enums."]
 	);
+
+	public static readonly ResultResponseDefinition SkillAdded = new(
+		Id: "WORKER_SKILL_ADDED",
+		Title: "Skill submitted successfully and is pending verification.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition SkillRemoved = new(
+		Id: "WORKER_SKILL_REMOVED",
+		Title: "Skill removed successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition SkillRetrieved = new(
+		Id: "WORKER_SKILL_RETRIEVED",
+		Title: "Skill retrieved successfully.",
+		Details: []
+	);
 }
