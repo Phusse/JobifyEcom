@@ -63,4 +63,22 @@ internal static partial class ResultCatalog
 		Title: "No more results.",
 		Details: ["The maximum cursor depth for pagination has been reached."]
 	);
+
+	public static readonly ResultResponseDefinition WorkerProfileCreated = new(
+	Id: "WORKER_PROFILE_CREATED",
+	Title: "Worker profile created successfully.",
+	Details: []
+);
+
+	public static readonly ResultResponseDefinition WorkerProfileDeleted = new(
+		Id: "WORKER_PROFILE_DELETED",
+		Title: "Worker profile deleted successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition WorkerProfileRetrieved = new(
+		Id: "WORKER_PROFILE_RETRIEVED",
+		Title: "Worker profile retrieved successfully.",
+		Details: []
+	);
 }
