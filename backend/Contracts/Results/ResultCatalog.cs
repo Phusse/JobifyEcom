@@ -81,4 +81,28 @@ internal static partial class ResultCatalog
 		Title: "Worker profile retrieved successfully.",
 		Details: []
 	);
+
+	public static readonly ResultResponseDefinition JobCreated = new(
+		Id: "JOB_CREATED",
+		Title: "Job created successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition JobRetrieved = new(
+		Id: "JOB_RETRIEVED",
+		Title: "Job retrieved successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition JobUpdated = new(
+		Id: "JOB_UPDATED",
+		Title: "Job updated successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition JobDeleted = new(
+		Id: "JOB_DELETED",
+		Title: "Job deleted successfully.",
+		Details: []
+	);
 }

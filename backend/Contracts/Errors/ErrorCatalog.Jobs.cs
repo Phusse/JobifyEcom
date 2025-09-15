@@ -25,6 +25,20 @@ internal static partial class ErrorCatalog
 		Details: []
 	);
 
+	internal static readonly ErrorResponseDefinition UnauthorizedJobModification = new(
+		Id: "JOB_UNAUTHORIZED_MODIFICATION",
+		HttpStatus: StatusCodes.Status403Forbidden,
+		Title: "You are not authorized to modify this job.",
+		Details: ["Only the user who created this job can update it."]
+	);
+
+	internal static readonly ErrorResponseDefinition UnauthorizedJobDeletion = new(
+		Id: "JOB_UNAUTHORIZED_DELETION",
+		HttpStatus: StatusCodes.Status403Forbidden,
+		Title: "You are not authorized to delete this job.",
+		Details: ["Only the user who posted this job or an administrator can delete it."]
+	);
+
 	internal static readonly ErrorResponseDefinition ApplicationNotFound = new(
 		Id: "APPLICATION_NOT_FOUND",
 		HttpStatus: StatusCodes.Status404NotFound,
