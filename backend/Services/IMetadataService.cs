@@ -29,7 +29,7 @@ public interface IMetadataService
 	/// A <see cref="ServiceResult{T}"/> containing a list of <see cref="EnumSetResponse"/> objects,
 	/// where each <see cref="EnumSetResponse"/> represents one enum and its possible values.
 	/// </returns>
-	Task<ServiceResult<List<EnumSetResponse>>> GetAllEnums();
+	ServiceResult<List<EnumSetResponse>> GetAllEnums();
 
 	/// <summary>
 	/// Retrieves a specific enum set by its type name.
@@ -39,5 +39,5 @@ public interface IMetadataService
 	/// A <see cref="ServiceResult{T}"/> containing the <see cref="EnumSetResponse"/> if found;
 	/// otherwise, <c>null</c>.
 	/// </returns>
-	Task<ServiceResult<EnumSetResponse?>> GetEnumByType(string typeName);
+	ServiceResult<EnumSetResponse?> GetEnumByType(string typeName);
 }

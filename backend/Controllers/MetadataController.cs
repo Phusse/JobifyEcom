@@ -28,9 +28,9 @@ public class MetadataController(IMetadataService metadataService) : ControllerBa
 	/// <response code="200">Returns a list of all enums in the system wrapped in ApiResponse.</response>
 	[ProducesResponseType(typeof(ApiResponse<List<EnumSetResponse>>), StatusCodes.Status200OK)]
 	[HttpGet(ApiRoutes.Metadata.Get.AllEnums)]
-	public async Task<IActionResult> GetAllEnums()
+	public IActionResult GetAllEnums()
 	{
-		ServiceResult<List<EnumSetResponse>> result = await _metadataService.GetAllEnums();
+		ServiceResult<List<EnumSetResponse>> result = _metadataService.GetAllEnums();
 		return Ok(result.MapToApiResponse());
 	}
 
@@ -55,9 +55,9 @@ public class MetadataController(IMetadataService metadataService) : ControllerBa
 	/// <response code="200">Returns the enum if found, or null if it does not exist, wrapped in ApiResponse.</response>
 	[ProducesResponseType(typeof(ApiResponse<EnumSetResponse?>), StatusCodes.Status200OK)]
 	[HttpGet(ApiRoutes.Metadata.Get.EnumByType)]
-	public async Task<IActionResult> GetEnumByType([FromRoute] string id)
+	public IActionResult GetEnumByType([FromRoute] string id)
 	{
-		ServiceResult<EnumSetResponse?> result = await _metadataService.GetEnumByType(id);
+		ServiceResult<EnumSetResponse?> result = _metadataService.GetEnumByType(id);
 		return Ok(result.MapToApiResponse());
 	}
 }

@@ -14,14 +14,13 @@ internal class MetadataService(EnumCache enumCache) : IMetadataService
 {
 	private readonly EnumCache _enumCache = enumCache;
 
-	public Task<ServiceResult<List<EnumSetResponse>>> GetAllEnums()
+	public ServiceResult<List<EnumSetResponse>> GetAllEnums()
 	{
 		List<EnumSetResponse> cachedEnums = [.. _enumCache.GetAll()];
-		var response = ServiceResult<List<EnumSetResponse>>.Create(ResultCatalog.AllEnumsRetrieved, cachedEnums);
-		return Task.FromResult(response);
+		return ServiceResult<List<EnumSetResponse>>.Create(ResultCatalog.AllEnumsRetrieved, cachedEnums);
 	}
 
-	public Task<ServiceResult<EnumSetResponse?>> GetEnumByType(string typeName)
+	public ServiceResult<EnumSetResponse?> GetEnumByType(string typeName)
 	{
 		EnumSetResponse? enumSet = _enumCache.GetByTypeName(typeName);
 		ServiceResult<EnumSetResponse?> response;
@@ -37,6 +36,6 @@ internal class MetadataService(EnumCache enumCache) : IMetadataService
 			response = ServiceResult<EnumSetResponse?>.Create(ResultCatalog.EnumRetrieved, enumSet);
 		}
 
-		return Task.FromResult(response);
+		return response;
 	}
 }
