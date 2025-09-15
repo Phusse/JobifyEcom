@@ -65,10 +65,10 @@ internal static partial class ResultCatalog
 	);
 
 	public static readonly ResultResponseDefinition WorkerProfileCreated = new(
-	Id: "WORKER_PROFILE_CREATED",
-	Title: "Worker profile created successfully.",
-	Details: []
-);
+		Id: "WORKER_PROFILE_CREATED",
+		Title: "Worker profile created successfully.",
+		Details: []
+	);
 
 	public static readonly ResultResponseDefinition WorkerProfileDeleted = new(
 		Id: "WORKER_PROFILE_DELETED",
@@ -103,6 +103,30 @@ internal static partial class ResultCatalog
 	public static readonly ResultResponseDefinition JobDeleted = new(
 		Id: "JOB_DELETED",
 		Title: "Job deleted successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition JobApplicationCreated = new(
+		Id: "JOB_APPLICATION_CREATED",
+		Title: "Your application has been submitted successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition JobApplicationRetrieved = new(
+		Id: "JOB_APPLICATION_RETRIEVED",
+		Title: "Job application retrieved successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition JobApplicationStatusUpdated = new(
+		Id: "JOB_APPLICATION_STATUS_UPDATED",
+		Title: "The application status has been updated successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition JobApplicationStatusAlreadySet = new(
+		Id: "JOB_APPLICATION_STATUS_ALREADY_SET",
+		Title: "The application already has this status.",
 		Details: []
 	);
 }
