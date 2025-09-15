@@ -45,4 +45,22 @@ internal static partial class ResultCatalog
 		Title: "Skill retrieved successfully.",
 		Details: []
 	);
+
+	public static readonly ResultResponseDefinition UsersFound = new(
+		Id: "SEARCH_USERS_FOUND",
+		Title: "Users retrieved successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition UsersNotFound = new(
+		Id: "SEARCH_USERS_NOT_FOUND",
+		Title: "No users found.",
+		Details: ["Try adjusting your search criteria or filters."]
+	);
+
+	public static readonly ResultResponseDefinition MaxCursorDepthReached = new(
+		Id: "SEARCH_MAX_CURSOR_DEPTH_REACHED",
+		Title: "No more results.",
+		Details: ["The maximum cursor depth for pagination has been reached."]
+	);
 }

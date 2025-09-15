@@ -1,17 +1,25 @@
+using JobifyEcom.Contracts.Results;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Users;
 using JobifyEcom.Enums;
+using JobifyEcom.Helpers;
 using JobifyEcom.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobifyEcom.Services;
 
-/// <param name="cursorProtector">The cursor protector.</param>
-internal class SearchService(AppDbContext db, IHttpContextAccessor httpContextAccessor, CursorProtector cursorProtector) : ISearchService
+/// <summary>
+/// Provides search functionality for users with support for filtering, sorting, and cursor-based pagination.
+/// This service allows querying entities dynamically and returning paginated results in a safe, stateless manner.
+/// </summary>
+/// <param name="db">The application database context used to query users.</param>
+/// <param name="appContextService">The service providing information about the current authenticated user.</param>
+/// <param name="cursorProtector">A helper used to encode and decode cursor state for pagination.</param>
+internal class SearchService(AppDbContext db, AppContextService appContextService, CursorProtector cursorProtector) : ISearchService
 {
 	private readonly AppDbContext _db = db;
-	private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+	private readonly AppContextService _appContextService = appContextService;
 	private readonly CursorProtector _cursorProtector = cursorProtector;
 
 	private const int MaxCursorDepth = 20;
@@ -22,7 +30,7 @@ internal class SearchService(AppDbContext db, IHttpContextAccessor httpContextAc
 		CursorPaginationResponse<UserProfileSummaryResponse> response;
 
 		// If cursor provided, decode it and use its state
-		if (!string.IsNullOrEmpty(request.Cursor))
+		if (!string.IsNullOrWhiteSpace(request.Cursor))
 		{
 			cursorState = _cursorProtector.Decode(request.Cursor);
 
@@ -36,7 +44,9 @@ internal class SearchService(AppDbContext db, IHttpContextAccessor httpContextAc
 					Items = [],
 				};
 
-				return ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>.Create(response, "No more results.");
+				return ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>.Create(
+					ResultCatalog.MaxCursorDepthReached, response
+				);
 			}
 
 			request.Filter = cursorState.Filter;
@@ -57,7 +67,7 @@ internal class SearchService(AppDbContext db, IHttpContextAccessor httpContextAc
 				{
 					searchBy = UserSearchField.Id;
 				}
-				else if (IsValidEmail(search))
+				else if (ValidationHelper.IsValidEmail(search))
 				{
 					searchBy = UserSearchField.Email;
 				}
@@ -160,16 +170,9 @@ internal class SearchService(AppDbContext db, IHttpContextAccessor httpContextAc
 			Items = items,
 		};
 
-		return ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>.Create(response, "Users found.");
-	}
-
-	private static bool IsValidEmail(string email)
-	{
-		try
-		{
-			var addr = new System.Net.Mail.MailAddress(email);
-			return addr.Address == email;
-		}
-		catch { return false; }
+		return ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>.Create(
+			response.Items.Count > 0 ? ResultCatalog.UsersFound : ResultCatalog.UsersNotFound,
+			response
+		);
 	}
 }

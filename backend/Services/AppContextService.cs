@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using JobifyEcom.Contracts.Errors;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Extensions;
