@@ -39,7 +39,7 @@ internal class UserService(AppDbContext db, AppContextService appContextService)
 			CreatedAt = user.CreatedAt
 		};
 
-		return ServiceResult<UserProfileResponse>.Create(ResultCatalog.CurrentUserRetrieved);
+		return ServiceResult<UserProfileResponse>.Create(ResultCatalog.CurrentUserRetrieved, response);
 	}
 
 	public async Task<ServiceResult<object>> GetUserByIdAsync(Guid userId)
