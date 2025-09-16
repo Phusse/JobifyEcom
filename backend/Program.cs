@@ -73,9 +73,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 });
 
 //--------------- Services & Auth ---------------
+builder.Services.AddSingleton(_ => new EnumCache());
+builder.Services.AddSingleton(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new CursorProtector(config);
+});
+
 builder.Services.AddSingleton<JwtTokenService>();
-builder.Services.AddSingleton<CursorProtector>();
-builder.Services.AddSingleton<EnumCache>();
 builder.Services.AddScoped<AppContextService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
