@@ -69,4 +69,19 @@ internal static class ResourceUrlBuilder
 
 		return $"{request.Scheme}://{request.Host}/{path}";
 	}
+
+	/// <summary>
+	/// Builds the full confirmation link URL for email verification.
+	/// </summary>
+	/// <param name="request">The current HTTP request used to determine scheme and host.</param>
+	/// <param name="email">The email address to confirm.</param>
+	/// <param name="confirmationToken">The confirmation token sent to the user.</param>
+	/// <returns>The fully-qualified confirmation link URL.</returns>
+	internal static string BuildConfirmationLink(HttpRequest request, string email, Guid confirmationToken)
+	{
+		string path = ApiRoutes.User.Patch.ConfirmEmail;
+		string encodedEmail = Uri.EscapeDataString(email);
+
+		return $"{request.Scheme}://{request.Host}/{path}?email={encodedEmail}&token={confirmationToken}";
+	}
 }

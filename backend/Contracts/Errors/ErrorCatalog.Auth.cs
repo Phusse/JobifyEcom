@@ -80,4 +80,67 @@ internal static partial class ErrorCatalog
 		Title: "Your login session is no longer valid. Please sign in again.",
 		Details: []
 	);
+
+	internal static readonly ErrorResponseDefinition MissingLoginDetails = new(
+		Id: "AUTH_MISSING_LOGIN_DETAILS",
+		HttpStatus: StatusCodes.Status400BadRequest,
+		Title: "Missing login details.",
+		Details: ["Please enter both your email address and password to sign in."]
+	);
+
+	internal static readonly ErrorResponseDefinition InvalidCredentials = new(
+		Id: "AUTH_INVALID_CREDENTIALS",
+		HttpStatus: StatusCodes.Status401Unauthorized,
+		Title: "Login failed.",
+		Details: ["We couldn't find an account with those credentials. Please check your email and password, then try again."]
+	);
+
+	internal static readonly ErrorResponseDefinition EmailNotConfirmed = new(
+		Id: "AUTH_EMAIL_NOT_CONFIRMED",
+		HttpStatus: StatusCodes.Status401Unauthorized,
+		Title: "Email confirmation required.",
+		Details: ["Please confirm your email address before signing in. Check your inbox for the confirmation link."]
+	);
+
+	internal static readonly ErrorResponseDefinition MissingRefreshToken = new(
+		Id: "AUTH_MISSING_REFRESH_TOKEN",
+		HttpStatus: StatusCodes.Status400BadRequest,
+		Title: "No refresh token provided.",
+		Details: ["A refresh token is required to renew your session. Please provide a valid refresh token."]
+	);
+
+	internal static readonly ErrorResponseDefinition SessionInvalid = new(
+		Id: "AUTH_SESSION_INVALID",
+		HttpStatus: StatusCodes.Status401Unauthorized,
+		Title: "Session invalid.",
+		Details: ["Your account security has changed. Please sign in again to continue."]
+	);
+
+	internal static readonly ErrorResponseDefinition TokenTypeInvalid = new(
+		Id: "AUTH_INVALID_TOKEN_TYPE",
+		HttpStatus: StatusCodes.Status401Unauthorized,
+		Title: "Invalid token type.",
+		Details: ["The provided token does not match the expected type."]
+	);
+
+	internal static readonly ErrorResponseDefinition SessionDataInvalid = new(
+		Id: "AUTH_SESSION_DATA_INVALID",
+		HttpStatus: StatusCodes.Status401Unauthorized,
+		Title: "Session data invalid.",
+		Details: ["We couldn't verify your session details. Please login again."]
+	);
+
+	internal static readonly ErrorResponseDefinition AlreadyRegistered = new(
+		Id: "AUTH_EMAIL_ALREADY_REGISTERED",
+		HttpStatus: StatusCodes.Status409Conflict,
+		Title: "Email already registered.",
+		Details: ["An account with this email address already exists. Please sign in or use a different email."]
+	);
+
+	internal static readonly ErrorResponseDefinition AuthenticationRequired = new(
+		Id: "AUTH_REQUIRED",
+		HttpStatus: StatusCodes.Status401Unauthorized,
+		Title: "Authentication required.",
+		Details: ["You must be signed in to log out."]
+	);
 }

@@ -8,6 +8,9 @@ using JobifyEcom.Security;
 using JobifyEcom.Contracts.Routes;
 using System.Security.Claims;
 using JobifyEcom.Extensions;
+using JobifyEcom.Contracts.Errors;
+using JobifyEcom.Contracts.Results;
+using JobifyEcom.Helpers;
 
 namespace JobifyEcom.Services;
 
@@ -16,94 +19,63 @@ namespace JobifyEcom.Services;
 /// </summary>
 /// <param name="db">The database context.</param>
 /// <param name="jwt">The JWT token service.</param>
-/// <param name="httpContextAccessor">The HTTP context accessor.</param>
-internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAccessor httpContextAccessor) : IAuthService
+/// <param name="appContextService">The HTTP context accessor.</param>
+internal class AuthService(AppDbContext db, JwtTokenService jwt, AppContextService appContextService) : IAuthService
 {
     private readonly AppDbContext _db = db;
     private readonly JwtTokenService _jwt = jwt;
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly AppContextService _appContextService = appContextService;
 
     private readonly TimeSpan _accessTokenLifetime = TimeSpan.FromMinutes(30);
     private readonly TimeSpan _refreshTokenLifetime = TimeSpan.FromDays(7);
 
     public async Task<ServiceResult<TokenResponse>> LoginAsync(LoginRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-        {
-            throw new AppException(400,
-                "Missing login details.",
-                ["Please enter both your email address and password to sign in."]
-            );
-        }
-
         User? user = await GetUserByEmailAsync(request.Email);
 
         if (user is null || !PasswordSecurity.VerifyPassword(request.Password, user.PasswordHash))
         {
-            throw new AppException(401,
-                "Login failed.",
-                ["We couldn't find an account with those credentials. Please check your email and password, then try again."]
-            );
+            throw new AppException(ErrorCatalog.InvalidCredentials);
         }
 
         if (!user.IsEmailConfirmed)
         {
-            throw new AppException(401,
-                "Email confirmation required.",
-                ["Please confirm your email address before signing in. Check your inbox for the confirmation link."]
-            );
+            throw new AppException(ErrorCatalog.EmailNotConfirmed);
         }
 
         if (user.IsLocked)
         {
-            throw new AppException(401,
-                "Account locked.",
-                ["Your account is currently locked. Contact support if you need help unlocking it."]
-            );
+            throw new AppException(ErrorCatalog.AccountLocked);
         }
 
         user.SecurityStamp = Guid.NewGuid();
         await _db.SaveChangesAsync();
 
         TokenResponse response = GenerateTokenResponse(user);
-        return ServiceResult<TokenResponse>.Create(response, "Signed in successfully.", GetTokenWarnings(response));
+
+        return ServiceResult<TokenResponse>.Create(
+            ResultCatalog.LoginSuccessful.AppendDetails(
+                GetTokenWarnings(response)?.ToArray() ?? []
+            ),
+            response
+        );
     }
 
     public async Task<ServiceResult<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.RefreshToken))
-        {
-            throw new AppException(400,
-                "No refresh token provided.",
-                ["A refresh token is required to renew your session. Please provide a valid refresh token."]
-            );
-        }
-
         ClaimsPrincipal principal = ValidateToken(request.RefreshToken, TokenType.Refresh);
         ExtractTokenUserData(principal, out Guid userId, out Guid tokenSecurityStamp);
 
-        User user = await _db.Users.AsNoTracking()
-            .Include(u => u.WorkerProfile)
-            .FirstOrDefaultAsync(u => u.Id == userId)
-            ?? throw new AppException(401,
-                "Account not found.",
-                ["We couldn't find an account for this session. It may have been deleted or changed."]
-            );
+        User user = await _appContextService.GetCurrentUserAsync();
 
         if (user.SecurityStamp != tokenSecurityStamp)
         {
-            throw new AppException(401,
-                "Session invalid.",
-                ["Your account security has changed. Please sign in again to continue."]
-            );
+            throw new AppException(ErrorCatalog.SessionExpired);
         }
 
         if (user.IsLocked)
         {
-            throw new AppException(401,
-                "Account locked.",
-                ["Your account is currently locked. Contact support if you need help unlocking it."]
-            );
+            throw new AppException(ErrorCatalog.AccountLocked);
         }
 
         string newAccessToken = _jwt.GenerateToken(user, _accessTokenLifetime, TokenType.Access);
@@ -117,30 +89,21 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         };
 
         return ServiceResult<TokenResponse>.Create(
-            response,
-            "Your session has been renewed. You are still signed in.",
-            GetTokenWarnings(response)
+            ResultCatalog.RefreshSuccessful.AppendDetails(
+                GetTokenWarnings(response)?.ToArray() ?? []
+            ),
+            response
         );
     }
 
     public async Task<ServiceResult<object>> LogoutAsync()
     {
-        Guid? userId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new AppException(401,
-                "Authentication required.",
-                ["You must be signed in to log out."]
-            );
-
-        User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId.Value)
-            ?? throw new AppException(404,
-                "User not found.",
-                ["We couldn't find your account. If this keeps happening, please contact support."]
-            );
+        User user = await _appContextService.GetCurrentUserAsync();
 
         user.SecurityStamp = Guid.Empty;
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "You have been signed out.");
+        return ServiceResult<object>.Create(ResultCatalog.LogoutSuccessful);
     }
 
     public async Task<ServiceResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
@@ -149,10 +112,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         if (await _db.Users.AnyAsync(u => u.Email == normalizedEmail))
         {
-            throw new AppException(409,
-                "Email already registered.",
-                ["An account with this email address already exists. Please sign in or use a different email."]
-            );
+            throw new AppException(ErrorCatalog.AlreadyRegistered);
         }
 
         Guid confirmationToken = Guid.NewGuid();
@@ -171,20 +131,21 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
         await _db.SaveChangesAsync();
 
         // Build the link
-        BuildConfirmationLink(user.Email, confirmationToken, out string confirmationLink, out List<string>? warnings);
-        warnings ??= ["Email sending is not yet available. For now, the confirmation link is included in the Location header."];
+        HttpRequest? httpRequest = _appContextService.HttpRequest;
+        string confirmationLink = httpRequest is not null
+            ? ResourceUrlBuilder.BuildConfirmationLink(httpRequest, user.Email, confirmationToken)
+            : string.Empty;
 
         return ServiceResult<RegisterResponse>.Create(
+            ResultCatalog.RegistrationSuccessful.AppendDetails(
+                "Email sending is not yet avaible. For now, the confirmation link is included in the the Location header."
+            ),
             new RegisterResponse
             {
-                ConfirmationLink = confirmationLink
-            },
-            "Registration successful! Please check your email for a confirmation link to activate your account.",
-            warnings
+                ConfirmationLink = confirmationLink,
+            }
         );
     }
-
-    #region Private Helpers
 
     private static string NormalizeEmail(string email) => email.ToLowerInvariant().Trim();
 
@@ -245,17 +206,13 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
             if (!string.Equals(tokenTypeClaim, tokenType.ToString(), StringComparison.OrdinalIgnoreCase))
             {
-                throw new AppException(401,
-                    "Invalid token type.",
+                throw new AppException(ErrorCatalog.TokenTypeInvalid.AppendDetails(
                     [$"The token provided is not a {tokenType} token. Please provide a valid {tokenType} token."]
-                );
+                ));
             }
         }
 
-        throw new AppException(401,
-            "Session expired.",
-            ["Your session has expired or is no longer valid. Please sign in again."]
-        );
+        throw new AppException(ErrorCatalog.SessionExpired);
     }
 
     private static void ExtractTokenUserData(ClaimsPrincipal principal, out Guid userId, out Guid securityStamp)
@@ -265,34 +222,7 @@ internal class AuthService(AppDbContext db, JwtTokenService jwt, IHttpContextAcc
 
         if (!Guid.TryParse(userIdClaim, out userId) || !Guid.TryParse(securityStampClaim, out securityStamp))
         {
-            throw new AppException(401,
-                "Session data invalid.",
-                ["We couldn't verify your session details. Please login again."]
-            );
+            throw new AppException(ErrorCatalog.SessionInvalid);
         }
     }
-
-    private void BuildConfirmationLink(string email, Guid token, out string confirmationLink, out List<string>? warnings)
-    {
-        HttpRequest? requestHttp = _httpContextAccessor.HttpContext?.Request;
-        string baseUrl;
-        warnings = null;
-
-        if (requestHttp is null || string.IsNullOrEmpty(requestHttp.Host.Value))
-        {
-            baseUrl = "http://localhost:5122";
-            warnings =
-            [
-                "Unable to determine the server address from the request. Using a default fallback URL."
-            ];
-        }
-        else
-        {
-            baseUrl = $"{requestHttp.Scheme}://{requestHttp.Host.Value}";
-        }
-
-        confirmationLink = $"{baseUrl}/{ApiRoutes.User.Patch.ConfirmEmail}?email={Uri.EscapeDataString(email)}&token={token}";
-    }
-
-    #endregion
 }

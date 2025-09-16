@@ -9,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 namespace JobifyEcom.Services;
 
 /// <summary>
-/// Provides access to information about the currently authenticated user.
-/// This service is intended to be used in request-scoped services
-/// to retrieve the current user's ID or full profile information.
+/// Provides access to information about the currently authenticated user and HTTP request context.
+/// This service centralizes context-related operations, making it easier for request-scoped services
+/// to retrieve user data, claims, and request information in a consistent and safe manner.
 /// </summary>
 /// <param name="httpContextAccessor">
 /// The <see cref="IHttpContextAccessor"/> used to access the current HTTP context.
@@ -69,4 +69,18 @@ internal class AppContextService(IHttpContextAccessor httpContextAccessor, AppDb
 
 		return user;
 	}
+
+	/// <summary>
+	/// Gets the current <see cref="HttpRequest"/> from the active HTTP context, if available.
+	/// </summary>
+	/// <remarks>
+	/// This property allows services to safely access request-specific data such as
+	/// scheme, host, and headers without needing to inject <see cref="IHttpContextAccessor"/>
+	/// directly.
+	/// <para>
+	/// If the service is used outside of a web request (e.g., background job or unit test),
+	/// this property may be <see langword="null"/> and should be checked before use.
+	/// </para>
+	/// </remarks>
+	internal HttpRequest? HttpRequest => _httpContextAccessor.HttpContext?.Request;
 }

@@ -207,4 +207,28 @@ internal static partial class ResultCatalog
 		Title: "User profile updated successfully.",
 		Details: []
 	);
+
+	public static readonly ResultResponseDefinition LoginSuccessful = new(
+	Id: "AUTH_LOGIN_SUCCESS",
+	Title: "Signed in successfully.",
+	Details: []
+);
+
+	public static readonly ResultResponseDefinition RefreshSuccessful = new(
+		Id: "AUTH_REFRESH_SUCCESS",
+		Title: "Your session has been renewed. You are still signed in.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition LogoutSuccessful = new(
+		Id: "AUTH_LOGOUT_SUCCESS",
+		Title: "You have been signed out.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition RegistrationSuccessful = new(
+		Id: "AUTH_REGISTRATION_SUCCESS",
+		Title: "Registration successful! Please check your email for a confirmation link to activate your account.",
+		Details: []
+	);
 }

@@ -12,12 +12,12 @@ public class LoginRequest
     /// </summary>
     [Required(ErrorMessage = "Please enter your email address.")]
     [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
-    public string? Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the user's password.
     /// </summary>
     [Required(ErrorMessage = "Please enter your password.")]
     [MinLength(6, ErrorMessage = "Your password must be at least 6 characters long.")]
-    public string? Password { get; set; }
+    public string Password { get; set; } = string.Empty;
 }
