@@ -14,12 +14,12 @@ public class UserProfileUpdateRequest
 	/// </summary>
 	[MinLength(2, ErrorMessage = "Name must be at least 2 characters long.")]
 	[StringLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
-	public string? Name { get; set; }
+	public string? Name { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The new bio for the user.
 	/// Maximum length is 250 characters if provided.
 	/// </summary>
 	[StringLength(250, ErrorMessage = "Bio cannot exceed 250 characters.")]
-	public string? Bio { get; set; }
+	public string? Bio { get; set; } = string.Empty;
 }

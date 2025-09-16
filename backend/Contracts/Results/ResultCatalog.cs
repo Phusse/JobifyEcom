@@ -129,4 +129,82 @@ internal static partial class ResultCatalog
 		Title: "The application already has this status.",
 		Details: []
 	);
+
+	public static readonly ResultResponseDefinition UserRetrieved = new(
+		Id: "USER_RETRIEVED",
+		Title: "User retrieved successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition CurrentUserRetrieved = new(
+		Id: "USER_CURRENT_RETRIEVED",
+		Title: "Your account details have been retrieved successfully.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition UserDeleted = new(
+		Id: "USER_DELETED",
+		Title: "The account was successfully deleted.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition CurrentUserDeleted = new(
+		Id: "USER_CURRENT_DELETED",
+		Title: "Your account has been deleted. We're sorry to see you go.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition EmailConfirmed = new(
+		Id: "USER_EMAIL_CONFIRMED",
+		Title: "Success! Your email address has been confirmed.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition EmailAlreadyConfirmed = new(
+		Id: "USER_EMAIL_ALREADY_CONFIRMED",
+		Title: "Your email is already confirmed. You can now sign in.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition UserLocked = new(
+		Id: "USER_LOCKED",
+		Title: "User account has been locked.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition UserAlreadyLocked = new(
+		Id: "USER_ALREADY_LOCKED",
+		Title: "This user account is already locked.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition UserUnlocked = new(
+		Id: "USER_UNLOCKED",
+		Title: "User account has been unlocked.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition UserAlreadyUnlocked = new(
+		Id: "USER_ALREADY_UNLOCKED",
+		Title: "This user account is not locked.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition PasswordResetRequested = new(
+		Id: "USER_PASSWORD_RESET_REQUESTED",
+		Title: "A password reset link has been sent to your email address.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition PasswordResetSuccessful = new(
+		Id: "USER_PASSWORD_RESET_SUCCESSFUL",
+		Title: "Your password has been updated. You can now sign in with your new password.",
+		Details: []
+	);
+
+	public static readonly ResultResponseDefinition UserProfileUpdated = new(
+		Id: "USER_PROFILE_UPDATED",
+		Title: "User profile updated successfully.",
+		Details: []
+	);
 }

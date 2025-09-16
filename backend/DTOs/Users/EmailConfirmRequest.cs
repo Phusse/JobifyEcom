@@ -13,11 +13,11 @@ public class EmailConfirmRequest
 	/// </summary>
 	[Required(ErrorMessage = "Please enter your email address.")]
 	[EmailAddress(ErrorMessage = "Please enter a valid email address.")]
-	public string? Email { get; set; }
+	public string Email { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The unique confirmation token sent to the user's email.
 	/// </summary>
 	[Required(ErrorMessage = "Email confirmation token is required. Please check your email for the link.")]
-	public Guid? Token { get; set; }
+	public Guid Token { get; set; } = Guid.Empty;
 }

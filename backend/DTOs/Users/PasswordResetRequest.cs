@@ -13,7 +13,7 @@ public class PasswordResetRequest
 	/// to authorize the password reset.
 	/// </summary>
 	[Required(ErrorMessage = "Password reset token is required. Please check your email for the link.")]
-	public Guid? Token { get; set; }
+	public Guid Token { get; set; } = Guid.Empty;
 
 	/// <summary>
 	/// The new password the user wishes to set for their account.
@@ -21,5 +21,5 @@ public class PasswordResetRequest
 	/// </summary>
 	[Required(ErrorMessage = "Please enter your new password.")]
 	[MinLength(6, ErrorMessage = "Your new password must be at least 6 characters long.")]
-	public string? NewPassword { get; set; }
+	public string? NewPassword { get; set; } = string.Empty;
 }

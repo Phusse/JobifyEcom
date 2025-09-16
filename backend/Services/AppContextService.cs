@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using JobifyEcom.Contracts.Errors;
 using JobifyEcom.Data;
 using JobifyEcom.Exceptions;
@@ -33,6 +34,19 @@ internal class AppContextService(IHttpContextAccessor httpContextAccessor, AppDb
 	internal Guid GetCurrentUserId()
 	{
 		return _httpContextAccessor.HttpContext?.User.GetUserId()
+			?? throw new AppException(ErrorCatalog.Unauthorized);
+	}
+
+	/// <summary>
+	/// Gets the claims of the currently authenticated user.
+	/// </summary>
+	/// <returns>The <see cref="ClaimsPrincipal"/> representing the authenticated user's claims.</returns>
+	/// <exception cref="AppException">
+	/// Thrown if no user is authenticated or the user claims cannot be determined.
+	/// </exception>
+	internal ClaimsPrincipal GetCurrentUserClaims()
+	{
+		return _httpContextAccessor.HttpContext?.User
 			?? throw new AppException(ErrorCatalog.Unauthorized);
 	}
 

@@ -1,10 +1,13 @@
 using System.Security.Claims;
+using JobifyEcom.Contracts.Errors;
+using JobifyEcom.Contracts.Results;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Users;
 using JobifyEcom.Enums;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Extensions;
+using JobifyEcom.Helpers;
 using JobifyEcom.Models;
 using JobifyEcom.Security;
 using Microsoft.EntityFrameworkCore;
@@ -12,30 +15,19 @@ using Microsoft.EntityFrameworkCore;
 namespace JobifyEcom.Services;
 
 /// <summary>
-/// User service for managing user-related operations.
+/// Provides operations for managing users, including retrieval, updates, and
+/// other user-related functionality within the application.
 /// </summary>
-/// <param name="db">The database context.</param>
-/// <param name="httpContextAccessor">The HTTP context accessor.</param>
-internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IUserService
+/// <param name="db">The database context used for data access.</param>
+/// <param name="appContextService">The application context service.</param>
+internal class UserService(AppDbContext db, AppContextService appContextService) : IUserService
 {
 	private readonly AppDbContext _db = db;
-	private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+	private readonly AppContextService _appContextService = appContextService;
 
 	public async Task<ServiceResult<UserProfileResponse>> GetCurrentUserAsync()
 	{
-		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-			?? throw new AppException(401,
-				"Sign in required.",
-				["You need to be signed in to access your account."]
-			);
-
-		// Include the WorkerProfile data else roles wont get populated properly
-		// This is necessary to ensure the user's roles are correctly retrieved
-		User? user = await _db.Users.Include(w => w.WorkerProfile).FirstOrDefaultAsync(u => u.Id == currentUserId)
-			?? throw new AppException(404,
-				"Account not found.",
-				["We couldn't find your account. Please contact support if this issue continues."]
-			);
+		User user = await _appContextService.GetCurrentUserAsync();
 
 		UserProfileResponse response = new()
 		{
@@ -47,18 +39,17 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 			CreatedAt = user.CreatedAt
 		};
 
-		return ServiceResult<UserProfileResponse>.Create(response, "User retrieved successfully.");
+		return ServiceResult<UserProfileResponse>.Create(ResultCatalog.CurrentUserRetrieved);
 	}
 
 	public async Task<ServiceResult<object>> GetUserByIdAsync(Guid userId)
 	{
 		User? user = await _db.Users.FindAsync(userId)
-			?? throw new AppException(404, "User not found.", ["No user exists with the specified ID."]);
+			?? throw new AppException(ErrorCatalog.AccountNotFound);
 
-		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new AppException(401, "Authentication required.", ["You must be signed in."]);
+		ClaimsPrincipal currentUserClaims = _appContextService.GetCurrentUserClaims();
 
-		IReadOnlyList<string> roles = currentUserPrincipal.GetRoles();
+		IReadOnlyList<string> roles = currentUserClaims.GetRoles();
 		bool isAdmin = roles.Contains(SystemRole.Admin.ToString()) || roles.Contains(SystemRole.SuperAdmin.ToString());
 
 		UserProfileResponse response = isAdmin switch
@@ -87,46 +78,24 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 			}
 		};
 
-		return ServiceResult<object>.Create(response, "User retrieved successfully.");
+		return ServiceResult<object>.Create(ResultCatalog.UserRetrieved, response);
 	}
 
 	public async Task<ServiceResult<object>> ConfirmEmailAsync(EmailConfirmRequest request)
 	{
-		if (string.IsNullOrWhiteSpace(request?.Email))
-		{
-			throw new AppException(400,
-				"Unable to confirm email.",
-				["Please provide a valid email address to continue."]
-			);
-		}
-
-		if (request.Token is null)
-		{
-			throw new AppException(400,
-				"Unable to confirm email.",
-				["The confirmation link is missing or invalid. Please request a new link and try again."]
-			);
-		}
-
 		string normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
 		User user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail)
-			?? throw new AppException(404,
-				"Unable to confirm email.",
-				["No account found with this email address. Please check and try again."]
-			);
+			?? throw new AppException(ErrorCatalog.AccountNotFoundByEmail);
 
 		if (user.IsEmailConfirmed)
 		{
-			return ServiceResult<object>.Create(null, "Your email is already confirmed. You can now sign in.");
+			return ServiceResult<object>.Create(ResultCatalog.EmailAlreadyConfirmed);
 		}
 
-		if (user.EmailConfirmationToken is null || user.EmailConfirmationToken != request.Token)
+		if (user.EmailConfirmationToken != request.Token)
 		{
-			throw new AppException(400,
-				"Unable to confirm email.",
-				["This confirmation link is no longer valid. Please request a new one."]
-			);
+			throw new AppException(ErrorCatalog.EmailConfirmationTokenInvalid);
 		}
 
 		user.IsEmailConfirmed = true;
@@ -135,86 +104,60 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 
 		await _db.SaveChangesAsync();
 
-		return ServiceResult<object>.Create(null, "Success! Your email address has been confirmed.");
+		return ServiceResult<object>.Create(ResultCatalog.EmailConfirmed);
 	}
 
 	public async Task<ServiceResult<object>> DeleteCurrentUserAsync()
 	{
-		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-			?? throw new AppException(401,
-				"Sign in required.",
-				["You need to be signed in to delete your account."]
-			);
-
-		User? user = await _db.Users.FindAsync(currentUserId)
-			?? throw new AppException(404,
-				"Account not found.",
-				["We couldn't find your account. Please contact support if this issue continues."]
-			);
+		User? user = await _appContextService.GetCurrentUserAsync();
 
 		_db.Users.Remove(user);
 		await _db.SaveChangesAsync();
 
-		return ServiceResult<object>.Create(null, "Your account has been deleted. We're sorry to see you go.");
+		return ServiceResult<object>.Create(ResultCatalog.CurrentUserDeleted);
 	}
 
 	public async Task<ServiceResult<object>> DeleteUserAsync(Guid userId)
 	{
+		ClaimsPrincipal currentUserClaims = _appContextService.GetCurrentUserClaims();
 		User? userToRemove = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId)
-			?? throw new AppException(404,
-				"User not found.",
-				["No user exists with the specified ID."]
-			);
+			?? throw new AppException(ErrorCatalog.AccountNotFound);
 
-		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new AppException(401,
-				"Authentication required.",
-				["You must be signed in to perform this action."]
-			);
-
-		EnsureCanModifyUser(userToRemove, currentUserPrincipal);
+		EnsureCanModifyUser(userToRemove, currentUserClaims);
 
 		_db.Users.Remove(userToRemove);
 		await _db.SaveChangesAsync();
 
-		return ServiceResult<object>.Create(null, "The account was successfully deleted.");
+		return ServiceResult<object>.Create(ResultCatalog.UserDeleted);
 	}
 
 	public async Task<ServiceResult<object>> LockUserAsync(Guid id)
 	{
-		User? user = await _db.FindAsync<User>(id)
-			?? throw new AppException(404,
-				"User not found.",
-				["No user found with the specified ID."]
-			);
-
-		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new AppException(401,
-				"Authentication required.",
-				["You must be signed in to perform this action."]
-			);
-
-		EnsureCanModifyUser(user, currentUserPrincipal);
+		User? user = await _db.Users.FindAsync(id)
+			?? throw new AppException(ErrorCatalog.AccountNotFound);
 
 		if (user.IsLocked)
 		{
-			return ServiceResult<object>.Create(null, "This user account is already locked.");
+			return ServiceResult<object>.Create(ResultCatalog.UserAlreadyLocked);
 		}
+
+		ClaimsPrincipal currentUserClaims = _appContextService.GetCurrentUserClaims();
+		EnsureCanModifyUser(user, currentUserClaims);
 
 		user.IsLocked = true;
 		await _db.SaveChangesAsync();
 
-		return ServiceResult<object>.Create(null, "User account has been locked.");
+		return ServiceResult<object>.Create(ResultCatalog.UserLocked);
 	}
 
 	public async Task<ServiceResult<object>> RequestPasswordResetAsync(Guid id)
 	{
-		User user = await _db.Users.FindAsync(id)
-			?? throw new AppException(404, "User not found.", ["No account found with this ID."]);
+		User? user = await _db.Users.FindAsync(id)
+			?? throw new AppException(ErrorCatalog.AccountNotFound);
 
 		if (user.IsLocked)
 		{
-			throw new AppException(400, "Password reset unavailable.", ["This account is locked and cannot reset the password."]);
+			throw new AppException(ErrorCatalog.PasswordResetUnavailableForLockedAccount);
 		}
 
 		user.PasswordResetToken = Guid.NewGuid();
@@ -223,36 +166,32 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		await _db.SaveChangesAsync();
 
 		// TODO: Email service to send token to user.Email and return in response
-		List<string> warnings =
-		[
-			"Email sending is not yet implemented. For now, the reset token and expiry are returned in the response."
-		];
 
-		return ServiceResult<object>.Create(new
-		{
-			resetToken = user.PasswordResetToken,
-			resetTokenExpiry = user.PasswordResetTokenExpiry
-		}, "A password reset link has been sent to your email address.", warnings);
+		return ServiceResult<object>.Create(
+			ResultCatalog.PasswordResetRequested.AppendDetails(
+				"Email sending is not yet implemented. For now, the reset token and expirty are returned in the response."
+			),
+			new
+			{
+				resetToken = user.PasswordResetToken,
+				resetTokenExpiry = user.PasswordResetTokenExpiry,
+			}
+		);
 	}
 
 	public async Task<ServiceResult<object>> ResetPasswordAsync(Guid id, PasswordResetRequest request)
 	{
-		User user = await _db.Users.FindAsync(id)
-			?? throw new AppException(404, "User not found.", ["No account found with this ID."]);
-
-		if (user.PasswordResetToken is null || user.PasswordResetToken != request.Token)
-		{
-			throw new AppException(400, "Password reset failed.", ["The reset link is invalid or has already been used."]);
-		}
+		User? user = await _db.Users.FindAsync(id)
+			?? throw new AppException(ErrorCatalog.AccountNotFound);
 
 		if (user.PasswordResetTokenExpiry < DateTime.UtcNow)
 		{
-			throw new AppException(400, "Password reset failed.", ["The reset link has expired. Please request a new one."]);
+			throw new AppException(ErrorCatalog.PasswordResetLinkExpired);
 		}
 
 		if (string.IsNullOrWhiteSpace(request.NewPassword))
 		{
-			throw new AppException(400, "Password reset failed.", ["Please enter a new password."]);
+			throw new AppException(ErrorCatalog.PasswordResetMissingNewPassword);
 		}
 
 		user.PasswordHash = PasswordSecurity.HashPassword(request.NewPassword);
@@ -260,74 +199,47 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		user.PasswordResetTokenExpiry = null;
 		user.SecurityStamp = Guid.Empty;
 		user.UpdatedAt = DateTime.UtcNow;
+
 		await _db.SaveChangesAsync();
 
-		return ServiceResult<object>.Create(null, "Your password has been updated. You can now sign in with your new password.");
+		return ServiceResult<object>.Create(ResultCatalog.PasswordResetSuccessful);
 	}
 
 	public async Task<ServiceResult<object>> UnlockUserAsync(Guid id)
 	{
-		User? user = await _db.FindAsync<User>(id)
-			?? throw new AppException(404,
-				"User not found.",
-				["No user found with the specified ID."]
-			);
-
-		ClaimsPrincipal currentUserPrincipal = _httpContextAccessor.HttpContext?.User
-			?? throw new AppException(401,
-				"Authentication required.",
-				["You must be signed in to perform this action."]
-			);
-
-		EnsureCanModifyUser(user, currentUserPrincipal);
+		User? user = await _db.Users.FindAsync(id)
+			?? throw new AppException(ErrorCatalog.AccountNotFound);
 
 		if (!user.IsLocked)
 		{
-			return ServiceResult<object>.Create(null, "This user account is not locked.");
+			return ServiceResult<object>.Create(ResultCatalog.UserAlreadyUnlocked);
 		}
+
+		ClaimsPrincipal currentUserClaims = _appContextService.GetCurrentUserClaims();
+		EnsureCanModifyUser(user, currentUserClaims);
 
 		user.IsLocked = false;
 		await _db.SaveChangesAsync();
 
-		return ServiceResult<object>.Create(null, "User account has been unlocked.");
+		return ServiceResult<object>.Create(ResultCatalog.UserUnlocked);
 	}
 
 	public async Task<ServiceResult<UserProfileResponse>> UpdateCurrentUserAsync(UserProfileUpdateRequest request)
 	{
-		if (request is null)
+		User user = await _appContextService.GetCurrentUserAsync();
+
+		bool isUpdated = false;
+
+		isUpdated |= UpdateHelper.TryUpdate(request.Name, u => user.Name = u);
+		isUpdated |= UpdateHelper.TryUpdate(request.Bio, u => user.Bio = u);
+
+		if (isUpdated)
 		{
-			throw new AppException(400,
-				"Update failed.",
-				["Update request cannot be empty."]
-			);
+			user.UpdatedAt = DateTime.UtcNow;
+			await _db.SaveChangesAsync();
 		}
 
-		Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-			?? throw new AppException(401,
-				"Authentication required.",
-				["You must be signed in to perform this action."]
-			);
-
-		User user = await _db.Users.FindAsync(currentUserId)
-			?? throw new AppException(404,
-				"User not found.",
-				["No user found with the specified ID."]
-			);
-
-		if (!string.IsNullOrWhiteSpace(request.Name))
-		{
-			user.Name = request.Name.Trim();
-		}
-
-		if (!string.IsNullOrWhiteSpace(request.Bio))
-		{
-			user.Bio = request.Bio.Trim();
-		}
-
-		user.UpdatedAt = DateTime.UtcNow;
-		await _db.SaveChangesAsync();
-
-		return ServiceResult<UserProfileResponse>.Create(new UserProfileResponse
+		UserProfileResponse response = new()
 		{
 			Id = user.Id,
 			Name = user.Name,
@@ -335,24 +247,20 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 			Bio = user.Bio ?? string.Empty,
 			Roles = user.GetUserRoles(),
 			CreatedAt = user.CreatedAt,
-		}, "User profile updated successfully.");
+		};
+
+		return ServiceResult<UserProfileResponse>.Create(ResultCatalog.UserProfileUpdated, response);
 	}
 
 	private static void EnsureCanModifyUser(User targetUser, ClaimsPrincipal currentUserPrincipal)
 	{
 		Guid currentUserId = currentUserPrincipal.GetUserId()
-			?? throw new AppException(401,
-				"Authentication required.",
-				["You must be signed in to perform this action."]
-			);
+			?? throw new AppException(ErrorCatalog.Unauthorized);
 
 		// Prevent user from modifying themselves
 		if (targetUser.Id == currentUserId)
 		{
-			throw new AppException(403,
-				"Operation not permitted.",
-				["You cannot perform this action on your own account using this endpoint."]
-			);
+			throw new AppException(ErrorCatalog.SelfModificationNotAllowed);
 		}
 
 		IReadOnlyList<string> currentUserRoles = currentUserPrincipal.GetRoles();
@@ -362,17 +270,11 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		{
 			if (targetUser.StaffRole == SystemRole.SuperAdmin)
 			{
-				throw new AppException(403,
-					"Operation not permitted.",
-					["Admins cannot modify SuperAdmin accounts."]
-				);
+				throw new AppException(ErrorCatalog.AdminCannotModifySuperAdmin);
 			}
 			if (targetUser.StaffRole == SystemRole.Admin)
 			{
-				throw new AppException(403,
-					"Operation not permitted.",
-					["Admins cannot modify other Admin accounts."]
-				);
+				throw new AppException(ErrorCatalog.AdminCannotModifyAdmin);
 			}
 		}
 
@@ -380,10 +282,7 @@ internal class UserService(AppDbContext db, IHttpContextAccessor httpContextAcce
 		if (targetUser.StaffRole == SystemRole.SuperAdmin
 			&& !currentUserRoles.Contains(SystemRole.SuperAdmin.ToString()))
 		{
-			throw new AppException(403,
-				"Operation not permitted.",
-				["Only SuperAdmins can modify SuperAdmin accounts."]
-			);
+			throw new AppException(ErrorCatalog.SuperAdminRequiredForModification);
 		}
 	}
 }
