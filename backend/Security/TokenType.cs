@@ -7,7 +7,7 @@ namespace JobifyEcom.Security;
 /// This enum is used to differentiate between short-lived <see cref="Access"/> tokens
 /// and longer-lived <see cref="Refresh"/> tokens in authentication and authorization flows.
 /// </remarks>
-public enum TokenType
+internal enum TokenType
 {
 	/// <summary>
 	/// Grants temporary access to protected resources.

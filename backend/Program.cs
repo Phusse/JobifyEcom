@@ -8,11 +8,14 @@ using JobifyEcom.Helpers;
 using System.Text.Json;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
-using JobifyEcom.DTOs;
 using JobifyEcom.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 using Scalar.AspNetCore;
+using JobifyEcom.Security;
+using JobifyEcom.Exceptions;
+using JobifyEcom.Contracts.Errors;
+using JobifyEcom.Contracts.Responses;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -31,59 +34,62 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 //--------------- Controllers use same JSON options ---------------
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
-        options.JsonSerializerOptions.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
-        options.JsonSerializerOptions.ReferenceHandler = globalJsonOptions.ReferenceHandler;
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    JsonSerializerOptions jsonSerializer = options.JsonSerializerOptions;
 
-        foreach (JsonConverter converter in globalJsonOptions.Converters)
-        {
-            options.JsonSerializerOptions.Converters.Add(converter);
-        }
+    jsonSerializer.PropertyNamingPolicy = globalJsonOptions.PropertyNamingPolicy;
+    jsonSerializer.DefaultIgnoreCondition = globalJsonOptions.DefaultIgnoreCondition;
+    jsonSerializer.PropertyNameCaseInsensitive = globalJsonOptions.PropertyNameCaseInsensitive;
+    jsonSerializer.ReferenceHandler = globalJsonOptions.ReferenceHandler;
+
+    foreach (JsonConverter converter in globalJsonOptions.Converters)
+    {
+        options.JsonSerializerOptions.Converters.Add(converter);
     }
-);
+});
 
 //--------------- JWT Authentication ---------------
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    IConfigurationSection jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
+    string secretKey = jwtSettings["SecretKey"]
+        ?? throw new InvalidOperationException("Missing JWT configuration: 'SecretKey' value is not set in JwtSettings.");
+
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        IConfigurationSection jwtSettings = builder.Configuration.GetSection("JwtSettings");
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ClockSkew = TimeSpan.Zero,
+    };
 
-        string secretKey = jwtSettings["SecretKey"]
-            ?? throw new InvalidOperationException("Missing JWT configuration: 'SecretKey' value is not set in JwtSettings.");
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-            ClockSkew = TimeSpan.Zero
-        };
-
-        // Use the global JSON options for JWT events
-        options.Events = JwtEventHandlers.Create(globalJsonOptions);
-    }
-);
+    options.Events = JwtEventHandlers.Create();
+});
 
 //--------------- Services & Auth ---------------
+builder.Services.AddSingleton(_ => new EnumCache());
+builder.Services.AddSingleton(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new CursorProtector(config);
+});
+
 builder.Services.AddSingleton<JwtTokenService>();
-builder.Services.AddSingleton<CursorProtector>();
-builder.Services.AddSingleton<EnumCache>();
+builder.Services.AddScoped<AppContextService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IWorkerSkillService, WorkerSkillService>();
-builder.Services.AddScoped<IWorkerDomainService, WorkerDomainService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
-builder.Services.AddScoped<IJobDomainService, JobDomainService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IVerificationService, VerificationService>();
 builder.Services.AddScoped<IMetadataService, MetadataService>();
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
@@ -98,8 +104,10 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
             .SelectMany(e => e.Value!.Errors)
             .Select(e => e.ErrorMessage)];
 
-        var response = ApiResponse<object>.Fail(null, "Some of the provided data is invalid.", errors);
-        return new BadRequestObjectResult(response);
+        ErrorResponseDefinition error = ErrorCatalog.ValidationFailed
+            .AppendDetails([.. errors]);
+
+        throw new AppException(error);
     };
 });
 
@@ -109,7 +117,7 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
-        string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "OpenApiDescription.md"));
+        string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "README.md"));
 
         options.SwaggerDoc("v1", new OpenApiInfo
         {
@@ -160,7 +168,7 @@ if (app.Environment.IsDevelopment())
     {
         options.Title = "JobifyEcom API";
         options.AddServer("http://localhost:5122", "Development");
-        options.AddServer("https://localhost:5122", "Production");
+        options.AddServer("http://localhost:5122", "Production");
         options.DefaultHttpClient = new(ScalarTarget.Node, ScalarClient.Fetch);
     });
 }

@@ -16,7 +16,7 @@ namespace JobifyEcom.Services;
 /// Uses application configuration values (<c>JwtSettings</c>) for
 /// <c>SecretKey</c>, <c>Issuer</c>, and <c>Audience</c>.
 /// </remarks>
-public class JwtTokenService(IConfiguration config)
+internal class JwtTokenService(IConfiguration config)
 {
 	private readonly IConfiguration _config = config;
 
@@ -39,8 +39,14 @@ public class JwtTokenService(IConfiguration config)
 	/// <item><description>security_stamp – unique GUID for token invalidation.</description></item>
 	/// <item><description>TokenType – indicates whether it's Access or Refresh.</description></item>
 	/// </list>
+	/// <para>
+	///	<b>Important:</b> The <paramref name="user"/> instance must have its related data loaded
+	/// (e.g. <c>User.Worker</c> if using <see cref="UserExtensions.GetUserRoles(User)"/>)
+	/// before calling this method. If the navigation is not loaded, worker roles will be missing
+	/// from the generated token even if the user is a worker.
+	/// </para>
 	/// </remarks>
-	public string GenerateToken(User user, TimeSpan expiry, TokenType tokenType)
+	internal string GenerateToken(User user, TimeSpan expiry, TokenType tokenType)
 	{
 		IConfigurationSection jwtSettings = _config.GetSection("JwtSettings");
 		string? secretKey = jwtSettings["SecretKey"];
@@ -93,7 +99,7 @@ public class JwtTokenService(IConfiguration config)
 	/// <exception cref="InvalidOperationException">
 	/// Thrown if required JWT configuration values (<c>SecretKey</c>, <c>Issuer</c>, <c>Audience</c>) are missing.
 	/// </exception>
-	public ClaimsPrincipal? ValidateToken(string token, TokenType? expectedType = null)
+	internal ClaimsPrincipal? ValidateToken(string token, TokenType? expectedType = null)
 	{
 		IConfigurationSection jwtSettings = _config.GetSection("JwtSettings");
 		string? secretKey = jwtSettings["SecretKey"];

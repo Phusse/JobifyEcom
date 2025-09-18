@@ -1,20 +1,17 @@
-using JobifyEcom.Contracts;
+using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Metadata;
-using JobifyEcom.Enums;
+using JobifyEcom.Extensions;
 using JobifyEcom.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobifyEcom.Controllers;
 
 /// <summary>
-/// Provides access to system metadata such as enums and lookup tables.
+/// Provides endpoints to fetch system metadata such as enums and lookup tables.
+/// Frontend can use these endpoints to dynamically populate dropdowns, select lists,
+/// and validation rules instead of hardcoding values.
 /// </summary>
-/// <remarks>
-/// The metadata endpoints allow client applications to dynamically retrieve
-/// enums and other static system-managed data used for things like dropdowns,
-/// select lists, and validation rules.
-/// </remarks>
 /// <param name="metadataService">Service for retrieving metadata.</param>
 [ApiController]
 public class MetadataController(IMetadataService metadataService) : ControllerBase
@@ -22,46 +19,45 @@ public class MetadataController(IMetadataService metadataService) : ControllerBa
 	private readonly IMetadataService _metadataService = metadataService;
 
 	/// <summary>
-	/// Retrieves all enums registered in the system along with their values.
+	/// Retrieves all enums registered in the system along with their possible values.
 	/// </summary>
 	/// <remarks>
-	/// Use this endpoint to fetch a list of all enums that the API exposes.
-	/// Each enum includes its name and possible values (keys and display names).
+	/// Each enum is returned as an object containing its name and associated values.
+	/// Ideal for building dynamic dropdowns or client-side validation lists.
 	/// </remarks>
-	/// <returns>
-	/// A list of <see cref="EnumSetResponse"/> objects, where each set
-	/// represents a single enum and its associated values.
-	/// </returns>
-	/// <response code="200">Returns the list of all enums successfully.</response>
+	/// <response code="200">Returns a list of all enums in the system wrapped in ApiResponse.</response>
 	[ProducesResponseType(typeof(ApiResponse<List<EnumSetResponse>>), StatusCodes.Status200OK)]
 	[HttpGet(ApiRoutes.Metadata.Get.AllEnums)]
-	public async Task<IActionResult> GetAllEnums()
+	public IActionResult GetAllEnums()
 	{
-		ServiceResult<List<EnumSetResponse>> result = await _metadataService.GetAllEnums();
-		return Ok(ApiResponse<List<EnumSetResponse>>.Ok(result.Data, result.Message, result.Errors));
+		ServiceResult<List<EnumSetResponse>> result = _metadataService.GetAllEnums();
+		return Ok(result.MapToApiResponse());
 	}
 
 	/// <summary>
 	/// Retrieves a specific enum by its type name.
 	/// </summary>
 	/// <remarks>
-	/// This endpoint allows you to query for one specific enum by name.
-	/// For example, <see cref="SystemRole"/> or <seealso cref="JobStatus"/>.
+	/// Pass the enum name (case-insensitive) to retrieve its values.
+	/// Useful when frontend only needs a single enum.
+	/// If the enum does not exist, the data field will be null and an explanatory message is returned.
 	///
-	/// If the enum does not exist, the response will contain <c>null</c> in the
-	/// <c>data</c> field and an explanatory message.
+	/// **Valid options:**
+	/// - `JobApplicationStatus` : current status of a job application
+	/// - `SystemRole` : roles assigned to users in the system
+	/// - `SkillLevel` : level of expertise or skill
+	/// - `JobStatus` : status of a job posting
+	/// - `VerificationStatus` : verification state of an entity
+	/// - `UserSortField` : fields available for sorting user lists
+	/// - `UserSearchField` : fields that can be searched for filtering users
 	/// </remarks>
-	/// <param name="id">The name of the enum type (case-insensitive).</param>
-	/// <returns>
-	/// A single <see cref="EnumSetResponse"/> object if found,
-	/// or <c>null</c> if the enum does not exist.
-	/// </returns>
-	/// <response code="200">Enum found and returned successfully.</response>
+	/// <param name="id">The name of the enum type to retrieve (case-insensitive), e.g., "SystemRole" or "JobStatus".</param>
+	/// <response code="200">Returns the enum if found, or null if it does not exist, wrapped in ApiResponse.</response>
 	[ProducesResponseType(typeof(ApiResponse<EnumSetResponse?>), StatusCodes.Status200OK)]
 	[HttpGet(ApiRoutes.Metadata.Get.EnumByType)]
-	public async Task<IActionResult> GetEnumByType([FromRoute] string id)
+	public IActionResult GetEnumByType([FromRoute] string id)
 	{
-		ServiceResult<EnumSetResponse?> result = await _metadataService.GetEnumByType(id);
-		return Ok(ApiResponse<EnumSetResponse?>.Ok(result.Data, result.Message, result.Errors));
+		ServiceResult<EnumSetResponse?> result = _metadataService.GetEnumByType(id);
+		return Ok(result.MapToApiResponse());
 	}
 }

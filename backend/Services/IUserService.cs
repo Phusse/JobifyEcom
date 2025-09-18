@@ -22,13 +22,6 @@ public interface IUserService
 	Task<ServiceResult<object>> GetUserByIdAsync(Guid id);
 
 	/// <summary>
-	/// Searches and lists users using pagination and optional filtering.
-	/// </summary>
-	/// <param name="request">The pagination and filter criteria.</param>
-	/// <returns>A paginated list of user summaries.</returns>
-	Task<ServiceResult<CursorPaginationResponse<UserProfileSummaryResponse>>> SearchUsersAsync(CursorPaginationRequest<UserProfileFilterRequest> request);
-
-	/// <summary>
 	/// Updates the profile information of a specific user.
 	/// </summary>
 	/// <param name="request">The new profile values to update.</param>

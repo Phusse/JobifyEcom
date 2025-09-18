@@ -1,85 +1,63 @@
+using JobifyEcom.Contracts.Errors;
+using JobifyEcom.Contracts.Results;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Workers;
 using JobifyEcom.Exceptions;
-using JobifyEcom.Extensions;
 using JobifyEcom.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobifyEcom.Services;
 
 /// <summary>
-/// Service for managing worker profiles.
+/// Provides operations for creating, retrieving, and deleting worker profiles
+/// for the currently authenticated user.
 /// </summary>
-/// <param name="db">The database context.</param>
-/// <param name="httpContextAccessor">The HTTP context accessor.</param>
-internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IWorkerService
+/// <param name="db">The database context used for data access.</param>
+/// <param name="appContextService">The application context service.</param>
+internal class WorkerService(AppDbContext db, AppContextService appContextService) : IWorkerService
 {
     private readonly AppDbContext _db = db;
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly AppContextService _appContextService = appContextService;
 
     public async Task<ServiceResult<object>> CreateProfileAsync()
     {
-        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
-                "Authentication required.",
-                ["You must be signed in to create a worker profile."]
-            );
-
+        Guid currentUserId = _appContextService.GetCurrentUserId();
         Worker? existingWorker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId);
 
         if (existingWorker is not null)
         {
-            throw new ConflictException(
-                "Worker profile already exists.",
-                [$"A worker profile with ID {existingWorker.Id} is already associated with this account."]
-            );
+            throw new AppException(ErrorCatalog.WorkerProfileExists.AppendDetails(
+                $"A worker profile with ID {existingWorker.Id} is already associated with this account."
+            ));
         }
 
-        Worker newWorker = new()
-        {
-            UserId = currentUserId,
-        };
-
+        Worker newWorker = new() { UserId = currentUserId };
         _db.Workers.Add(newWorker);
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "Your worker profile has been created successfully.");
+        return ServiceResult<object>.Create(ResultCatalog.WorkerProfileCreated);
     }
 
     public async Task<ServiceResult<object>> DeleteProfileAsync()
     {
-        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
-                "Authentication required.",
-                ["You must be signed in to delete a worker profile."]
-            );
+        Guid currentUserId = _appContextService.GetCurrentUserId();
 
         Worker worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId)
-            ?? throw new NotFoundException(
-                "Worker profile not found.",
-                ["No worker profile could be found for this user."]
-            );
+            ?? throw new AppException(ErrorCatalog.WorkerProfileNotFound);
 
         _db.Workers.Remove(worker);
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "Your worker profile has been deleted successfully.");
+        return ServiceResult<object>.Create(ResultCatalog.WorkerProfileDeleted);
     }
 
     public async Task<ServiceResult<WorkerProfileResponse>> GetMyProfileAsync()
     {
-        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
-                "Authentication required.",
-                ["You must be signed in to view your worker profile."]
-            );
+        Guid currentUserId = _appContextService.GetCurrentUserId();
 
         Worker worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId)
-            ?? throw new NotFoundException(
-                "Worker profile not found.",
-                ["No worker profile could be found for this user."]
-            );
+            ?? throw new AppException(ErrorCatalog.WorkerProfileNotFound);
 
         WorkerProfileResponse response = new()
         {
@@ -88,6 +66,6 @@ internal class WorkerService(AppDbContext db, IHttpContextAccessor httpContextAc
             CreatedAt = worker.CreatedAt,
         };
 
-        return ServiceResult<WorkerProfileResponse>.Create(response, "Your worker profile has been retrieved successfully.");
+        return ServiceResult<WorkerProfileResponse>.Create(ResultCatalog.WorkerProfileRetrieved, response);
     }
 }

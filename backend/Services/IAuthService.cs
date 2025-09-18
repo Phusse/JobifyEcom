@@ -36,7 +36,7 @@ public interface IAuthService
     /// <returns>
     /// A task representing the asynchronous operation.
     /// </returns>
-    Task<ServiceResult<object>> RegisterAsync(RegisterRequest request);
+    Task<ServiceResult<RegisterResponse>> RegisterAsync(RegisterRequest request);
 
     /// <summary>
     /// Logs out the current user, invalidating their authentication tokens as needed.

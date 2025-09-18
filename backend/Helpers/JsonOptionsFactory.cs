@@ -7,7 +7,7 @@ namespace JobifyEcom.Helpers;
 /// Provides a configured <see cref="JsonSerializerOptions"/> instance
 /// for consistent JSON serialization and deserialization throughout the application.
 /// </summary>
-public static class JsonOptionsFactory
+internal static class JsonOptionsFactory
 {
 	/// <summary>
 	/// Creates and returns a preconfigured <see cref="JsonSerializerOptions"/> instance.
@@ -26,7 +26,7 @@ public static class JsonOptionsFactory
 	/// A configured instance of <see cref="JsonSerializerOptions"/>
 	/// that can be reused across serialization and deserialization operations.
 	/// </returns>
-	public static JsonSerializerOptions Create()
+	internal static JsonSerializerOptions Create()
 	{
 		JsonSerializerOptions options = new()
 		{
@@ -37,7 +37,6 @@ public static class JsonOptionsFactory
 		};
 
 		options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));
-
 		return options;
 	}
 }

@@ -1,17 +1,17 @@
 namespace JobifyEcom.Enums;
 
 /// <summary>
-/// Supported entity types that can be tagged.
+/// Represents the types of entities in the system.
 /// </summary>
 public enum EntityType
 {
 	/// <summary>
-	/// A job post entity.
+	/// Represents a job post entity.
 	/// </summary>
-	JobPost,
+	Job,
 
 	/// <summary>
-	/// A skill entity.
+	/// Represents a skill entity.
 	/// </summary>
 	Skill,
 }

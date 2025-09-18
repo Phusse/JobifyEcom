@@ -1,29 +1,33 @@
+using System.Runtime.CompilerServices;
+using JobifyEcom.Contracts.Errors;
+using JobifyEcom.Contracts.Results;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Jobs;
 using JobifyEcom.Enums;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Extensions;
+using JobifyEcom.Helpers;
 using JobifyEcom.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobifyEcom.Services;
 
 /// <summary>
-/// Service for managing job-related operations.
+/// Provides operations for creating, retrieving, updating, and deleting jobs,
+/// as well as other job-related actions.
 /// </summary>
-internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IJobService
+/// <param name="db">The database context used for data access.</param>
+/// <param name="appContextService">The application context service.</param>
+internal class JobService(AppDbContext db, AppContextService appContextService) : IJobService
 {
+
     private readonly AppDbContext _db = db;
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly AppContextService _appContextService = appContextService;
 
     public async Task<ServiceResult<JobResponse>> CreateJobAsync(JobCreateRequest request)
     {
-        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
-            );
+        Guid currentUserId = _appContextService.GetCurrentUserId();
 
         Job createdJob = new()
         {
@@ -37,121 +41,100 @@ internal class JobService(AppDbContext db, IHttpContextAccessor httpContextAcces
         _db.Jobs.Add(createdJob);
         await _db.SaveChangesAsync();
 
-        JobResponse response = ToResponse(createdJob);
+        JobResponse response = new()
+        {
+            Id = createdJob.Id,
+            Title = createdJob.Title,
+            Description = createdJob.Description,
+            Price = createdJob.Price,
+            Status = createdJob.Status,
+            CreatedAt = createdJob.CreatedAt,
+            PostedByUserId = createdJob.PostedByUserId,
+        };
 
-        return ServiceResult<JobResponse>.Create(response, "Job created successfully.");
+        return ServiceResult<JobResponse>.Create(ResultCatalog.JobCreated, response);
     }
 
     public async Task<ServiceResult<JobResponse?>> GetJobByIdAsync(Guid jobId)
     {
         Job? job = await _db.Jobs.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException(
-                "Job not found.",
-                [$"No job exists with the specified ID.({jobId})"]
-            );
+            ?? throw new AppException(ErrorCatalog.JobNotFound);
 
-        JobResponse response = ToResponse(job);
+        JobResponse response = new()
+        {
+            Id = job.Id,
+            Title = job.Title,
+            Description = job.Description,
+            Price = job.Price,
+            Status = job.Status,
+            CreatedAt = job.CreatedAt,
+            PostedByUserId = job.PostedByUserId,
+        };
 
-        return ServiceResult<JobResponse?>.Create(response, "Job retrieved successfully.");
+        return ServiceResult<JobResponse?>.Create(ResultCatalog.JobRetrieved, response);
     }
 
     public async Task<ServiceResult<JobResponse>> UpdateJobAsync(Guid jobId, JobUpdateRequest request)
     {
-        Job job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException(
-                "Job not found.",
-                [$"No job exists with the specified ID. ({jobId})"]
-            );
+        Job? job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == jobId)
+            ?? throw new AppException(ErrorCatalog.JobNotFound);
 
-        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
-            );
+        Guid currentUserId = _appContextService.GetCurrentUserId();
 
         if (job.PostedByUserId != currentUserId)
         {
-            throw new ForbiddenException(
-                "Access denied.",
-                ["You do not have permission to update this job."]
-            );
+            throw new AppException(ErrorCatalog.UnauthorizedJobModification);
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Title))
+        bool isUpdated = false;
+
+        isUpdated |= UpdateHelper.TryUpdate(request.Title, v => job.Title = v);
+        isUpdated |= UpdateHelper.TryUpdate(request.Description, v => job.Description = v);
+        isUpdated |= UpdateHelper.TryUpdate(request.Price, v => job.Price = v);
+        isUpdated |= UpdateHelper.TryUpdate(request.Status, v => job.Status = v);
+
+        if (isUpdated)
         {
-            job.Title = request.Title.Trim();
+            job.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Description))
+        JobResponse response = new()
         {
-            job.Description = request.Description.Trim();
-        }
+            Id = job.Id,
+            Title = job.Title,
+            Description = job.Description,
+            Price = job.Price,
+            Status = job.Status,
+            CreatedAt = job.CreatedAt,
+            PostedByUserId = job.PostedByUserId,
+        };
 
-        if (request.Price.HasValue)
-        {
-            job.Price = request.Price.Value;
-        }
-
-        if (request.Status.HasValue)
-        {
-            job.Status = request.Status.Value;
-        }
-
-        job.UpdatedAt = DateTime.UtcNow;
-
-        await _db.SaveChangesAsync();
-        JobResponse response = ToResponse(job);
-
-        return ServiceResult<JobResponse>.Create(response, "Job updated successfully.");
+        return ServiceResult<JobResponse>.Create(ResultCatalog.JobRetrieved, response);
     }
 
     public async Task<ServiceResult<object>> DeleteJobAsync(Guid jobId)
     {
         Job? job = await _db.Jobs.FirstOrDefaultAsync(j => j.Id == jobId)
-            ?? throw new NotFoundException(
-                "Job not found.",
-                [$"No job exists with the specified ID. ({jobId})"]
-            );
+            ?? throw new AppException(ErrorCatalog.JobNotFound);
 
-        Guid currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId()
-            ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
-            );
-
+        Guid currentUserId = _appContextService.GetCurrentUserId();
         User? currentUser = await _db.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == currentUserId)
-            ?? throw new UnauthorizedException(
-                "Sign in required.",
-                ["You need to be signed in to access your account."]
-            );
+            ?? throw new AppException(ErrorCatalog.AccountNotFound);
 
         bool isOwner = job.PostedByUserId == currentUserId;
         bool isStaff = currentUser.StaffRole is SystemRole.Admin or SystemRole.SuperAdmin;
 
         if (!isOwner && !isStaff)
         {
-            throw new ForbiddenException(
-                "Access denied.",
-                ["You do not have permission to delete this job."]
-            );
+            throw new AppException(ErrorCatalog.UnauthorizedJobDeletion);
         }
 
         _db.Jobs.Remove(job);
         await _db.SaveChangesAsync();
 
-        return ServiceResult<object>.Create(null, "Job deleted successfully.");
+        return ServiceResult<object>.Create(ResultCatalog.JobDeleted);
     }
-
-    private static JobResponse ToResponse(Job job) => new()
-    {
-        Id = job.Id,
-        Title = job.Title,
-        Description = job.Description,
-        Price = job.Price,
-        Status = job.Status,
-        CreatedAt = job.CreatedAt,
-        PostedByUserId = job.PostedByUserId,
-    };
 }

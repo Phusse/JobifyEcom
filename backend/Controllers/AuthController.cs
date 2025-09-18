@@ -1,38 +1,43 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using JobifyEcom.Contracts;
+using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs.Auth;
 using JobifyEcom.DTOs;
 using JobifyEcom.Services;
+using JobifyEcom.Extensions;
 
 namespace JobifyEcom.Controllers;
 
 /// <summary>
-/// Handles user authentication operations including login, registration, and logout.
+/// Handles user authentication operations, including login, token refresh, registration, and logout.
+/// Frontend can use these endpoints to manage authentication flows and obtain tokens.
 /// </summary>
+/// <param name="authService">Service for handling authentication-related operations.</param>
 [ApiController]
 public class AuthController(IAuthService authService) : ControllerBase
 {
     private readonly IAuthService _authService = authService;
 
     /// <summary>
-    /// Authenticates a user and issues JSON Web Tokens (JWT) upon successful login.
+    /// Authenticates a user and returns JWT tokens upon successful login.
     /// </summary>
     /// <remarks>
-    /// This endpoint verifies the user's *email* and *password* credentials.
-    /// Upon successful authentication, it returns both:
-    /// <list type="bullet">
-    ///   <item><description>A short-lived access JWT token, which must be included
-    ///   in the <c>Authorization</c> header of subsequent requests to access protected resources.</description></item>
-    ///   <item><description>A long-lived refresh JWT token, which is used to obtain new access tokens
-    ///   without requiring the user to re-enter credentials.</description></item>
-    /// </list>
+    /// Authenticates a user with their <c>email</c> and <c>password</c>.
+    /// Upon success, returns two JWT tokens:
+    ///
+    /// - **Access token**: short-lived token used to authorize API requests.
+    /// Include it in the <c>Authorization</c> header for all protected endpoints.
+    /// - **Refresh token**: long-lived token used to obtain a new access token without
+    /// requiring the user to log in again. Helps maintain user sessions securely.
+    ///
+    /// Store the access token in memory or a secure storage, and the refresh
+    /// token in a secure, http-only cookie or similar safe storage. Tokens must be sent
+    /// in the correct header or request body as required by subsequent API calls.
     /// </remarks>
-    /// <param name="request">The login credentials including *email* and *password*.</param>
-    /// <returns>A response containing both access and refresh JWT tokens along with their expiration times.</returns>
-    /// <response code="200">Login successful. Access and refresh JWT tokens returned.</response>
-    /// <response code="400">Login request contains invalid data or fails validation.</response>
-    /// <response code="401">Authentication failed due to incorrect credentials.</response>
+    /// <param name="request">Login credentials including <c>email</c> and <c>password</c>.</param>
+    /// <response code="200">Login successful; access and refresh tokens returned.</response>
+    /// <response code="400">Invalid request payload or validation failed.</response>
+    /// <response code="401">Authentication failed; incorrect email or password.</response>
     [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
@@ -40,23 +45,22 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         ServiceResult<TokenResponse> result = await _authService.LoginAsync(request);
-        return Ok(ApiResponse<TokenResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
-    /// Refreshes the access token using a valid refresh token.
+    /// Issues a new access token using a valid refresh token.
     /// </summary>
     /// <remarks>
-    /// This endpoint allows the client to obtain a new short-lived access token without
-    /// re-entering credentials, provided that the supplied refresh token is still valid.
+    /// Allows a client to obtain a fresh access token without requiring the user to log in again.
+    /// The provided refresh token must be valid, not expired, and not revoked.
+    ///
+    /// Tokens should be stored securely. The new access token is used to authorize requests to protected endpoints,
+    /// while the refresh token remains available to request subsequent access tokens as needed.
     /// </remarks>
-    /// <param name="request">The refresh token request containing the refresh token string.</param>
-    /// <returns>
-    /// A new access token along with its expiry, while the provided refresh token remains unchanged.
-    /// Throws an error if the request is invalid or unauthorized.
-    /// </returns>
-    /// <response code="200">Token successfully refreshed.</response>
-    /// <response code="400">Invalid request payload or failed validation.</response>
+    /// <param name="request">The refresh token request containing the <c>refreshToken</c> string.</param>
+    /// <response code="200">Access token successfully refreshed and returned in the response body.</response>
+    /// <response code="400">Invalid request payload or validation failed.</response>
     /// <response code="401">Refresh token is invalid, expired, or revoked.</response>
     [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -65,39 +69,45 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         ServiceResult<TokenResponse> result = await _authService.RefreshTokenAsync(request);
-        return Ok(ApiResponse<TokenResponse>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 
     /// <summary>
     /// Registers a new user account with the provided information.
     /// </summary>
     /// <remarks>
-    /// Creates a new user profile if the *email address* is not already in use.
-    /// Registration requires valid user details such as *name*, *email*, and *password*.
+    /// Creates a new user if the specified <c>email</c> is not already in use.
+    /// After successful registration, a confirmation link is generated and returned in the <c>Location</c> header.
+    /// This link must be visited to activate the account.
+    ///
+    /// The confirmation link can be used to verify the account in automated flows or during testing.
+    /// In production, it is typically sent via email to the user.
     /// </remarks>
-    /// <param name="request">User registration details.</param>
-    /// <returns>Confirmation of successful registration or an error indicating conflict.</returns>
-    /// <response code="201">User successfully registered.</response>
+    /// <param name="request">User registration details including <c>name</c>, <c>email</c>, and <c>password</c>.</param>
+    /// <response code="201">User successfully registered. Confirmation link provided in <c>Location</c> header.</response>
     /// <response code="409">Registration failed because the email is already registered.</response>
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
     [HttpPost(ApiRoutes.Auth.Post.Register)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        ServiceResult<object> result = await _authService.RegisterAsync(request);
-        return Created(string.Empty, ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        ServiceResult<RegisterResponse> result = await _authService.RegisterAsync(request);
+
+        string? location = result.Data?.ConfirmationLink;
+        result.Data = null; // strip data to only included in Location header
+
+        return Created(location, result.MapToApiResponse());
     }
 
     /// <summary>
-    /// Logs out the currently authenticated user by invalidating their session or token.
+    /// Logs out the currently authenticated user by revoking their session and tokens.
     /// </summary>
     /// <remarks>
-    /// This endpoint requires the user to be *authenticated*.
-    /// It revokes the user's authentication token, effectively ending their session.
+    /// Requires a valid access token in the <c>Authorization</c> header.
+    /// Revokes the user's current session and access tokens, effectively ending the authenticated session.
     /// </remarks>
-    /// <returns>A confirmation message upon successful logout or an error if the user was not found.</returns>
-    /// <response code="200">Logout completed successfully.</response>
-    /// <response code="404">User not found or already logged out.</response>
+    /// <response code="200">Logout successful; session and tokens revoked.</response>
+    /// <response code="404">User not found or session already terminated.</response>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [Authorize]
@@ -105,6 +115,6 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Logout()
     {
         ServiceResult<object> result = await _authService.LogoutAsync();
-        return Ok(ApiResponse<object>.Ok(result.Data, result.Message, result.Errors));
+        return Ok(result.MapToApiResponse());
     }
 }

@@ -1,4 +1,5 @@
-using JobifyEcom.Contracts;
+using JobifyEcom.Contracts.Results;
+using JobifyEcom.Contracts.Routes;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Metadata;
 
@@ -13,31 +14,28 @@ internal class MetadataService(EnumCache enumCache) : IMetadataService
 {
 	private readonly EnumCache _enumCache = enumCache;
 
-	public Task<ServiceResult<List<EnumSetResponse>>> GetAllEnums()
+	public ServiceResult<List<EnumSetResponse>> GetAllEnums()
 	{
 		List<EnumSetResponse> cachedEnums = [.. _enumCache.GetAll()];
-		var response = ServiceResult<List<EnumSetResponse>>.Create(cachedEnums, "All enums retrieved successfully.");
-		return Task.FromResult(response);
+		return ServiceResult<List<EnumSetResponse>>.Create(ResultCatalog.AllEnumsRetrieved, cachedEnums);
 	}
 
-	public Task<ServiceResult<EnumSetResponse?>> GetEnumByType(string typeName)
+	public ServiceResult<EnumSetResponse?> GetEnumByType(string typeName)
 	{
 		EnumSetResponse? enumSet = _enumCache.GetByTypeName(typeName);
 		ServiceResult<EnumSetResponse?> response;
 
 		if (enumSet is null)
 		{
-			response = ServiceResult<EnumSetResponse?>.Create(
-				null,
-				$"We couldn't find an enum named '{typeName}'.",
-				[$"Please check the list of available enums at '{ApiRoutes.Metadata.Get.AllEnums}'."]
-			);
+			response = ServiceResult<EnumSetResponse?>.Create(ResultCatalog.EnumNotFound.AppendDetails(
+				$"You can view all available enums at: '{ApiRoutes.Metadata.Get.AllEnums}'"
+			));
 		}
 		else
 		{
-			response = ServiceResult<EnumSetResponse?>.Create(enumSet, $"Enum '{enumSet.Name}' retrieved successfully.");
+			response = ServiceResult<EnumSetResponse?>.Create(ResultCatalog.EnumRetrieved, enumSet);
 		}
 
-		return Task.FromResult(response);
+		return response;
 	}
 }

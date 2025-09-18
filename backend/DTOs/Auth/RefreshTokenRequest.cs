@@ -13,5 +13,5 @@ public class RefreshTokenRequest
 	/// This token is required to obtain a new access token.
 	/// </summary>
 	[Required(ErrorMessage = "A refresh token is required to continue. Please log in again if you don't have one.")]
-	public string? RefreshToken { get; set; }
+	public string RefreshToken { get; set; } = string.Empty;
 }

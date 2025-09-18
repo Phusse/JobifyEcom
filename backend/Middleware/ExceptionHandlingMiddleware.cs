@@ -1,6 +1,7 @@
 using System.Text.Json;
 using JobifyEcom.DTOs;
 using JobifyEcom.Exceptions;
+using JobifyEcom.Extensions;
 
 namespace JobifyEcom.Middleware;
 
@@ -47,49 +48,28 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 		string traceId = context.TraceIdentifier;
 		context.Response.ContentType = "application/json";
 
-		string? message = _env.IsDevelopment()
-			? ex.InnerException?.Message ?? ex.Message
-			: null;
+		string? developerMessage = null;
+
+		if (_env.IsDevelopment())
+		{
+			developerMessage = ex.InnerException is not null
+				? $"{ex.Message} | {ex.InnerException.Message}"
+				: ex.Message;
+		}
 
 		ApiResponse<object> response;
 
 		if (ex is AppException appEx)
 		{
 			context.Response.StatusCode = appEx.StatusCode;
-
-			// Show the developer message in development, otherwise just the user-friendly errors
-			response = ApiResponse<object>.Fail(
-				null,
-				message,
-				appEx.Errors?.Count > 0
-					? appEx.Errors
-					: ["Something went wrong with your request. Please review the details and try again."],
-				traceId
-			);
+			response = appEx.MapToApiResponse(developerMessage, traceId);
+			_logger.LogWarning(ex, "Handled application/client error. Trace ID: {TraceId}", traceId);
 		}
 		else
 		{
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-			string safeMessage = string.IsNullOrWhiteSpace(message)
-				? "A server error occurred and your request could not be completed. Please try again later or contact support with the trace ID."
-				: message;
-
-			response = ApiResponse<object>.Fail(
-				null,
-				null,
-				[safeMessage],
-				traceId
-			);
-		}
-
-		if (context.Response.StatusCode >= 500)
-		{
-			_logger.LogError(ex, "A server error occurred. Trace ID: {TraceId}", traceId);
-		}
-		else
-		{
-			_logger.LogWarning(ex, "A handled application/client error occurred. Trace ID: {TraceId}", traceId);
+			response = ex.MapToApiResponse(developerMessage, traceId);
+			_logger.LogError(ex, "Server error occurred. Trace ID: {TraceId}", traceId);
 		}
 
 		string json = JsonSerializer.Serialize(response, _jsonOptions);

@@ -29,7 +29,7 @@ namespace JobifyEcom.Helpers;
 /// var name = EnumDisplayHelper.GetDisplayName(UserRole.Admin); // "Administrator"
 /// </code>
 /// </remarks>
-public static class EnumDisplayHelper
+internal static class EnumDisplayHelper
 {
 	/// <summary>
 	/// Gets the display name for a given enum value.
@@ -40,7 +40,7 @@ public static class EnumDisplayHelper
 	/// The <see cref="DisplayAttribute.Name"/> if present;
 	/// otherwise, the enum value's name as a string.
 	/// </returns>
-	public static string GetDisplayName<T>(T value) where T : Enum
+	internal static string GetDisplayName<T>(T value) where T : Enum
 	{
 		MemberInfo? member = typeof(T).GetMember(value.ToString()).FirstOrDefault();
 		var displayAttr = member?.GetCustomAttribute<DisplayAttribute>();

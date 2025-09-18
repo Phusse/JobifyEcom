@@ -10,7 +10,7 @@ namespace JobifyEcom.Security;
 /// and optional enforcement of a specific <see cref="TokenType"/> claim.
 /// It can also read expiry dates from tokens without validating them.
 /// </remarks>
-public class JwtTokenReader
+internal class JwtTokenReader
 {
 	/// <summary>
 	/// Extracts the expiry date from a JWT without performing validation.
@@ -19,7 +19,7 @@ public class JwtTokenReader
 	/// <returns>
 	/// The expiry date in UTC if available; otherwise <c>null</c>.
 	/// </returns>
-	public static DateTime? GetExpiryFromToken(string token)
+	internal static DateTime? GetExpiryFromToken(string token)
 	{
 		JwtSecurityTokenHandler handler = new();
 

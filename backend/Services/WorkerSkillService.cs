@@ -1,9 +1,10 @@
+using JobifyEcom.Contracts.Errors;
+using JobifyEcom.Contracts.Results;
 using JobifyEcom.Data;
 using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Workers;
 using JobifyEcom.Enums;
 using JobifyEcom.Exceptions;
-using JobifyEcom.Extensions;
 using JobifyEcom.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,72 +12,67 @@ namespace JobifyEcom.Services;
 
 /// <summary>
 /// Handles worker skill management: add, remove, fetch, and verify skills.
-/// Ensures authentication, ownership checks, tag handling, and verification flow.
+/// Assumes validation of tags is performed by the DTO.
 /// </summary>
-internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IWorkerSkillService
+internal class WorkerSkillService(AppDbContext db, AppContextService appContextService) : IWorkerSkillService
 {
 	private readonly AppDbContext _db = db;
-	private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-
-	private Guid GetCurrentUserId()
-	{
-		return _httpContextAccessor.HttpContext?.User.GetUserId()
-			?? throw new UnauthorizedException(
-				"Authentication required.",
-				["You must be signed in to perform this action."]
-			);
-	}
+	private readonly AppContextService _appContextService = appContextService;
 
 	public async Task<ServiceResult<WorkerSkillResponse>> AddSkillAsync(AddWorkerSkillRequest request)
 	{
-		Guid currentUserId = GetCurrentUserId();
-
+		// Get current user and ensure worker profile exists
+		Guid currentUserId = _appContextService.GetCurrentUserId();
 		Worker worker = await _db.Workers
 			.FirstOrDefaultAsync(w => w.UserId == currentUserId)
-			?? throw new NotFoundException(
-				"Worker profile not found.",
-				["You must create a worker profile before adding skills."]
-			);
+			?? throw new AppException(ErrorCatalog.WorkerProfileNotFound.AppendDetails(
+				"You need a worker profile to add skills. Create one to continue."
+			));
 
-		if (request.Tags is null || request.Tags.Count == 0)
+		// Prevent duplicate skill for this worker
+		string skillNameNormalized = request.Name.Trim().ToLower();
+
+		bool skillExists = await _db.Skills
+			.AnyAsync(s => s.WorkerId == worker.Id && s.Name.ToLower() == skillNameNormalized);
+
+		if (skillExists)
 		{
-			throw new ValidationException("At least one tag is required for a skill.");
+			throw new AppException(ErrorCatalog.SkillAlreadyExists.WithDetails(
+				$"The skill '{request.Name}' conflicts with a skill you already have."
+			));
 		}
 
 		Skill skill = new()
 		{
-			Name = request.Name,
-			Description = request.Description,
+			Name = request.Name.Trim(),
+			Description = request.Description?.Trim(),
 			Level = request.Level,
 			YearsOfExperience = request.YearsOfExperience,
-			CertificationLink = request.CertificationLink,
+			CertificationLink = request.CertificationLink?.Trim(),
 			WorkerId = worker.Id,
 		};
 
 		_db.Skills.Add(skill);
 
-		// Normalize tag names
+		// Normalize and handle tags
 		List<string> normalizedTags = [.. request.Tags
-			.Select(t => t.Trim().ToLowerInvariant())
-			.Distinct()];
+			.Select(t => t.Trim())
+			.Distinct(StringComparer.OrdinalIgnoreCase)];
 
-		// Find existing tags
 		List<Tag> existingTags = await _db.Tags
 			.Where(t => normalizedTags.Contains(t.Name.ToLower()))
 			.ToListAsync();
 
-		// Determine which ones are new
-		List<string> existingNames = [.. existingTags.Select(t => t.Name)];
-		List<string> newNames = [.. normalizedTags.Except(existingNames)];
+		List<string> existingTagNames = [.. existingTags.Select(t => t.Name)];
+		List<Tag> newTags = [.. normalizedTags
+			.Except(existingTagNames, StringComparer.OrdinalIgnoreCase)
+			.Select(n => new Tag { Name = n })];
 
-		// Add new tags
-		List<Tag> newTags = [.. newNames.Select(n => new Tag { Name = n })];
 		_db.Tags.AddRange(newTags);
 
-		// Combine all tags
 		List<Tag> allTags = [.. existingTags, .. newTags];
 
-		// Add entity-tag relations
+		// Add EntityTag relations
 		foreach (Tag tag in allTags)
 		{
 			EntityTag entityTag = new()
@@ -89,7 +85,7 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 			_db.EntityTags.Add(entityTag);
 		}
 
-		// Add verification
+		// Create verification record
 		Verification verification = new()
 		{
 			EntityType = EntityType.Skill,
@@ -113,35 +109,31 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 			VerificationStatus = verification.Status,
 		};
 
-		return ServiceResult<WorkerSkillResponse>.Create(response, "Skill submitted successfully and is pending verification.");
+		return ServiceResult<WorkerSkillResponse>.Create(ResultCatalog.SkillAdded, response);
 	}
 
 	public async Task<ServiceResult<object>> RemoveSkillAsync(Guid skillId)
 	{
-		Guid currentUserId = GetCurrentUserId();
+		Guid currentUserId = _appContextService.GetCurrentUserId();
 
 		Worker worker = await _db.Workers.FirstOrDefaultAsync(w => w.UserId == currentUserId)
-			?? throw new NotFoundException(
-				"Worker profile not found.",
-				["You must create a worker profile before removing skills."]
-			);
+			?? throw new AppException(ErrorCatalog.WorkerProfileNotFound.AppendDetails(
+				"You need a worker profile to remove skills. Create one to continue."
+			));
 
 		Skill skill = await _db.Skills.FirstOrDefaultAsync(s => s.Id == skillId && s.WorkerId == worker.Id)
-			?? throw new NotFoundException(
-				"Skill not found.",
-				["This skill does not exist or does not belong to you."]
-			);
+			?? throw new AppException(ErrorCatalog.SkillNotFound);
 
 		_db.Skills.Remove(skill);
 		await _db.SaveChangesAsync();
 
-		return ServiceResult<object>.Create(null, "Skill removed successfully.");
+		return ServiceResult<object>.Create(ResultCatalog.SkillRemoved);
 	}
 
 	public async Task<ServiceResult<WorkerSkillResponse>> GetSkillByIdAsync(Guid skillId)
 	{
 		Skill skill = await _db.Skills.FirstOrDefaultAsync(s => s.Id == skillId)
-			?? throw new NotFoundException("Skill not found.");
+			?? throw new AppException(ErrorCatalog.SkillNotFound);
 
 		List<string> tags = await _db.EntityTags
 			.Where(et => et.EntityId == skill.Id && et.EntityType == EntityType.Skill)
@@ -165,21 +157,6 @@ internal class WorkerSkillService(AppDbContext db, IHttpContextAccessor httpCont
 			VerificationStatus = verification?.Status ?? VerificationStatus.Pending,
 		};
 
-		return ServiceResult<WorkerSkillResponse>.Create(response, "Skill retrieved successfully.");
-	}
-
-	public async Task<ServiceResult<WorkerSkillResponse>> VerifySkillAsync(Guid skillId, VerifySkillRequest request)
-	{
-		Verification verification = await _db.Verifications
-			.FirstOrDefaultAsync(v => v.EntityId == skillId && v.EntityType == EntityType.Skill)
-			?? throw new NotFoundException("Verification record not found for this skill.");
-
-		verification.Status = request.Status;
-		verification.ReviewerComment = request.ReviewerComment;
-		verification.ReviewerId = GetCurrentUserId();
-		verification.ReviewedAt = DateTime.UtcNow;
-
-		await _db.SaveChangesAsync();
-		return await GetSkillByIdAsync(skillId);
+		return ServiceResult<WorkerSkillResponse>.Create(ResultCatalog.SkillRetrieved, response);
 	}
 }

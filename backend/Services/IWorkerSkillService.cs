@@ -4,8 +4,7 @@ using JobifyEcom.DTOs.Workers;
 namespace JobifyEcom.Services;
 
 /// <summary>
-/// Defines operations for managing worker skills, including creation,
-/// retrieval, removal, and verification.
+/// Defines operations for managing worker skills.
 /// </summary>
 public interface IWorkerSkillService
 {
@@ -35,14 +34,4 @@ public interface IWorkerSkillService
 	/// A <see cref="ServiceResult{T}"/> containing the <see cref="WorkerSkillResponse"/>.
 	/// </returns>
 	Task<ServiceResult<WorkerSkillResponse>> GetSkillByIdAsync(Guid skillId);
-
-	/// <summary>
-	/// Updates the verification status of a worker's skill (admin-only action).
-	/// </summary>
-	/// <param name="skillId">The unique identifier of the skill to verify.</param>
-	/// <param name="request">The verification request, including status and reviewer comment.</param>
-	/// <returns>
-	/// A <see cref="ServiceResult{T}"/> containing the updated <see cref="WorkerSkillResponse"/>.
-	/// </returns>
-	Task<ServiceResult<WorkerSkillResponse>> VerifySkillAsync(Guid skillId, VerifySkillRequest request);
 }

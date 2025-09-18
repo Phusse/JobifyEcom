@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using JobifyEcom.Contracts.Errors;
+using JobifyEcom.Exceptions;
 using JobifyEcom.Models;
 
 namespace JobifyEcom.Services;
@@ -14,7 +16,7 @@ namespace JobifyEcom.Services;
 /// This ensures that the cursor cannot be tampered with between requests,
 /// while remaining compact and URL-safe.
 /// </remarks>
-public class CursorProtector
+internal class CursorProtector
 {
 	private readonly byte[] _key;
 
@@ -28,7 +30,7 @@ public class CursorProtector
 	/// <exception cref="InvalidOperationException">
 	/// Thrown if <c>CursorOptions:SecretKey</c> is not configured.
 	/// </exception>
-	public CursorProtector(IConfiguration config)
+	internal CursorProtector(IConfiguration config)
 	{
 		string? secretKey = config["CursorOptions:SecretKey"];
 
@@ -45,15 +47,15 @@ public class CursorProtector
 	/// <returns>
 	/// A Base64 string containing the serialized cursor state with an HMAC signature appended.
 	/// </returns>
-	public string Encode(CursorState state)
+	internal string Encode(CursorState state)
 	{
 		string json = JsonSerializer.Serialize(state);
 		byte[] data = Encoding.UTF8.GetBytes(json);
 
-		using var hmac = new HMACSHA256(_key);
+		using HMACSHA256 hmac = new(_key);
 		byte[] signature = hmac.ComputeHash(data);
 
-		byte[] payload = data.Concat(signature).ToArray();
+		byte[] payload = [.. data, .. signature];
 		return Convert.ToBase64String(payload);
 	}
 
@@ -65,19 +67,28 @@ public class CursorProtector
 	/// <exception cref="InvalidOperationException">
 	/// Thrown if the token has been tampered with or the signature is invalid.
 	/// </exception>
-	public CursorState Decode(string token)
+	internal CursorState Decode(string token)
 	{
 		byte[] payload = Convert.FromBase64String(token);
 
-		int sigLength = 32; // HMACSHA256 = 32 bytes
-		byte[] data = payload.Take(payload.Length - sigLength).ToArray();
-		byte[] signature = payload.Skip(payload.Length - sigLength).ToArray();
+		using HMACSHA256 hmac = new(_key);
+		int sigLength = hmac.HashSize / 8; // HashSize is in bits, divide by 8 for bytes
 
-		using var hmac = new HMACSHA256(_key);
+		if (payload.Length < sigLength)
+		{
+			throw new AppException(ErrorCatalog.InvalidCursor);
+		}
+
+		// Split the payload into data and signature
+		byte[] data = [.. payload.Take(payload.Length - sigLength)];
+		byte[] signature = [.. payload.Skip(payload.Length - sigLength)];
+
 		byte[] expectedSig = hmac.ComputeHash(data);
 
 		if (!expectedSig.SequenceEqual(signature))
-			throw new InvalidOperationException("Invalid cursor token.");
+		{
+			throw new AppException(ErrorCatalog.InvalidCursor);
+		}
 
 		string json = Encoding.UTF8.GetString(data);
 		return JsonSerializer.Deserialize<CursorState>(json)!;
