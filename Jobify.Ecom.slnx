@@ -1,0 +1,16 @@
+<Solution>
+
+  <Folder Name="/legacy/">
+    <Project Path="backend/JobifyEcom.csproj" />
+  </Folder>
+
+  <Folder Name="/src/">
+    <Project Path="src/Jobify.Ecom.Api/Jobify.Ecom.Api.csproj" />
+    <Project Path="src/Jobify.Ecom.Application/Jobify.Ecom.Application.csproj" />
+    <Project Path="src/Jobify.Ecom.Domain/Jobify.Ecom.Domain.csproj" />
+    <Project Path="src/Jobify.Ecom.Infrastructure/Jobify.Ecom.Infrastructure.csproj" />
+    <Project Path="src/Jobify.Ecom.Persistence/Jobify.Ecom.Persistence.csproj" />
+    <Project Path="src/Jobify.Ecom.Shared/Jobify.Ecom.Shared.csproj" />
+  </Folder>
+
+</Solution>
