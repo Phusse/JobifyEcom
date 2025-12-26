@@ -7,7 +7,6 @@ using JobifyEcom.Services;
 using JobifyEcom.Helpers;
 using System.Text.Json;
 using System.Reflection;
-using Microsoft.OpenApi.Models;
 using JobifyEcom.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
@@ -16,6 +15,7 @@ using JobifyEcom.Security;
 using JobifyEcom.Exceptions;
 using JobifyEcom.Contracts.Errors;
 using JobifyEcom.Contracts.Responses;
+using Microsoft.OpenApi;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -27,9 +27,8 @@ builder.Services.AddSingleton(globalJsonOptions);
 
 //--------------- Database connection ---------------
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
 
@@ -140,18 +139,18 @@ if (builder.Environment.IsDevelopment())
             Description = "Enter the access token you are given after you login.",
         });
 
-        options.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {{
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }});
+        // options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        // {{
+        //     new OpenApiSecurityScheme
+        //     {
+        //         Reference = new OpenApiReference
+        //         {
+        //             Type = ReferenceType.SecurityScheme,
+        //             Id = "Bearer"
+        //         }
+        //     },
+        //     Array.Empty<string>()
+        // }});
     });
 }
 
