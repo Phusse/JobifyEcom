@@ -1,0 +1,6 @@
+@Jobify.Ecom.Api_HostAddress = http://localhost:5177
+
+GET {{Jobify.Ecom.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
