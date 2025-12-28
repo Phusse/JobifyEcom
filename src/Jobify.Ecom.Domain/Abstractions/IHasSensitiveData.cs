@@ -7,9 +7,8 @@ internal interface IHasSensitiveData<TSensitive> where TSensitive : ISensitiveDa
     byte[] EncryptedData { get; }
     TSensitive? SensitiveData { get; }
 
+    void SetEncryptedData(byte[] data);
+
     void SetSensitiveData(TSensitive data);
     void ClearSensitiveData();
-
-    void SetEncryptedData(byte[] data);
-    void ClearEncryptedData();
 }

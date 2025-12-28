@@ -1,100 +1,83 @@
+using System.Runtime.CompilerServices;
+using Jobify.Ecom.Domain.Abstractions;
 using Jobify.Ecom.Domain.Components.Auditing;
 using Jobify.Ecom.Domain.Components.Security;
 using Jobify.Ecom.Domain.Entities.UserSessions;
 using Jobify.Ecom.Domain.Enums;
-using Jobify.Ecom.Domain.Extensions.Validations;
+
+[assembly: InternalsVisibleTo("Jobify.Ecom.Persistence")]
 
 namespace Jobify.Ecom.Domain.Entities.Users;
 
-public class User
+public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
 {
-    private readonly AuditState _audit = new();
-    private readonly SensitiveDataState<UserSensitive> _sensitive = new();
-
-    public static string Audit => nameof(_audit);
-    public static string Sensitive => nameof(_sensitive);
+    internal readonly AuditState AuditState = new();
+    internal readonly SensitiveDataState<UserSensitive> SensitiveDataState = new();
 
     private User() { }
 
     public User(string userName, string emailHash, string passwordHash)
     {
-        UserName = userName.EnsureNotEmptyAndTrim();
-        EmailHash = emailHash.EnsureNotEmptyAndTrim();
-        PasswordHash = passwordHash.EnsureNotEmptyAndTrim();
-
-        _audit.UpdateAudit();
+        SetUserName(userName);
+        SetEmailHash(emailHash);
+        SetPasswordHash(passwordHash);
     }
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; } = Guid.CreateVersion7();
 
-    public string UserName { get; private set; } = null!;
-    public string EmailHash { get; private set; } = null!;
-    public string PasswordHash { get; private set; } = null!;
+    public DateTime CreatedAt => AuditState.CreatedAt;
+    public DateTime UpdatedAt => AuditState.UpdatedAt;
+
+    public byte[] EncryptedData => SensitiveDataState.EncryptedData;
+    public UserSensitive? SensitiveData => SensitiveDataState.SensitiveData;
+
+    public string UserName { get; private set; } = string.Empty;
+    public string EmailHash { get; private set; } = string.Empty;
+    public string PasswordHash { get; private set; } = string.Empty;
 
     public bool IsLocked { get; private set; } = false;
     public SystemRole Role { get; private set; } = SystemRole.User;
 
-    public DateTime CreatedAt => _audit.CreatedAt;
-    public DateTime UpdatedAt => _audit.UpdatedAt;
-
-    public byte[] EncryptedData => _sensitive.EncryptedData;
-    public UserSensitive? SensitiveData => _sensitive.SensitiveData;
-
     public ICollection<UserSession> Sessions { get; private set; } = [];
 
-    public void ChangeRole(SystemRole newRole)
+    public void SetUserName(string userName)
     {
-        if (Role == newRole) return;
+        if (string.IsNullOrWhiteSpace(userName))
+            throw new ArgumentException("UserName cannot be null or empty.", nameof(userName));
 
-        if (!Enum.IsDefined(newRole))
-            throw new ArgumentException("Invalid role.");
-
-        Role = newRole;
-        _audit.UpdateAudit();
+        UserName = userName;
+        AuditState.UpdateAudit();
     }
 
-    public void UpdateUserName(string newUserName)
+    public void SetEmailHash(string emailHash)
     {
-        if (newUserName == UserName) return;
+        if (string.IsNullOrWhiteSpace(emailHash))
+            throw new ArgumentException("EmailHash cannot be null or empty.", nameof(emailHash));
 
-        UserName = newUserName.EnsureNotEmptyAndTrim();
-        _audit.UpdateAudit();
+        EmailHash = emailHash;
+        AuditState.UpdateAudit();
     }
 
-    public void UpdateEmailHash(string newEmailHash)
+    public void SetPasswordHash(string passwordHash)
     {
-        if (newEmailHash == EmailHash) return;
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException("PasswordHash cannot be null or empty.", nameof(passwordHash));
 
-        EmailHash = newEmailHash.EnsureNotEmptyAndTrim();
-        _audit.UpdateAudit();
+        PasswordHash = passwordHash;
+        AuditState.UpdateAudit();
     }
 
-    public void UpdatePasswordHash(string newPasswordHash)
+    public void SetEncryptedData(byte[] data)
     {
-        if (newPasswordHash == PasswordHash) return;
+        ArgumentNullException.ThrowIfNull(data);
 
-        PasswordHash = newPasswordHash.EnsureNotEmptyAndTrim();
-        _audit.UpdateAudit();
+        if (data.Length == 0)
+            throw new ArgumentException("Data cannot be empty.", nameof(data));
+
+        SensitiveDataState.SetEncryptedData(data);
+        AuditState.UpdateAudit();
     }
 
-    public void LockAccount()
-    {
-        if (IsLocked) return;
-
-        IsLocked = true;
-        _audit.UpdateAudit();
-    }
-
-    public void UnlockAccount()
-    {
-        if (!IsLocked) return;
-
-        IsLocked = false;
-        _audit.UpdateAudit();
-    }
-
-    public void SetSensitiveData(UserSensitive data) => _sensitive.SetSensitiveData(data);
-    public void SetEncryptedData(byte[] data) => _sensitive.SetEncryptedData(data);
-    public void ClearDecryptedData() => _sensitive.ClearSensitiveData();
-    public void ClearEncryptedData() => _sensitive.ClearEncryptedData();
+    public void SetSensitiveData(UserSensitive data) => SensitiveDataState.SetSensitiveData(data);
+    public void ClearSensitiveData() => SensitiveDataState.ClearSensitiveData();
 }
