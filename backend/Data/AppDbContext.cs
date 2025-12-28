@@ -12,47 +12,47 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// <summary>
     /// Gets or sets the Users table.
     /// </summary>
-    public DbSet<User> Users { get; set; }
+    public DbSet<User> Users => Set<User>();
 
     /// <summary>
     /// Gets or sets the WorkerProfiles table.
     /// </summary>
-    public DbSet<Worker> Workers { get; set; }
+    public DbSet<Worker> Workers => Set<Worker>();
 
     /// <summary>
     /// Gets or sets the Skills table.
     /// </summary>
-    public DbSet<Skill> Skills { get; set; }
+    public DbSet<Skill> Skills => Set<Skill>();
 
     /// <summary>
     /// Gets or sets the Job table.
     /// </summary>
-    public DbSet<Job> Jobs { get; set; }
+    public DbSet<Job> Jobs => Set<Job>();
 
     /// <summary>
     /// Gets or sets the JobApplications table.
     /// </summary>
-    public DbSet<JobApplication> JobApplications { get; set; }
+    public DbSet<JobApplication> JobApplications => Set<JobApplication>();
 
     /// <summary>
     /// Gets or sets the Ratings table.
     /// </summary>
-    public DbSet<Rating> Ratings { get; set; }
+    public DbSet<Rating> Ratings => Set<Rating>();
 
     /// <summary>
     /// Gets or sets the Tags table.
     /// </summary>
-    public DbSet<Tag> Tags { get; set; }
+    public DbSet<Tag> Tags => Set<Tag>();
 
     /// <summary>
     /// Gets or sets the EntityTags table that links tags to different entity types (JobPost, Skill, etc.).
     /// </summary>
-    public DbSet<EntityTag> EntityTags { get; set; }
+    public DbSet<EntityTag> EntityTags => Set<EntityTag>();
 
     /// <summary>
     /// Gets or sets the Verification table that hold verificatioins for different entities.
     /// </summary>
-    public DbSet<Verification> Verifications { get; set; }
+    public DbSet<Verification> Verifications => Set<Verification>();
 
     /// <summary>
     /// Configures entity relationships and value conversions for the database schema.
