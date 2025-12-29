@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using JobifyEcom.Contracts.Errors;
 using JobifyEcom.Contracts.Results;
 using JobifyEcom.Data;
@@ -6,7 +5,6 @@ using JobifyEcom.DTOs;
 using JobifyEcom.DTOs.Jobs;
 using JobifyEcom.Enums;
 using JobifyEcom.Exceptions;
-using JobifyEcom.Extensions;
 using JobifyEcom.Helpers;
 using JobifyEcom.Models;
 using Microsoft.EntityFrameworkCore;
