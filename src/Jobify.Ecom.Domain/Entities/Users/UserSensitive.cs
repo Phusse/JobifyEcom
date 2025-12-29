@@ -5,10 +5,7 @@ namespace Jobify.Ecom.Domain.Entities.Users;
 
 public class UserSensitive : ISensitiveData
 {
-    public string FirstName { get; private set; }
-    public string? MiddleName { get; private set; }
-    public string LastName { get; private set; }
-    public string Email { get; private set; }
+    private UserSensitive() { }
 
     private UserSensitive(string firstName, string? middleName, string lastName, string email)
     {
@@ -17,6 +14,11 @@ public class UserSensitive : ISensitiveData
         LastName = lastName;
         Email = email;
     }
+
+    public string FirstName { get; private set; } = string.Empty;
+    public string? MiddleName { get; private set; }
+    public string LastName { get; private set; } = string.Empty;
+    public string Email { get; private set; } = string.Empty;
 
     public static UserSensitive Create(string firstName, string? middleName, string lastName, string email)
     {
@@ -33,9 +35,9 @@ public class UserSensitive : ISensitiveData
             throw new ArgumentException("Email format is invalid", nameof(email));
 
         return new UserSensitive(
-            firstName.Trim().ToLowerInvariant(),
-            middleName?.Trim().ToLowerInvariant(),
-            lastName.Trim().ToLowerInvariant(),
+            firstName.Trim(),
+            middleName?.Trim(),
+            lastName.Trim(),
             email.Trim().ToLowerInvariant()
         );
     }
@@ -44,8 +46,8 @@ public class UserSensitive : ISensitiveData
     {
         try
         {
-            MailAddress emailAdress = new(email);
-            return emailAdress.Address == email;
+            MailAddress emailAddress = new(email);
+            return emailAddress.Address == email;
         }
         catch
         {
