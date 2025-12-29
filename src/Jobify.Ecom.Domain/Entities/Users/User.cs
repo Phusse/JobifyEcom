@@ -23,7 +23,7 @@ public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
         SetPasswordHash(passwordHash);
     }
 
-    public Guid Id { get; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; } = Guid.CreateVersion7();
 
     public DateTime CreatedAt => AuditState.CreatedAt;
     public DateTime UpdatedAt => AuditState.UpdatedAt;
