@@ -19,4 +19,8 @@
     <Project Path="src/Jobify.Ecom.Shared/Jobify.Ecom.Shared.csproj" />
   </Folder>
 
+  <Folder Name="/test/">
+    <Project Path="test/Jobify.Ecom.Domain.Test/Jobify.Ecom.Domain.Test.csproj" />
+  </Folder>
+
 </Solution>
