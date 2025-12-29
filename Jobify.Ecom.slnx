@@ -20,7 +20,7 @@
   </Folder>
 
   <Folder Name="/test/">
-    <Project Path="test/Jobify.Ecom.Domain.Test/Jobify.Ecom.Domain.Test.csproj" />
+    <Project Path="test/Jobify.Ecom.Domain.Test/Jobify.Ecom.Domain.Tests.csproj" />
   </Folder>
 
 </Solution>

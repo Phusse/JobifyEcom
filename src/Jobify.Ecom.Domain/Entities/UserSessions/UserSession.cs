@@ -1,9 +1,6 @@
-using System.Runtime.CompilerServices;
 using Jobify.Ecom.Domain.Abstractions;
 using Jobify.Ecom.Domain.Components.Auditing;
 using Jobify.Ecom.Domain.Entities.Users;
-
-[assembly: InternalsVisibleTo("Jobify.Ecom.Persistence")]
 
 namespace Jobify.Ecom.Domain.Entities.UserSessions;
 
