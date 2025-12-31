@@ -1,1 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jobify.Ecom.Domain\Jobify.Ecom.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
