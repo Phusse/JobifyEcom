@@ -21,6 +21,7 @@
 
   <Folder Name="/test/">
     <Project Path="test/Jobify.Ecom.Domain.Test/Jobify.Ecom.Domain.Tests.csproj" />
+    <Project Path="test/Jobify.Ecom.Shared.Tests/Jobify.Ecom.Shared.Tests.csproj" />
   </Folder>
 
 </Solution>
