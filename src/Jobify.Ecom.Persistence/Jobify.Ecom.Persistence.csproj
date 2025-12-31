@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Jobify.Ecom.Domain\Jobify.Ecom.Domain.csproj" />
+    <ProjectReference Include="..\Jobify.Ecom.Shared\Jobify.Ecom.Shared.csproj" />
   </ItemGroup>
 
 </Project>
