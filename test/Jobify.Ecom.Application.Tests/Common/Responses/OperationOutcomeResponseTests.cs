@@ -1,10 +1,31 @@
 using FluentAssertions;
 using Jobify.Ecom.Application.Common.Responses;
+using Jobify.Ecom.Application.Enums;
+using Jobify.Ecom.Application.Models;
 
 namespace Jobify.Ecom.Application.Tests.Common.Responses;
 
 public class OperationOutcomeResponseTests
 {
+    [Fact]
+    public void Constructor_ShouldAssignAllValuesCorrectly()
+    {
+        string id = "1";
+        string title = "Title";
+        ResponseDetail[] details = [new ResponseDetail("code", ResponseSeverity.Info)];
+
+        OperationOutcomeResponse response = new(
+            Id: id,
+            Title: title,
+            Details: details
+        );
+
+        response.Id.Should().Be(id);
+        response.Title.Should().Be(title);
+        response.Details.Should().BeSameAs(details);
+        response.Data.Should().BeNull();
+    }
+
     [Fact]
     public void WithData_ShouldSetData()
     {
