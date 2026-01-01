@@ -32,7 +32,6 @@ public class UserSessionTests
 
         session.IsRevoked.Should().BeFalse();
         session.RevokedAt.Should().BeNull();
-        session.SessionStamp.Should().NotBe(Guid.Empty);
     }
 
     [Theory]

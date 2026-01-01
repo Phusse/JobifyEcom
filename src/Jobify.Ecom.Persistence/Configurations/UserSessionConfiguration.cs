@@ -20,9 +20,6 @@ internal class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
             .HasForeignKey(us => us.UserId)
             .IsRequired();
 
-        builder.Property(us => us.SessionStamp)
-            .IsRequired();
-
         builder.Property(us => us.RememberMe)
             .IsRequired();
 
