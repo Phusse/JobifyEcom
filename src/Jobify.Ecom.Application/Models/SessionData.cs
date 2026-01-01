@@ -5,7 +5,6 @@ namespace Jobify.Ecom.Application.Models;
 public record SessionData(
     Guid SessionId,
     Guid UserId,
-    Guid SessionStamp,
     DateTime ExpiresAt,
     DateTime AbsoluteExpiresAt,
     bool IsRevoked,
