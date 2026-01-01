@@ -41,7 +41,6 @@ public class UserSession : IEntity, IAuditable
 
     public bool RememberMe { get; private set; }
 
-    public Guid SessionStamp { get; private set; } = Guid.NewGuid();
     public bool IsRevoked { get; private set; }
     public DateTime? RevokedAt { get; private set; }
 
