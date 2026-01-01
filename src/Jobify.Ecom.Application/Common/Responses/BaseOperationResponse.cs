@@ -11,7 +11,7 @@ internal abstract record BaseOperationResponse<TSelf>(
 	protected TSelf Self => (TSelf)this;
 
 	public TSelf WithTitle(string title) => Self with { Title = title };
-	public TSelf AppendTitle(string suffix) => Self with { Title = $"{Title}{suffix}" };
+	public TSelf AppendTitle(string suffix, string separator = " ") => Self with { Title = $"{Title}{separator}{suffix}" };
 
 	public TSelf WithDetails(params ResponseDetail[] details) => Self with { Details = details };
 	public TSelf AppendDetails(params ResponseDetail[] additionalDetails)
