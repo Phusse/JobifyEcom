@@ -7,6 +7,7 @@ using Jobify.Ecom.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Jobify.Ecom.Infrastructure.CQRS.Decorators;
 
 namespace Jobify.Ecom.Infrastructure;
 

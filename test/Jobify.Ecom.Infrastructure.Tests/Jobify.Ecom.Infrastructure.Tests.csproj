@@ -15,4 +15,8 @@
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Jobify.Ecom.Infrastructure\Jobify.Ecom.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

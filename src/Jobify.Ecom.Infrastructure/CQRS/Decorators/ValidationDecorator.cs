@@ -5,7 +5,7 @@ using Jobify.Ecom.Application.Models;
 using FluentValidation;
 using FluentValidation.Results;
 
-namespace Jobify.Ecom.Infrastructure.CQRS.Messaging;
+namespace Jobify.Ecom.Infrastructure.CQRS.Decorators;
 
 internal class ValidationDecorator<TRequest, TResponse>(IHandler<TRequest, TResponse> next, IEnumerable<IValidator<TRequest>> validators)
     : IHandler<TRequest, TResponse> where TRequest : IRequest<TResponse>
