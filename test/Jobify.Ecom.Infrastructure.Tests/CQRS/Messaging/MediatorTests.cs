@@ -70,8 +70,8 @@ public class MediatorTests
     [Fact]
     public async Task Mediator_Should_Execute_Behaviors_In_Order()
     {
-        var order = new List<string>();
-        var services = new ServiceCollection();
+        List<string> order = [];
+        ServiceCollection services = new();
         services.AddSingleton<IHandler<TestRequest, int>, TestHandler>();
         services.AddTransient<IPipelineBehavior<TestRequest, int>>(sp =>
             new DelegateBehavior((req, next, ct) => { order.Add("First"); return next(); })
@@ -80,8 +80,8 @@ public class MediatorTests
             new DelegateBehavior((req, next, ct) => { order.Add("Second"); return next(); })
         );
 
-        var provider = services.BuildServiceProvider();
-        var mediator = new Mediator(provider);
+        ServiceProvider provider = services.BuildServiceProvider();
+        Mediator mediator = new(provider);
 
         int result = await mediator.Send(new TestRequest(3));
 
