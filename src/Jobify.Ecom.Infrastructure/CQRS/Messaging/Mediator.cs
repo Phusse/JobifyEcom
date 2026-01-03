@@ -10,7 +10,6 @@ namespace Jobify.Ecom.Infrastructure.CQRS.Messaging;
 internal class Mediator(IServiceProvider serviceProvider) : IMediator
 {
     private static readonly ConcurrentDictionary<(Type MessageType, Type ResultType), object> _cache = new();
-    private static readonly MethodInfo HandleMethodDefinition = typeof(IHandler<,>).GetMethod("Handle")!;
 
     public Task<TResult> Send<TResult>(IRequest<TResult> message, CancellationToken cancellationToken = default)
     {
@@ -24,12 +23,15 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
 
     private static Func<IServiceProvider, IRequest<TResult>, CancellationToken, Task<TResult>> BuildExecutorWithPipeline<TResult>(Type messageType)
     {
+        // Concrete handler type
         Type handlerType = typeof(IHandler<,>).MakeGenericType(messageType, typeof(TResult));
 
+        // Lambda parameters
         ParameterExpression providerParam = Expression.Parameter(typeof(IServiceProvider), "serviceProvider");
         ParameterExpression messageParam = Expression.Parameter(typeof(IRequest<TResult>), "message");
         ParameterExpression ctParam = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
+        // Get handler from DI
         MethodCallExpression getHandlerCall = Expression.Call(
             typeof(ServiceProviderServiceExtensions),
             nameof(ServiceProviderServiceExtensions.GetRequiredService),
@@ -37,15 +39,21 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
             providerParam
         );
 
-        MethodInfo handleMethod = HandleMethodDefinition.MakeGenericMethod(messageType, typeof(TResult));
+        // Cast message to concrete type
+        Expression castMessage = Expression.Convert(messageParam, messageType);
 
+        // Get concrete Handle method
+        MethodInfo handleMethod = handlerType.GetMethod(nameof(IHandler<,>.Handle))!;
+
+        // Call Handle
         MethodCallExpression baseHandleCall = Expression.Call(
             Expression.Convert(getHandlerCall, handlerType),
             handleMethod,
-            Expression.Convert(messageParam, messageType),
+            castMessage,
             ctParam
         );
 
+        // Call BuildPipeline<TRequest, TResult>
         MethodInfo buildPipelineMethod = typeof(Mediator)
             .GetMethod(nameof(BuildPipeline), BindingFlags.NonPublic | BindingFlags.Static)!
             .MakeGenericMethod(messageType, typeof(TResult));
@@ -53,13 +61,17 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
         MethodCallExpression pipelineCall = Expression.Call(
             buildPipelineMethod,
             providerParam,
-            messageParam,
-            ctParam,
-            baseHandleCall
+            castMessage,
+            baseHandleCall,
+            ctParam
         );
 
+        // Compile lambda
         var lambda = Expression.Lambda<Func<IServiceProvider, IRequest<TResult>, CancellationToken, Task<TResult>>>(
-            pipelineCall, providerParam, messageParam, ctParam
+            pipelineCall,
+            providerParam,
+            messageParam,
+            ctParam
         );
 
         return lambda.Compile();
