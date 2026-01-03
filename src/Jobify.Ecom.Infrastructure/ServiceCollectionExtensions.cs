@@ -8,6 +8,7 @@ using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Jobify.Ecom.Infrastructure.CQRS.Decorators;
+using Jobify.Ecom.Application.CQRS.Decorators;
 
 namespace Jobify.Ecom.Infrastructure;
 
@@ -32,7 +33,7 @@ public static class ServiceCollectionExtensions
 
         private void AddCqrsWithValidation(Assembly[] assembliesToScan)
         {
-            services.AddScoped<IMediator, Mediator>();
+            services.AddSingleton<IMediator, Mediator>();
 
             foreach (Assembly assembly in assembliesToScan)
             {
@@ -51,7 +52,9 @@ public static class ServiceCollectionExtensions
                 );
             }
 
-            services.Decorate(typeof(IHandler<,>), typeof(ValidationDecorator<,>));
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RetryBehavior<,>));
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         }
     }
 }
