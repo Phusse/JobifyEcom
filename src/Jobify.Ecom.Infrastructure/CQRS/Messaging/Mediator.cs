@@ -45,13 +45,17 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
         // Get concrete Handle method
         MethodInfo handleMethod = handlerType.GetMethod(nameof(IHandler<,>.Handle))!;
 
-        // Call Handle
-        MethodCallExpression baseHandleCall = Expression.Call(
+        // Create handler call expression
+        MethodCallExpression handlerCall = Expression.Call(
             Expression.Convert(getHandlerCall, handlerType),
             handleMethod,
             castMessage,
             ctParam
         );
+
+        // Wrap handler call in a lambda to defer execution
+        Type handlerFuncType = typeof(Func<Task<TResult>>);
+        LambdaExpression baseHandleLambda = Expression.Lambda(handlerFuncType, handlerCall);
 
         // Call BuildPipeline<TRequest, TResult>
         MethodInfo buildPipelineMethod = typeof(Mediator)
@@ -62,11 +66,11 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
             buildPipelineMethod,
             providerParam,
             castMessage,
-            baseHandleCall,
+            baseHandleLambda,
             ctParam
         );
 
-        // Compile lambda
+        // Compile final lambda
         var lambda = Expression.Lambda<Func<IServiceProvider, IRequest<TResult>, CancellationToken, Task<TResult>>>(
             pipelineCall,
             providerParam,
@@ -77,11 +81,11 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
         return lambda.Compile();
     }
 
-    private static async Task<TResult> BuildPipeline<TRequest, TResult>(IServiceProvider serviceProvider, TRequest request, Task<TResult> finalHandlerTask, CancellationToken cancellationToken = default)
+    private static async Task<TResult> BuildPipeline<TRequest, TResult>(IServiceProvider serviceProvider, TRequest request, Func<Task<TResult>> handler, CancellationToken cancellationToken = default)
         where TRequest : IRequest<TResult>
     {
         var behaviors = serviceProvider.GetServices<IPipelineBehavior<TRequest, TResult>>();
-        Func<Task<TResult>> next = () => finalHandlerTask;
+        Func<Task<TResult>> next = handler;
 
         foreach (IPipelineBehavior<TRequest, TResult> behavior in behaviors.Reverse())
         {

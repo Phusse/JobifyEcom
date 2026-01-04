@@ -7,31 +7,50 @@ namespace Jobify.Ecom.Infrastructure.Tests.CQRS.Messaging;
 
 public class MediatorTests
 {
-    protected record TestRequest(int Value) : IRequest<int>;
-
-    protected class TestHandler : IHandler<TestRequest, int>
+    private static class InMemoryDb
     {
-        public Task<int> Handle(TestRequest request, CancellationToken ct)
+        private static readonly List<string> _events = [];
+
+        public static void Clear() => _events.Clear();
+        public static void Add(string value) => _events.Add(value);
+        public static IReadOnlyList<string> Events => _events;
+    }
+
+    private record DoubleValueRequest(int Value) : IRequest<int>;
+
+    private class DoubleValueHandler : IHandler<DoubleValueRequest, int>
+    {
+        public Task<int> Handle(DoubleValueRequest request, CancellationToken ct)
             => Task.FromResult(request.Value * 2);
     }
 
-    protected class ExceptionHandler : IHandler<TestRequest, int>
+    private class ExceptionHandler : IHandler<DoubleValueRequest, int>
     {
-        public Task<int> Handle(TestRequest request, CancellationToken ct)
+        public Task<int> Handle(DoubleValueRequest request, CancellationToken ct)
             => throw new InvalidOperationException("Handler failure");
     }
 
-    protected class DelegateBehavior(Func<TestRequest, Func<Task<int>>, CancellationToken, Task<int>> func) : IPipelineBehavior<TestRequest, int>
-    {
-        private readonly Func<TestRequest, Func<Task<int>>, CancellationToken, Task<int>> _func = func;
+    private record AddToMemoryCommand(string Value) : IRequest<string>;
 
-        public Task<int> Handle(TestRequest request, Func<Task<int>> next, CancellationToken cancellationToken)
-            => _func(request, next, cancellationToken);
+    private class AddToMemoryHandler : IHandler<AddToMemoryCommand, string>
+    {
+        public Task<string> Handle(AddToMemoryCommand request, CancellationToken ct)
+        {
+            InMemoryDb.Add(request.Value);
+            return Task.FromResult(request.Value);
+        }
     }
 
-    private class IncrementBehavior : IPipelineBehavior<TestRequest, int>
+    private class DelegateBehavior<TRequest, TResponse>(Func<TRequest, Func<Task<TResponse>>, CancellationToken, Task<TResponse>> func) : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>
     {
-        public async Task<int> Handle(TestRequest request, Func<Task<int>> next, CancellationToken ct)
+        public Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken)
+            => func(request, next, cancellationToken);
+    }
+
+    private class IncrementBehavior : IPipelineBehavior<DoubleValueRequest, int>
+    {
+        public async Task<int> Handle(DoubleValueRequest request, Func<Task<int>> next, CancellationToken ct)
         {
             int result = await next();
             return result + 1;
@@ -42,12 +61,12 @@ public class MediatorTests
     public async Task Mediator_Should_Invoke_Handler_And_Behaviors()
     {
         ServiceCollection services = new();
-        services.AddSingleton<IHandler<TestRequest, int>, TestHandler>();
-        services.AddTransient<IPipelineBehavior<TestRequest, int>, IncrementBehavior>();
+        services.AddSingleton<IHandler<DoubleValueRequest, int>, DoubleValueHandler>();
+        services.AddTransient<IPipelineBehavior<DoubleValueRequest, int>, IncrementBehavior>();
         ServiceProvider provider = services.BuildServiceProvider();
 
         Mediator mediator = new(provider);
-        TestRequest request = new(Value: 5);
+        DoubleValueRequest request = new(Value: 5);
 
         int result = await mediator.Send(request);
 
@@ -58,34 +77,44 @@ public class MediatorTests
     public async Task Mediator_Should_Propagate_Exception_From_Handler()
     {
         ServiceCollection services = new();
-        services.AddSingleton<IHandler<TestRequest, int>, ExceptionHandler>();
+        services.AddSingleton<IHandler<DoubleValueRequest, int>, ExceptionHandler>();
         ServiceProvider provider = services.BuildServiceProvider();
 
         Mediator mediator = new(provider);
-        TestRequest request = new(Value: 5);
+        DoubleValueRequest request = new(Value: 5);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => mediator.Send(request));
     }
 
     [Fact]
-    public async Task Mediator_Should_Execute_Behaviors_In_Order()
+    public async Task Mediator_Executes_Behaviors_Before_Handler_In_Order()
     {
-        List<string> order = [];
+        InMemoryDb.Clear();
         ServiceCollection services = new();
-        services.AddSingleton<IHandler<TestRequest, int>, TestHandler>();
-        services.AddTransient<IPipelineBehavior<TestRequest, int>>(sp =>
-            new DelegateBehavior((req, next, ct) => { order.Add("First"); return next(); })
+        services.AddSingleton<IHandler<AddToMemoryCommand, string>, AddToMemoryHandler>();
+
+        services.AddTransient<IPipelineBehavior<AddToMemoryCommand, string>>(_ =>
+            new DelegateBehavior<AddToMemoryCommand, string>((req, next, ct) =>
+            {
+                InMemoryDb.Add("First");
+                return next();
+            })
         );
-        services.AddTransient<IPipelineBehavior<TestRequest, int>>(sp =>
-            new DelegateBehavior((req, next, ct) => { order.Add("Second"); return next(); })
+
+        services.AddTransient<IPipelineBehavior<AddToMemoryCommand, string>>(_ =>
+            new DelegateBehavior<AddToMemoryCommand, string>((req, next, ct) =>
+            {
+                InMemoryDb.Add("Second");
+                return next();
+            })
         );
 
         ServiceProvider provider = services.BuildServiceProvider();
         Mediator mediator = new(provider);
 
-        int result = await mediator.Send(new TestRequest(3));
+        string result = await mediator.Send(new AddToMemoryCommand("Handler"));
 
-        Assert.Equal(6, result);
-        Assert.Equal(["First", "Second"], order);
+        Assert.Equal("Handler", result);
+        Assert.Equal(["First", "Second", "Handler"], InMemoryDb.Events);
     }
 }
