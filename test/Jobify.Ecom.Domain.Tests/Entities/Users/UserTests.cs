@@ -138,7 +138,7 @@ public class UserTests
     public void SetSensitiveData_Should_StoreSensitiveData()
     {
         User user = CreateValidUser();
-        var sensitive = CreateValidUserSensitive();
+        UserSensitive sensitive = CreateValidUserSensitive();
 
         user.SetSensitiveData(sensitive);
 
