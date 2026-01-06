@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Jobify.Ecom.Infrastructure.Tests.CQRS.Decorators;
 
-public partial class LoggingBehaviorTests
+public class LoggingBehaviorTests
 {
     [Fact]
     public async Task Handle_Should_Call_Next_And_Return_Response()
