@@ -16,14 +16,12 @@
     <Project Path="src/Jobify.Ecom.Domain/Jobify.Ecom.Domain.csproj" />
     <Project Path="src/Jobify.Ecom.Infrastructure/Jobify.Ecom.Infrastructure.csproj" />
     <Project Path="src/Jobify.Ecom.Persistence/Jobify.Ecom.Persistence.csproj" />
-    <Project Path="src/Jobify.Ecom.Shared/Jobify.Ecom.Shared.csproj" />
   </Folder>
 
   <Folder Name="/test/">
     <Project Path="test/Jobify.Ecom.Application.Tests/Jobify.Ecom.Application.Tests.csproj" />
     <Project Path="test/Jobify.Ecom.Domain.Tests/Jobify.Ecom.Domain.Tests.csproj" />
     <Project Path="test/Jobify.Ecom.Infrastructure.Tests/Jobify.Ecom.Infrastructure.Tests.csproj" />
-    <Project Path="test/Jobify.Ecom.Shared.Tests/Jobify.Ecom.Shared.Tests.csproj" />
   </Folder>
 
 </Solution>

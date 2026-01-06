@@ -19,9 +19,9 @@ public class AesGcmDataEncryptionServiceTests
     {
         key ??= GenerateValidKey();
 
-        var options = Options.Create(new DataEncryptionOptions
+        IOptions<DataEncryptionOptions> options = Options.Create(new DataEncryptionOptions
         {
-            Key = Convert.ToBase64String(key)
+            Key = Convert.ToBase64String(key),
         });
 
         return new AesGcmDataEncryptionService(options);
@@ -30,148 +30,114 @@ public class AesGcmDataEncryptionServiceTests
     [Fact]
     public void Constructor_ShouldThrow_WhenKeyIsMissing()
     {
-        // Arrange
-        var options = Options.Create(new DataEncryptionOptions
+        IOptions<DataEncryptionOptions> options = Options.Create(new DataEncryptionOptions
         {
-            Key = ""
+            Key = string.Empty,
         });
 
-        // Act
-        Action act = () => new AesGcmDataEncryptionService(options);
+        Action act = () => _ = new AesGcmDataEncryptionService(options);
 
-        // Assert
-        act.ShouldThrow<InvalidOperationException>()
-           .WithMessage("*DataEncryption:Key*");
+        act.ShouldThrow<InvalidOperationException>().WithMessage("*DataEncryption:Key*");
     }
 
     [Fact]
     public void Constructor_ShouldThrow_WhenKeyIsNotBase64()
     {
-        // Arrange
-        var options = Options.Create(new DataEncryptionOptions
+        IOptions<DataEncryptionOptions> options = Options.Create(new DataEncryptionOptions
         {
-            Key = "not-base64!!!"
+            Key = "not-base64!!!",
         });
 
-        // Act
-        Action act = () => new AesGcmDataEncryptionService(options);
+        Action act = () => _ = new AesGcmDataEncryptionService(options);
 
-        // Assert
-        act.ShouldThrow<InvalidOperationException>()
-           .WithMessage("*Base64*");
+        act.ShouldThrow<InvalidOperationException>().WithMessage("*Base64*");
     }
 
     [Fact]
     public void Constructor_ShouldThrow_WhenKeyIsWrongLength()
     {
-        // Arrange
-        byte[] shortKey = new byte[16]; // AES-128
-        var options = Options.Create(new DataEncryptionOptions
+        byte[] shortKey = new byte[16];
+        IOptions<DataEncryptionOptions> options = Options.Create(new DataEncryptionOptions
         {
-            Key = Convert.ToBase64String(shortKey)
+            Key = Convert.ToBase64String(shortKey),
         });
 
-        // Act
-        Action act = () => new AesGcmDataEncryptionService(options);
+        Action act = () => _ = new AesGcmDataEncryptionService(options);
 
-        // Assert
-        act.ShouldThrow<InvalidOperationException>()
-           .WithMessage("*32 bytes*");
+        act.ShouldThrow<InvalidOperationException>().WithMessage("*32 bytes*");
     }
 
     [Fact]
     public void EncryptAndDecrypt_ShouldReturnOriginalPlaintext()
     {
-        // Arrange
-        var service = CreateService();
-        byte[] plaintext = "Sensitive data payload".Select(c => (byte)c).ToArray();
+        AesGcmDataEncryptionService service = CreateService();
+        byte[] plaintext = [.. "Sensitive data payload".Select(c => (byte)c)];
 
-        // Act
         byte[] encrypted = service.EncryptData(plaintext);
         byte[] decrypted = service.DecryptData(encrypted);
 
-        // Assert
         decrypted.Should().Equal(plaintext);
     }
 
     [Fact]
     public void Encrypt_ShouldProduceDifferentCiphertext_ForSamePlaintext()
     {
-        // Arrange
-        var service = CreateService();
-        byte[] plaintext = "Same input data".Select(c => (byte)c).ToArray();
+        AesGcmDataEncryptionService service = CreateService();
+        byte[] plaintext = [.. "Same input data".Select(c => (byte)c)];
 
-        // Act
         byte[] encrypted1 = service.EncryptData(plaintext);
         byte[] encrypted2 = service.EncryptData(plaintext);
 
-        // Assert
-        encrypted1.Should().NotEqual(encrypted2); // nonce randomness
+        encrypted1.Should().NotEqual(encrypted2);
     }
 
     [Fact]
     public void Decrypt_ShouldThrow_WhenCiphertextIsTampered()
     {
-        // Arrange
-        var service = CreateService();
-        byte[] plaintext = "Top secret".Select(c => (byte)c).ToArray();
+        AesGcmDataEncryptionService service = CreateService();
+        byte[] plaintext = [.. "Top secret".Select(c => (byte)c)];
         byte[] encrypted = service.EncryptData(plaintext);
 
-        // Tamper with ciphertext
         encrypted[^1] ^= 0xFF;
 
-        // Act
         Action act = () => service.DecryptData(encrypted);
 
-        // Assert
         act.ShouldThrow<CryptographicException>();
     }
 
     [Fact]
     public void EncryptData_ShouldThrow_WhenKeyIsInvalidLength()
     {
-        // Arrange
-        var service = CreateService();
-        byte[] plaintext = new byte[] { 1, 2, 3 };
+        AesGcmDataEncryptionService service = CreateService();
+        byte[] plaintext = [1, 2, 3];
         byte[] invalidKey = new byte[16];
 
-        // Act
         Action act = () => service.EncryptData(plaintext, invalidKey);
 
-        // Assert
-        act.ShouldThrow<InvalidOperationException>()
-           .WithMessage("*32 bytes*");
+        act.ShouldThrow<InvalidOperationException>().WithMessage("*32 bytes*");
     }
 
     [Fact]
     public void DecryptData_ShouldThrow_WhenKeyIsInvalidLength()
     {
-        // Arrange
-        var service = CreateService();
-        byte[] plaintext = new byte[] { 1, 2, 3 };
+        AesGcmDataEncryptionService service = CreateService();
+        byte[] plaintext = [1, 2, 3];
         byte[] encrypted = service.EncryptData(plaintext);
         byte[] invalidKey = new byte[16];
 
-        // Act
         Action act = () => service.DecryptData(encrypted, invalidKey);
 
-        // Assert
-        act.ShouldThrow<InvalidOperationException>()
-           .WithMessage("*32 bytes*");
+        act.ShouldThrow<InvalidOperationException>().WithMessage("*32 bytes*");
     }
 
     [Fact]
     public void DecryptData_ShouldThrow_WhenEncryptedDataIsTooShort()
     {
-        // Arrange
-        var service = CreateService();
-        byte[] invalidData = new byte[10]; // < nonce + tag
+        AesGcmDataEncryptionService service = CreateService();
+        byte[] invalidData = new byte[10];
 
-        // Act
         Action act = () => service.DecryptData(invalidData);
 
-        // Assert
-        act.ShouldThrow<ArgumentException>()
-           .WithMessage("*Invalid encrypted data*");
+        act.ShouldThrow<ArgumentException>().WithMessage("*Invalid encrypted data*");
     }
 }
