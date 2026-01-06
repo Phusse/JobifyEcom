@@ -1,5 +1,4 @@
 using Jobify.Ecom.Persistence.Context;
-using Jobify.Ecom.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,15 +9,9 @@ public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddPersistenceServices(IConfiguration configuration, AppEnvironment appEnvironment)
+        public IServiceCollection AddPersistenceServices(IConfiguration configuration)
         {
-            string connectionName = appEnvironment switch
-            {
-                AppEnvironment.Local => "localdatabase",
-                AppEnvironment.Test => "testdatabase",
-                AppEnvironment.Production => "productiondatabase",
-                _ => throw new ArgumentOutOfRangeException(nameof(appEnvironment), "Unsupported application environment")
-            };
+            const string connectionName = "Database";
 
             string connectionString = configuration.GetConnectionString(connectionName)
                 ?? throw new InvalidOperationException($"Connection string '{connectionName}' is not configured.");
