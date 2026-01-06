@@ -1,7 +1,7 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
-namespace Jobify.Ecom.Infrastructure.Tests.Services;
+namespace Jobify.Ecom.Infrastructure.Tests.Utilities.Redis;
 
 public class RedisTestFixture : IAsyncLifetime
 {
@@ -13,7 +13,6 @@ public class RedisTestFixture : IAsyncLifetime
     {
         _redisContainer = new ContainerBuilder("redis:latest")
             .WithPortBinding(6379, true)
-            // .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
     }
 
@@ -22,10 +21,4 @@ public class RedisTestFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
         => await _redisContainer.DisposeAsync();
-}
-
-internal sealed class TestObject
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
 }

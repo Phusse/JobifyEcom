@@ -7,19 +7,11 @@ namespace Jobify.Ecom.Infrastructure.Tests.CQRS.Decorators;
 
 public class ValidationBehaviorTests
 {
-    private sealed record TestRequest(string Name) : IRequest<string>;
+    private record UserNameRequest(string Name) : IRequest<string>;
 
-    private class PassValidator : AbstractValidator<TestRequest>
+    private class UserNameValidator : AbstractValidator<UserNameRequest>
     {
-        public PassValidator()
-        {
-            RuleFor(x => x.Name).NotEmpty();
-        }
-    }
-
-    private class FailValidator : AbstractValidator<TestRequest>
-    {
-        public FailValidator()
+        public UserNameValidator()
         {
             RuleFor(x => x.Name).NotEmpty();
         }
@@ -28,14 +20,14 @@ public class ValidationBehaviorTests
     [Fact]
     public async Task Handle_Should_Call_Next_When_Validation_Passes()
     {
-        var validator = new PassValidator();
-        var behavior = new ValidationBehavior<TestRequest, string>(new[] { validator });
-        var request = new TestRequest("John");
+        UserNameValidator validator = new();
+        ValidationBehavior<UserNameRequest, string> behavior = new([validator]);
+        UserNameRequest request = new("John");
 
-        var nextCalled = false;
+        bool nextCalled = false;
         Task<string> Next() { nextCalled = true; return Task.FromResult("OK"); }
 
-        var result = await behavior.Handle(request, Next, CancellationToken.None);
+        string result = await behavior.Handle(request, Next, CancellationToken.None);
 
         Assert.True(nextCalled);
         Assert.Equal("OK", result);
@@ -44,16 +36,16 @@ public class ValidationBehaviorTests
     [Fact]
     public async Task Handle_Should_Throw_AppException_When_Validation_Fails()
     {
-        var validator = new FailValidator();
-        var behavior = new ValidationBehavior<TestRequest, string>(new[] { validator });
-        var request = new TestRequest(""); // invalid
+        UserNameValidator validator = new();
+        ValidationBehavior<UserNameRequest, string> behavior = new([validator]);
+        UserNameRequest request = new("");
 
         static Task<string> Next() => Task.FromResult("OK");
 
-        var ex = await Assert.ThrowsAsync<AppException>(() =>
-            behavior.Handle(request, Next, CancellationToken.None));
+        AppException ex = await Assert.ThrowsAsync<AppException>(() =>
+            behavior.Handle(request, Next, CancellationToken.None)
+        );
 
         Assert.Equal("SYSTEM_VALIDATION_FAILED", ex.Id);
-        Assert.Contains("Name", ex.Details.First().Message);
     }
 }

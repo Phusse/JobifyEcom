@@ -1,35 +1,12 @@
-using Jobify.Ecom.Application.CQRS.Messaging;
 using Jobify.Ecom.Infrastructure.CQRS.Decorators;
+using Jobify.Ecom.Infrastructure.Tests.Utilities.Logging;
+using Jobify.Ecom.Infrastructure.Tests.Utilities.Messaging;
 using Microsoft.Extensions.Logging;
 
 namespace Jobify.Ecom.Infrastructure.Tests.CQRS.Decorators;
 
-public class LoggingBehaviorTests
+public partial class LoggingBehaviorTests
 {
-    private class TestLogger<T> : ILogger<T>
-    {
-        public List<(LogLevel Level, string Message)> Logs { get; } = [];
-
-        public IDisposable BeginScope<TState>(TState state)
-            where TState : notnull
-            => NullScope.Instance;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        {
-            Logs.Add((logLevel, formatter(state, exception)));
-        }
-
-        private class NullScope : IDisposable
-        {
-            public static readonly NullScope Instance = new();
-            public void Dispose() { }
-        }
-    }
-
-    private record TestRequest : IRequest<string>;
-
     [Fact]
     public async Task Handle_Should_Call_Next_And_Return_Response()
     {
@@ -62,11 +39,11 @@ public class LoggingBehaviorTests
         await behavior.Handle(new TestRequest(), Next);
 
         Assert.Contains(logger.Logs, log =>
-            log.Level == LogLevel.Information && log.Message.Contains("Handling")
+            log.Level is LogLevel.Information && log.Message.Contains("Handling")
         );
 
         Assert.Contains(logger.Logs, log =>
-            log.Level == LogLevel.Information && log.Message.Contains("Handled")
+            log.Level is LogLevel.Information && log.Message.Contains("Handled")
         );
     }
 
@@ -87,7 +64,7 @@ public class LoggingBehaviorTests
         Assert.Equal("OK", result);
 
         Assert.Contains(logger.Logs, log =>
-            log.Level == LogLevel.Warning && log.Message.Contains("Slow request detected")
+            log.Level is LogLevel.Warning && log.Message.Contains("Slow request detected")
         );
     }
 
@@ -102,7 +79,7 @@ public class LoggingBehaviorTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => behavior.Handle(new TestRequest(), Next));
 
         Assert.Contains(logger.Logs, log =>
-            log.Level == LogLevel.Information && log.Message.Contains("Handled")
+            log.Level is LogLevel.Information && log.Message.Contains("Handled")
         );
     }
 }
