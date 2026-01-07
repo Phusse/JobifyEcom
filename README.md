@@ -13,7 +13,7 @@ A web application built with **ASP.NET Core** for the backend API and **React** 
 ### Backend Setup
 
 ```bash
-cd backend\EduTracker
+cd backend
 dotnet restore
 dotnet run
 ```
