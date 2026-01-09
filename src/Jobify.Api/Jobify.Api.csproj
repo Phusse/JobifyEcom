@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Jobify.Application\Jobify.Application.csproj" />
+    <ProjectReference Include="..\Jobify.Infrastructure\Jobify.Infrastructure.csproj" />
+    <ProjectReference Include="..\Jobify.Persistence\Jobify.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
