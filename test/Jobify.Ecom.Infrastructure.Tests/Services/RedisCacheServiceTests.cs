@@ -37,7 +37,7 @@ public class RedisCacheServiceTests
         TestObject value = new() { Id = 1, Name = "Jane" };
 
         bool setResult = await _cache.SetAsync(key, value, TimeSpan.FromMinutes(1));
-        var result = await _cache.GetAsync<TestObject>(key);
+        TestObject? result = await _cache.GetAsync<TestObject>(key);
 
         Assert.True(setResult);
         Assert.NotNull(result);
@@ -73,7 +73,7 @@ public class RedisCacheServiceTests
     [Fact]
     public async Task Get_ShouldReturnNull_WhenKeyDoesNotExist()
     {
-        var result = await _cache.GetAsync<string>("non-existent-key");
+        string? result = await _cache.GetAsync<string>("non-existent-key");
 
         Assert.Null(result);
     }
@@ -93,7 +93,7 @@ public class RedisCacheServiceTests
     [InlineData("   ")]
     public async Task GetAsync_ShouldReturnDefault_WhenKeyIsInvalid(string key)
     {
-        var result = await _cache.GetAsync<string>(key);
+        string? result = await _cache.GetAsync<string>(key);
 
         Assert.Null(result);
     }
@@ -173,7 +173,7 @@ public class RedisCacheServiceTests
             NullLogger<RedisCacheService>.Instance
         );
 
-        var result = await service.GetAsync<string>("key");
+        string? result = await service.GetAsync<string>("key");
 
         Assert.Null(result);
     }
