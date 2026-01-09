@@ -1,4 +1,6 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
+using Jobify.Application.Enums;
 using Jobify.Application.Services;
 using Jobify.Infrastructure.Configurations.Security;
 using Microsoft.Extensions.Options;
@@ -7,7 +9,8 @@ namespace Jobify.Infrastructure.Services;
 
 internal class AesGcmDataEncryptionService : IDataEncryptionService
 {
-    private readonly byte[] _key;
+    private readonly Dictionary<byte, byte[]> _masterKeys;
+    private readonly byte _currentVersion;
 
     private const int KeySizeBytes = 32;
     private const int NonceSizeBytes = 12;
@@ -15,69 +18,94 @@ internal class AesGcmDataEncryptionService : IDataEncryptionService
 
     public AesGcmDataEncryptionService(IOptions<DataEncryptionOptions> options)
     {
-        string base64Key = options.Value.Key;
+        if (options?.Value?.Keys is null || options.Value.Keys.Count is 0)
+            throw new InvalidOperationException("At least one key must be configured.");
 
-        if (string.IsNullOrWhiteSpace(base64Key))
-            throw new InvalidOperationException("DataEncryption:Key must be provided in configuration.");
+        _currentVersion = options.Value.CurrentKeyVersion;
+        _masterKeys = options.Value.Keys.ToDictionary(
+            kvp => kvp.Key,
+            kvp => Convert.FromBase64String(kvp.Value)
+        );
 
-        try
+        foreach (var key in _masterKeys.Values)
         {
-            _key = Convert.FromBase64String(base64Key);
+            if (key.Length != KeySizeBytes)
+                throw new InvalidOperationException($"Each key must be {KeySizeBytes} bytes (AES-256).");
         }
-        catch
-        {
-            throw new InvalidOperationException("DataEncryption:Key must be a valid Base64-encoded key.");
-        }
-
-        if (_key.Length is not KeySizeBytes)
-            throw new InvalidOperationException($"DataEncryption:Key must decode to {KeySizeBytes} bytes (AES-256).");
     }
 
-    public byte[] EncryptData(byte[] data) => EncryptData(data, _key);
-    public byte[] DecryptData(byte[] encryptedData) => DecryptData(encryptedData, _key);
-
-    public byte[] EncryptData(byte[] data, byte[] key)
+    public byte[] Encrypt(byte[] data, CryptoPurpose purpose)
     {
-        if (key.Length is not KeySizeBytes)
-            throw new InvalidOperationException($"Key must be {KeySizeBytes} bytes for AES-256.");
+        byte[] masterKey = _masterKeys[_currentVersion];
+        byte[] derivedKey = DeriveKey(masterKey, purpose);
 
-        byte[] nonce = new byte[NonceSizeBytes];
-        RandomNumberGenerator.Fill(nonce);
+        byte[] aad = [_currentVersion, (byte)purpose];
+        byte[] encrypted = EncryptInternal(data, derivedKey, aad);
 
-        byte[] cipher = new byte[data.Length];
-        byte[] tag = new byte[TagSizeBytes];
-
-        using AesGcm aesGcm = new(key, tagSizeInBytes: TagSizeBytes);
-        aesGcm.Encrypt(nonce, data, cipher, tag);
-
-        byte[] result = new byte[NonceSizeBytes + TagSizeBytes + cipher.Length];
-        Buffer.BlockCopy(nonce, 0, result, 0, NonceSizeBytes);
-        Buffer.BlockCopy(tag, 0, result, NonceSizeBytes, TagSizeBytes);
-        Buffer.BlockCopy(cipher, 0, result, NonceSizeBytes + TagSizeBytes, cipher.Length);
+        byte[] result = new byte[1 + encrypted.Length];
+        result[0] = _currentVersion;
+        encrypted.CopyTo(result.AsSpan(1));
 
         return result;
     }
 
-    public byte[] DecryptData(byte[] encryptedData, byte[] key)
+    public byte[] Decrypt(byte[] encryptedData, CryptoPurpose purpose)
     {
-        if (key.Length is not KeySizeBytes)
-            throw new InvalidOperationException($"Key must be {KeySizeBytes} bytes for AES-256.");
+        if (encryptedData.Length < 1)
+            throw new ArgumentException("Invalid encrypted data.");
 
+        byte version = encryptedData[0];
+
+        if (!_masterKeys.TryGetValue(version, out byte[]? masterKey))
+            throw new InvalidOperationException($"No key configured for version {version}");
+
+        byte[] derivedKey = DeriveKey(masterKey, purpose);
+        byte[] aad = [version, (byte)purpose];
+
+        ReadOnlySpan<byte> payload = encryptedData.AsSpan(1);
+        return DecryptInternal(payload, derivedKey, aad);
+    }
+
+    private static byte[] DeriveKey(byte[] masterKey, CryptoPurpose purpose)
+    {
+        return HKDF.DeriveKey(
+            HashAlgorithmName.SHA256,
+            masterKey,
+            KeySizeBytes,
+            info: Encoding.UTF8.GetBytes(purpose.ToString())
+        );
+    }
+
+    private static byte[] EncryptInternal(ReadOnlySpan<byte> data, ReadOnlySpan<byte> key, ReadOnlySpan<byte> aad)
+    {
+        byte[] nonce = new byte[NonceSizeBytes];
+        RandomNumberGenerator.Fill(nonce);
+
+        byte[] result = new byte[NonceSizeBytes + TagSizeBytes + data.Length];
+        Span<byte> nonceSpan = result.AsSpan(0, NonceSizeBytes);
+        Span<byte> tagSpan = result.AsSpan(NonceSizeBytes, TagSizeBytes);
+        Span<byte> cipherSpan = result.AsSpan(NonceSizeBytes + TagSizeBytes);
+
+        nonce.CopyTo(nonceSpan);
+
+        using AesGcm aesGcm = new(key, TagSizeBytes);
+        aesGcm.Encrypt(nonceSpan, data, cipherSpan, tagSpan, aad);
+
+        return result;
+    }
+
+    private static byte[] DecryptInternal(ReadOnlySpan<byte> encryptedData, ReadOnlySpan<byte> key, ReadOnlySpan<byte> aad)
+    {
         if (encryptedData.Length < NonceSizeBytes + TagSizeBytes)
             throw new ArgumentException("Invalid encrypted data.");
 
-        byte[] nonce = new byte[NonceSizeBytes];
-        byte[] tag = new byte[TagSizeBytes];
-        byte[] cipher = new byte[encryptedData.Length - NonceSizeBytes - TagSizeBytes];
-
-        Buffer.BlockCopy(encryptedData, 0, nonce, 0, NonceSizeBytes);
-        Buffer.BlockCopy(encryptedData, NonceSizeBytes, tag, 0, TagSizeBytes);
-        Buffer.BlockCopy(encryptedData, NonceSizeBytes + TagSizeBytes, cipher, 0, cipher.Length);
+        ReadOnlySpan<byte> nonce = encryptedData[..NonceSizeBytes];
+        ReadOnlySpan<byte> tag = encryptedData.Slice(NonceSizeBytes, TagSizeBytes);
+        ReadOnlySpan<byte> cipher = encryptedData[(NonceSizeBytes + TagSizeBytes)..];
 
         byte[] plaintext = new byte[cipher.Length];
-
-        using AesGcm aesGcm = new(key, tagSizeInBytes: TagSizeBytes);
-        aesGcm.Decrypt(nonce, cipher, tag, plaintext);
+        using AesGcm aesGcm = new(key, TagSizeBytes);
+        aesGcm.Decrypt(nonce, cipher, tag, plaintext, aad);
 
         return plaintext;
     }

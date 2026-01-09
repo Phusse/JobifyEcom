@@ -1,10 +1,9 @@
-﻿namespace Jobify.Application.Services;
+﻿using Jobify.Application.Enums;
+
+namespace Jobify.Application.Services;
 
 public interface IDataEncryptionService
 {
-	byte[] EncryptData(byte[] data);
-	byte[] DecryptData(byte[] encryptedData);
-
-	byte[] EncryptData(byte[] data, byte[] key);
-	byte[] DecryptData(byte[] encryptedData, byte[] key);
+	byte[] Encrypt(byte[] data, CryptoPurpose purpose);
+	byte[] Decrypt(byte[] encryptedData, CryptoPurpose purpose);
 }

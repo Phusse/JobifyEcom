@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using FluentAssertions;
+using Jobify.Application.Enums;
 using Jobify.Infrastructure.Configurations.Security;
 using Jobify.Infrastructure.Services;
 using Microsoft.Extensions.Options;
@@ -11,46 +12,39 @@ public class AesGcmDataEncryptionServiceTests
     private static byte[] GenerateValidKey()
     {
         byte[] key = new byte[32];
-        Random.Shared.NextBytes(key);
+        RandomNumberGenerator.Fill(key);
         return key;
     }
 
-    private static AesGcmDataEncryptionService CreateService(byte[]? key = null)
+    private static AesGcmDataEncryptionService CreateService(Dictionary<byte, string>? keys = null, byte? currentVersion = null)
     {
-        key ??= GenerateValidKey();
+        currentVersion ??= 1;
+
+        keys ??= new Dictionary<byte, string>
+        {
+            [currentVersion.Value] = Convert.ToBase64String(GenerateValidKey())
+        };
 
         IOptions<DataEncryptionOptions> options = Options.Create(new DataEncryptionOptions
         {
-            Key = Convert.ToBase64String(key),
+            CurrentKeyVersion = currentVersion.Value,
+            Keys = keys
         });
 
         return new AesGcmDataEncryptionService(options);
     }
 
     [Fact]
-    public void Constructor_ShouldThrow_WhenKeyIsMissing()
+    public void Constructor_ShouldThrow_WhenKeysAreMissing()
     {
         IOptions<DataEncryptionOptions> options = Options.Create(new DataEncryptionOptions
         {
-            Key = string.Empty,
+            Keys = []
         });
 
         Action act = () => _ = new AesGcmDataEncryptionService(options);
 
-        act.ShouldThrow<InvalidOperationException>().WithMessage("*DataEncryption:Key*");
-    }
-
-    [Fact]
-    public void Constructor_ShouldThrow_WhenKeyIsNotBase64()
-    {
-        IOptions<DataEncryptionOptions> options = Options.Create(new DataEncryptionOptions
-        {
-            Key = "not-base64!!!",
-        });
-
-        Action act = () => _ = new AesGcmDataEncryptionService(options);
-
-        act.ShouldThrow<InvalidOperationException>().WithMessage("*Base64*");
+        act.ShouldThrow<InvalidOperationException>().WithMessage("*At least one key*");
     }
 
     [Fact]
@@ -59,7 +53,8 @@ public class AesGcmDataEncryptionServiceTests
         byte[] shortKey = new byte[16];
         IOptions<DataEncryptionOptions> options = Options.Create(new DataEncryptionOptions
         {
-            Key = Convert.ToBase64String(shortKey),
+            CurrentKeyVersion = 1,
+            Keys = new Dictionary<byte, string> { [1] = Convert.ToBase64String(shortKey) }
         });
 
         Action act = () => _ = new AesGcmDataEncryptionService(options);
@@ -71,10 +66,11 @@ public class AesGcmDataEncryptionServiceTests
     public void EncryptAndDecrypt_ShouldReturnOriginalPlaintext()
     {
         AesGcmDataEncryptionService service = CreateService();
-        byte[] plaintext = [.. "Sensitive data payload".Select(c => (byte)c)];
+        byte[] plaintext = "Sensitive data payload"u8.ToArray();
+        CryptoPurpose purpose = CryptoPurpose.UserSensitiveData;
 
-        byte[] encrypted = service.EncryptData(plaintext);
-        byte[] decrypted = service.DecryptData(encrypted);
+        byte[] encrypted = service.Encrypt(plaintext, purpose);
+        byte[] decrypted = service.Decrypt(encrypted, purpose);
 
         decrypted.Should().Equal(plaintext);
     }
@@ -83,10 +79,11 @@ public class AesGcmDataEncryptionServiceTests
     public void Encrypt_ShouldProduceDifferentCiphertext_ForSamePlaintext()
     {
         AesGcmDataEncryptionService service = CreateService();
-        byte[] plaintext = [.. "Same input data".Select(c => (byte)c)];
+        byte[] plaintext = "Same input data"u8.ToArray();
+        CryptoPurpose purpose = CryptoPurpose.UserSensitiveData;
 
-        byte[] encrypted1 = service.EncryptData(plaintext);
-        byte[] encrypted2 = service.EncryptData(plaintext);
+        byte[] encrypted1 = service.Encrypt(plaintext, purpose);
+        byte[] encrypted2 = service.Encrypt(plaintext, purpose);
 
         encrypted1.Should().NotEqual(encrypted2);
     }
@@ -95,48 +92,75 @@ public class AesGcmDataEncryptionServiceTests
     public void Decrypt_ShouldThrow_WhenCiphertextIsTampered()
     {
         AesGcmDataEncryptionService service = CreateService();
-        byte[] plaintext = [.. "Top secret".Select(c => (byte)c)];
-        byte[] encrypted = service.EncryptData(plaintext);
+        byte[] plaintext = "Top secret"u8.ToArray();
+        CryptoPurpose purpose = CryptoPurpose.UserSensitiveData;
+        byte[] encrypted = service.Encrypt(plaintext, purpose);
 
         encrypted[^1] ^= 0xFF;
 
-        Action act = () => service.DecryptData(encrypted);
+        Action act = () => service.Decrypt(encrypted, purpose);
 
         act.ShouldThrow<CryptographicException>();
     }
 
     [Fact]
-    public void EncryptData_ShouldThrow_WhenKeyIsInvalidLength()
+    public void Decrypt_ShouldThrow_WhenPurposeIsDifferent()
     {
+        // GCM Additional Authenticated Data (AAD) protection test
         AesGcmDataEncryptionService service = CreateService();
-        byte[] plaintext = [1, 2, 3];
-        byte[] invalidKey = new byte[16];
+        byte[] plaintext = "Sensitive data"u8.ToArray();
 
-        Action act = () => service.EncryptData(plaintext, invalidKey);
+        byte[] encrypted = service.Encrypt(plaintext, CryptoPurpose.UserSensitiveData);
 
-        act.ShouldThrow<InvalidOperationException>().WithMessage("*32 bytes*");
+        // Try to decrypt with a different purpose
+        Action act = () => service.Decrypt(encrypted, CryptoPurpose.UserSessionData);
+
+        act.ShouldThrow<CryptographicException>();
     }
 
     [Fact]
-    public void DecryptData_ShouldThrow_WhenKeyIsInvalidLength()
+    public void Decrypt_ShouldSupportHistoricalKeys()
     {
-        AesGcmDataEncryptionService service = CreateService();
-        byte[] plaintext = [1, 2, 3];
-        byte[] encrypted = service.EncryptData(plaintext);
-        byte[] invalidKey = new byte[16];
+        byte[] oldKey = GenerateValidKey();
+        byte[] newKey = GenerateValidKey();
 
-        Action act = () => service.DecryptData(encrypted, invalidKey);
+        var keys = new Dictionary<byte, string>
+        {
+            [1] = Convert.ToBase64String(oldKey),
+            [2] = Convert.ToBase64String(newKey)
+        };
 
-        act.ShouldThrow<InvalidOperationException>().WithMessage("*32 bytes*");
+        // Service with key version 1
+        AesGcmDataEncryptionService oldService = CreateService(keys, 1);
+        byte[] plaintext = "Old secret"u8.ToArray();
+        byte[] encrypted = oldService.Encrypt(plaintext, CryptoPurpose.UserSensitiveData);
+
+        // New service instance with key version 2 (but still has key 1 in its dictionary)
+        AesGcmDataEncryptionService newService = CreateService(keys, 2);
+        byte[] decrypted = newService.Decrypt(encrypted, CryptoPurpose.UserSensitiveData);
+
+        decrypted.Should().Equal(plaintext);
+        encrypted[0].Should().Be(1); // Should have version 1 prefix
     }
 
     [Fact]
-    public void DecryptData_ShouldThrow_WhenEncryptedDataIsTooShort()
+    public void Decrypt_ShouldThrow_WhenVersionIsUnknown()
     {
         AesGcmDataEncryptionService service = CreateService();
-        byte[] invalidData = new byte[10];
+        byte[] encrypted = [99, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; // Version 99
 
-        Action act = () => service.DecryptData(invalidData);
+        Action act = () => service.Decrypt(encrypted, CryptoPurpose.UserSensitiveData);
+
+        act.ShouldThrow<InvalidOperationException>().WithMessage("*No key configured for version 99*");
+    }
+
+    [Fact]
+    public void Decrypt_ShouldThrow_WhenDataIsTooShort()
+    {
+        AesGcmDataEncryptionService service = CreateService();
+        byte[] invalidData = [1, 2, 3]; // Too short for nonce + tag
+
+        Action act = () => service.Decrypt(invalidData, CryptoPurpose.UserSensitiveData);
 
         act.ShouldThrow<ArgumentException>().WithMessage("*Invalid encrypted data*");
     }
