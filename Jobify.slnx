@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
 
   <Folder Name="/config/">
     <File Path=".gitignore" />
@@ -8,6 +8,10 @@
 
   <Folder Name="/legacy/">
     <Project Path="backend/JobifyEcom.csproj" />
+  </Folder>
+
+  <Folder Name="/scripts/">
+    <File Path="scripts/GenerateSecrets.cs" />
   </Folder>
 
   <Folder Name="/src/">
