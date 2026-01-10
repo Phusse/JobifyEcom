@@ -22,7 +22,7 @@ public class RetryBehaviorTests
             attempts++;
 
             if (attempts < 3)
-                throw new Exception("Transient");
+                throw new TimeoutException("Transient");
 
             return Task.FromResult("OK");
         }

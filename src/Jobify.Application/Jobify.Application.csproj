@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Jobify.Domain\Jobify.Domain.csproj" />
+    <ProjectReference Include="..\Jobify.Persistence\Jobify.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

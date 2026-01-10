@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
 
   <Folder Name="/config/">
     <File Path=".gitignore" />
@@ -8,6 +8,20 @@
 
   <Folder Name="/legacy/">
     <Project Path="backend/JobifyEcom.csproj" />
+  </Folder>
+
+  <Folder Name="/scripts/">
+    <File Path="scripts/GenerateSecrets.cs" />
+  </Folder>
+
+  <Folder Name="/sql/Users/">
+    <File Path="sql/Users/list_user.sql" />
+  </Folder>
+
+  <Folder Name="/sql/UserSessions/">
+    <File Path="sql/UserSessions/delete_inactive_sessions.sql" />
+    <File Path="sql/UserSessions/find_inactive_sessions.sql" />
+    <File Path="sql/UserSessions/list_user_sessions.sql" />
   </Folder>
 
   <Folder Name="/src/">

@@ -1,7 +1,8 @@
 ﻿using Jobify.Application.CQRS.Messaging;
 using Jobify.Application.CQRS.Decorators;
-using Microsoft.Extensions.Logging;
 using Jobify.Application.Exceptions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Jobify.Infrastructure.CQRS.Decorators;
 
@@ -9,12 +10,13 @@ internal class RetryBehavior<TRequest, TResponse>(ILogger<RetryBehavior<TRequest
     where TRequest : IRequest<TResponse>
 {
     private const int MaxRetries = 3;
+    private static readonly TimeSpan BaseDelay = TimeSpan.FromMilliseconds(100);
 
     public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken = default)
     {
-        int attempt = 1;
+        Exception? lastException = null;
 
-        while (true)
+        for (int attempt = 1; attempt <= MaxRetries; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -24,8 +26,10 @@ internal class RetryBehavior<TRequest, TResponse>(ILogger<RetryBehavior<TRequest
             }
             catch (AppException) { throw; }
             catch (OperationCanceledException) { throw; }
-            catch (Exception ex) when (attempt <= MaxRetries)
+            catch (Exception ex) when (IsTransient(ex) && attempt < MaxRetries)
             {
+                lastException = ex;
+
                 if (logger.IsEnabled(LogLevel.Warning))
                     logger.LogWarning(
                         ex,
@@ -35,10 +39,21 @@ internal class RetryBehavior<TRequest, TResponse>(ILogger<RetryBehavior<TRequest
                         typeof(TRequest).Name
                     );
 
-                await Task.Delay(TimeSpan.FromMilliseconds(100 * attempt), cancellationToken);
-
-                attempt++;
+                await Task.Delay(
+                    TimeSpan.FromMilliseconds(BaseDelay.TotalMilliseconds * attempt),
+                    cancellationToken
+                );
             }
+            catch (Exception) { throw; }
         }
+
+        // This line is theoretically unreachable, but kept for correctness
+        throw lastException!;
     }
+
+    private static bool IsTransient(Exception ex) =>
+        ex is TimeoutException
+        || ex is TaskCanceledException
+        || ex is DbUpdateConcurrencyException
+        || (ex is DbUpdateException dbEx && dbEx.InnerException is TimeoutException);
 }

@@ -33,7 +33,7 @@ public static class ServiceCollectionExtensions
 
         private void AddCqrsWithValidation(Assembly[] assembliesToScan)
         {
-            services.AddSingleton<IMediator, Mediator>();
+            services.AddScoped<IMediator, Mediator>();
 
             foreach (Assembly assembly in assembliesToScan)
             {
@@ -52,9 +52,9 @@ public static class ServiceCollectionExtensions
                 );
             }
 
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RetryBehavior<,>));
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RetryBehavior<,>));
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         }
     }
 }
