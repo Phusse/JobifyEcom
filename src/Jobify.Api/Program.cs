@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Jobify.Api.Endpoints.Auth;
+using Jobify.Api.Endpoints.Base;
+using Jobify.Api.Extensions.OpenApi;
 using Jobify.Api.Middleware;
 using Jobify.Application;
 using Jobify.Application.CQRS.Messaging;
@@ -15,31 +17,44 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration, [typeof(IMediator).Assembly]);
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.Configure<JsonOptions>(opts =>
 {
-    opts.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    opts.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    opts.SerializerOptions.WriteIndented = true;
-    opts.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    JsonSerializerOptions serializer = opts.SerializerOptions;
+
+    serializer.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    serializer.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    serializer.WriteIndented = true;
+    serializer.Converters.Add(new JsonStringEnumConverter());
 });
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddCustomOpenApiTransformer();
+});
 
 WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "Jobify API Gateway";
+        options.DefaultHttpClient = new(ScalarTarget.Node, ScalarClient.Fetch);
+    });
+}
+else
+{
+    app.UseHttpsRedirection();
 }
 
 app.UseMiddleware<TraceIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-app.UseHttpsRedirection();
-
-app.MapGet("/", () => Results.Ok("Hello World!"));
-
+app.MapBaseEndpoints();
 app.MapAuthEndpoints();
 
 app.Run();
