@@ -25,7 +25,7 @@ public static class GetInfoEndpointHandler
                 Version = "1.0.0",
                 Description = "A scalable and secure API platform powering job matching, recruitment, and career management.",
                 Features,
-                Documentation = "/scalar (development only endpoint)"
+                Documentation = "/scalar (development only endpoint)",
             }
         );
 

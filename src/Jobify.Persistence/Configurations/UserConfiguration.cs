@@ -13,28 +13,6 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.UserName)
             .IsUnique();
 
-        builder.Property(u => u.UserName)
-            .IsRequired()
-            .HasMaxLength(30);
-
-        builder.HasIndex(u => u.EmailHash)
-            .IsUnique();
-
-        builder.Property(u => u.EmailHash)
-            .IsRequired()
-            .HasMaxLength(64);
-
-        builder.Property(u => u.IsLocked)
-            .IsRequired();
-
-        builder.Property(u => u.PasswordHash)
-            .IsRequired()
-            .HasMaxLength(60);
-
-        builder.Property(u => u.Role)
-            .HasConversion<string>()
-            .IsRequired();
-
         builder.OwnsOne(u => u.AuditState, audit =>
         {
             audit.Property(a => a.CreatedAt)
@@ -54,6 +32,28 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
 
             sensitive.Ignore(s => s.SensitiveData);
         });
+
+        builder.Property(u => u.UserName)
+            .IsRequired()
+            .HasMaxLength(30);
+
+        builder.HasIndex(u => u.EmailHash)
+            .IsUnique();
+
+        builder.Property(u => u.EmailHash)
+            .IsRequired()
+            .HasMaxLength(64);
+
+        builder.Property(u => u.PasswordHash)
+            .IsRequired()
+            .HasMaxLength(60);
+
+        builder.Property(u => u.IsLocked)
+            .IsRequired();
+
+        builder.Property(u => u.Role)
+            .HasConversion<string>()
+            .IsRequired();
 
         builder.HasMany(u => u.Sessions)
             .WithOne(us => us.User)

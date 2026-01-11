@@ -106,14 +106,12 @@ public class AesGcmDataEncryptionServiceTests
     [Fact]
     public void Decrypt_ShouldThrow_WhenPurposeIsDifferent()
     {
-        // GCM Additional Authenticated Data (AAD) protection test
         AesGcmDataEncryptionService service = CreateService();
         byte[] plaintext = "Sensitive data"u8.ToArray();
 
-        byte[] encrypted = service.Encrypt(plaintext, CryptoPurpose.UserSensitiveData);
+        byte[] encrypted = service.Encrypt(plaintext, (CryptoPurpose)1);
 
-        // Try to decrypt with a different purpose
-        Action act = () => service.Decrypt(encrypted, CryptoPurpose.UserSessionData);
+        Action act = () => service.Decrypt(encrypted, (CryptoPurpose)2);
 
         act.ShouldThrow<CryptographicException>();
     }
@@ -130,24 +128,22 @@ public class AesGcmDataEncryptionServiceTests
             [2] = Convert.ToBase64String(newKey)
         };
 
-        // Service with key version 1
         AesGcmDataEncryptionService oldService = CreateService(keys, 1);
         byte[] plaintext = "Old secret"u8.ToArray();
         byte[] encrypted = oldService.Encrypt(plaintext, CryptoPurpose.UserSensitiveData);
 
-        // New service instance with key version 2 (but still has key 1 in its dictionary)
         AesGcmDataEncryptionService newService = CreateService(keys, 2);
         byte[] decrypted = newService.Decrypt(encrypted, CryptoPurpose.UserSensitiveData);
 
         decrypted.Should().Equal(plaintext);
-        encrypted[0].Should().Be(1); // Should have version 1 prefix
+        encrypted[0].Should().Be(1);
     }
 
     [Fact]
     public void Decrypt_ShouldThrow_WhenVersionIsUnknown()
     {
         AesGcmDataEncryptionService service = CreateService();
-        byte[] encrypted = [99, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; // Version 99
+        byte[] encrypted = [99, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
         Action act = () => service.Decrypt(encrypted, CryptoPurpose.UserSensitiveData);
 
@@ -158,7 +154,7 @@ public class AesGcmDataEncryptionServiceTests
     public void Decrypt_ShouldThrow_WhenDataIsTooShort()
     {
         AesGcmDataEncryptionService service = CreateService();
-        byte[] invalidData = [1, 2, 3]; // Too short for nonce + tag
+        byte[] invalidData = [1, 2, 3];
 
         Action act = () => service.Decrypt(invalidData, CryptoPurpose.UserSensitiveData);
 

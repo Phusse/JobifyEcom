@@ -2,5 +2,5 @@
 
 internal static class CookieKeys
 {
-    public const string Session = "jb_session_token";
+    public const string Session = "X-Session-Id";
 }

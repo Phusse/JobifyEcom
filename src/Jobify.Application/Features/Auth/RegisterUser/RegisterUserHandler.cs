@@ -1,8 +1,8 @@
-using System.Text.Json;
 using Jobify.Application.Constants.Responses;
 using Jobify.Application.CQRS.Messaging;
 using Jobify.Application.Enums;
 using Jobify.Application.Extensions.Responses;
+using Jobify.Application.Helpers;
 using Jobify.Application.Models;
 using Jobify.Application.Services;
 using Jobify.Domain.Entities.Users;
@@ -11,7 +11,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Jobify.Application.Features.Auth.RegisterUser;
 
-public class RegisterUserHandler(AppDbContext db, IHashingService hashingService, IDataEncryptionService encryptionService) : IHandler<RegisterUserRequest, OperationResult<Guid>>
+public class RegisterUserHandler(AppDbContext db, IHashingService hashingService, IDataEncryptionService encryptionService)
+    : IHandler<RegisterUserRequest, OperationResult<Guid>>
 {
     public async Task<OperationResult<Guid>> Handle(RegisterUserRequest message, CancellationToken cancellationToken = default)
     {
@@ -27,7 +28,7 @@ public class RegisterUserHandler(AppDbContext db, IHashingService hashingService
             email: message.Email
         );
 
-        byte[] sensitiveDataBytes = JsonSerializer.SerializeToUtf8Bytes(sensitiveData);
+        byte[] sensitiveDataBytes = ObjectByteConverter.SerializeToBytes(sensitiveData);
         byte[] encryptedData = encryptionService.Encrypt(sensitiveDataBytes, CryptoPurpose.UserSensitiveData);
 
         string passwordHash = await hashingService.HashPasswordAsync(message.Password);

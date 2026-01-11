@@ -1,7 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Jobify.Api;
 using Jobify.Api.Endpoints.Auth;
 using Jobify.Api.Endpoints.Base;
+using Jobify.Api.Endpoints.Users;
 using Jobify.Api.Extensions.OpenApi;
 using Jobify.Api.Middleware;
 using Jobify.Application;
@@ -16,6 +18,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration, [typeof(IMediator).Assembly]);
+builder.Services.AddApiServices();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -56,5 +59,6 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapBaseEndpoints();
 app.MapAuthEndpoints();
+app.MapUserEndpoints();
 
 app.Run();

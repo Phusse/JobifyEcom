@@ -37,6 +37,20 @@ public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
 
     public ICollection<UserSession> Sessions { get; private set; } = [];
 
+    public void SetEncryptedData(byte[] data)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+
+        if (data.Length == 0)
+            throw new ArgumentException("Data cannot be empty.", nameof(data));
+
+        SensitiveDataState.SetEncryptedData(data);
+        AuditState.UpdateAudit();
+    }
+
+    public void SetSensitiveData(UserSensitive data) => SensitiveDataState.SetSensitiveData(data);
+    public void ClearSensitiveData() => SensitiveDataState.ClearSensitiveData();
+
     public void SetUserName(string userName)
     {
         if (string.IsNullOrWhiteSpace(userName))
@@ -63,18 +77,4 @@ public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
         PasswordHash = passwordHash;
         AuditState.UpdateAudit();
     }
-
-    public void SetEncryptedData(byte[] data)
-    {
-        ArgumentNullException.ThrowIfNull(data);
-
-        if (data.Length == 0)
-            throw new ArgumentException("Data cannot be empty.", nameof(data));
-
-        SensitiveDataState.SetEncryptedData(data);
-        AuditState.UpdateAudit();
-    }
-
-    public void SetSensitiveData(UserSensitive data) => SensitiveDataState.SetSensitiveData(data);
-    public void ClearSensitiveData() => SensitiveDataState.ClearSensitiveData();
 }
