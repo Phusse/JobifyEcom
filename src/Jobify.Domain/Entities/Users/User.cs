@@ -41,7 +41,7 @@ public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
     {
         ArgumentNullException.ThrowIfNull(data);
 
-        if (data.Length == 0)
+        if (data.Length is 0)
             throw new ArgumentException("Data cannot be empty.", nameof(data));
 
         SensitiveDataState.SetEncryptedData(data);

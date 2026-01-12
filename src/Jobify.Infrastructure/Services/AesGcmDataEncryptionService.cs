@@ -27,9 +27,9 @@ internal class AesGcmDataEncryptionService : IDataEncryptionService
             kvp => Convert.FromBase64String(kvp.Value)
         );
 
-        foreach (var key in _masterKeys.Values)
+        foreach (byte[] key in _masterKeys.Values)
         {
-            if (key.Length != KeySizeBytes)
+            if (key.Length is not KeySizeBytes)
                 throw new InvalidOperationException($"Each key must be {KeySizeBytes} bytes (AES-256).");
         }
     }

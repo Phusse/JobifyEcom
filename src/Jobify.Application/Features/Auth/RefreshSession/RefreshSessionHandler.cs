@@ -16,7 +16,8 @@ public class RefreshSessionHandler(SessionManagementService sessionService)
         if (message.SessionId is null)
             throw ResponseCatalog.Auth.InvalidSession.ToException();
 
-        SessionData sessionData = await sessionService.RefreshSessionAsync(message.SessionId.Value, cancellationToken)
+        SessionData sessionData = await sessionService
+            .RefreshSessionAsync(message.SessionId.Value, cancellationToken)
             ?? throw ResponseCatalog.Auth.InvalidSession.ToException();
 
         SessionTimestampsResponse data = sessionData.ToTimestampsResponse();

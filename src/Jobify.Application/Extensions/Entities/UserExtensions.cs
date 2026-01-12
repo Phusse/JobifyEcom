@@ -3,7 +3,7 @@ using Jobify.Domain.Entities.Users;
 
 namespace Jobify.Application.Extensions.Entities;
 
-public static class UserExtensions
+internal static class UserExtensions
 {
     extension(User user)
     {

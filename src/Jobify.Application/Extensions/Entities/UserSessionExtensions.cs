@@ -5,7 +5,7 @@ using Jobify.Domain.Enums;
 
 namespace Jobify.Application.Extensions.Entities;
 
-public static class UserSessionExtensions
+internal static class UserSessionExtensions
 {
     extension(UserSession session)
     {

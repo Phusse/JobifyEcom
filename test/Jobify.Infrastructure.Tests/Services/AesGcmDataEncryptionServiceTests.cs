@@ -122,10 +122,10 @@ public class AesGcmDataEncryptionServiceTests
         byte[] oldKey = GenerateValidKey();
         byte[] newKey = GenerateValidKey();
 
-        var keys = new Dictionary<byte, string>
+        Dictionary<byte, string> keys = new()
         {
             [1] = Convert.ToBase64String(oldKey),
-            [2] = Convert.ToBase64String(newKey)
+            [2] = Convert.ToBase64String(newKey),
         };
 
         AesGcmDataEncryptionService oldService = CreateService(keys, 1);

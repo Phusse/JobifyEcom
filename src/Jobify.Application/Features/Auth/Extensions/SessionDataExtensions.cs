@@ -3,7 +3,7 @@ using Jobify.Application.Models;
 
 namespace Jobify.Application.Features.Auth.Extensions;
 
-public static class SessionDataExtensions
+internal static class SessionDataExtensions
 {
     extension(SessionData sessionData)
     {

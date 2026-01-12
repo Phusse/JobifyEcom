@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Jobify.Application.Helpers;
 
-public static class ObjectByteConverter
+internal static class ObjectByteConverter
 {
     public static byte[] SerializeToBytes<T>(T obj)
     {
@@ -16,7 +16,7 @@ public static class ObjectByteConverter
 
     public static T DeserializeFromBytes<T>(byte[] data)
     {
-        if (data is null || data.Length == 0)
+        if (data is null || data.Length is 0)
             throw new ArgumentException("Data cannot be null or empty.", nameof(data));
 
         string json = Encoding.UTF8.GetString(data);
