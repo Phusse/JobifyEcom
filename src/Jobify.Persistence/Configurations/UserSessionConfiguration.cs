@@ -10,6 +10,17 @@ internal class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
     {
         builder.HasKey(us => us.Id);
 
+        builder.OwnsOne(us => us.AuditState, audit =>
+        {
+            audit.Property(a => a.CreatedAt)
+                .HasColumnName("CreatedAt")
+                .IsRequired();
+
+            audit.Property(a => a.UpdatedAt)
+                .HasColumnName("UpdatedAt")
+                .IsRequired();
+        });
+
         builder.HasIndex(us => us.UserId);
 
         builder.Property(us => us.UserId)
@@ -31,16 +42,5 @@ internal class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
 
         builder.Property(us => us.AbsoluteExpiresAt)
             .IsRequired();
-
-        builder.OwnsOne(us => us.AuditState, audit =>
-        {
-            audit.Property(a => a.CreatedAt)
-                .HasColumnName("CreatedAt")
-                .IsRequired();
-
-            audit.Property(a => a.UpdatedAt)
-                .HasColumnName("UpdatedAt")
-                .IsRequired();
-        });
     }
 }

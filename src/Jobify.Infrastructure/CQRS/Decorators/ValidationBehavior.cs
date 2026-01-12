@@ -5,6 +5,7 @@ using Jobify.Application.Models;
 using FluentValidation;
 using FluentValidation.Results;
 using Jobify.Application.CQRS.Decorators;
+using System.Net;
 
 namespace Jobify.Infrastructure.CQRS.Decorators;
 
@@ -28,7 +29,7 @@ internal class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TR
             {
                 throw new AppException(
                     id: "SYSTEM_VALIDATION_FAILED",
-                    statusCode: 400,
+                    statusCode: (int)HttpStatusCode.BadRequest,
                     title: "Validation failed.",
                     details: [.. failures]
                 );

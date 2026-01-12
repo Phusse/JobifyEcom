@@ -11,6 +11,7 @@ Jobify is a distributed ecosystem of services designed to streamline the career 
 - **Service Delegation**: Routing and delegating requests to downstream services.
 
 ### Downstream Services (The "Sub-Services")
+
 The Gateway is built to eventually delegate domain-specific operations to:
 - **ecom**: Job posting and candidate sourcing.
 - **matching**: Job matching algorithms and recommendations.
@@ -42,6 +43,7 @@ Web/Mobile Client
 All interactions with the Jobify ecosystem are secured via the Gateway. We use a combination of hashing for sensitive data and encryption for personal identifiers.
 
 ### Data Security Policy
+
 - **User Identifiers**: Emails and other identifiers are securely hashed and encrypted to protect privacy.
 - **Passwords**: Stored using strong one-way hashing algorithms.
 - **Personal Information**: Names and contact details are encrypted using advanced encryption standards to ensure confidentiality.
@@ -53,6 +55,7 @@ All interactions with the Jobify ecosystem are secured via the Gateway. We use a
 The API follows RESTful conventions and returns a standardized response envelope.
 
 ### Standard Response Envelope
+
 ```json
 {
   "success": true,

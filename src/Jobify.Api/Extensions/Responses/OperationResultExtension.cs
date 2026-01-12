@@ -3,7 +3,7 @@ using Jobify.Application.Models;
 
 namespace Jobify.Api.Extensions.Responses;
 
-public static class OperationResultExtension
+internal static class OperationResultExtension
 {
     extension<T>(OperationResult<T> result)
     {

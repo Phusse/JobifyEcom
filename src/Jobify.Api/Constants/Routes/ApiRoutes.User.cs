@@ -7,5 +7,6 @@ internal static partial class ApiRoutes
         public const string Base = $"{ApiBasePath}/users";
 
         public const string GetById = "/{id:guid}";
+        public const string Me = "/me";
     }
 }
