@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Jobify.Api;
+using Jobify.Api.Authentication;
+using Jobify.Api.Constants.Auth;
 using Jobify.Api.Endpoints.Auth;
 using Jobify.Api.Endpoints.Base;
 using Jobify.Api.Endpoints.Users;
@@ -8,8 +10,11 @@ using Jobify.Api.Extensions.OpenApi;
 using Jobify.Api.Middleware;
 using Jobify.Application;
 using Jobify.Application.CQRS.Messaging;
+using Jobify.Domain.Enums;
 using Jobify.Infrastructure;
 using Jobify.Persistence;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
 using Scalar.AspNetCore;
 
@@ -21,6 +26,19 @@ builder.Services.AddInfrastructureServices(builder.Configuration, [typeof(IMedia
 builder.Services.AddApiServices();
 
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddAuthentication(AuthenticationSchemes.Session)
+    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(
+        AuthenticationSchemes.Session,
+        options => { options.ClaimsIssuer = "Jobify"; }
+    );
+
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthenticationResultHandler>();
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("UserOnly", p => p.RequireRole(SystemRole.User.ToString()))
+    .AddPolicy("AdminOnly", p => p.RequireRole(SystemRole.Admin.ToString(), SystemRole.SuperAdmin.ToString()))
+    .AddPolicy("SuperAdminOnly", p => p.RequireRole(SystemRole.SuperAdmin.ToString()));
 
 builder.Services.Configure<JsonOptions>(opts =>
 {
@@ -56,6 +74,10 @@ else
 
 app.UseMiddleware<TraceIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<SessionRefreshMiddleware>();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapBaseEndpoints();
 app.MapAuthEndpoints();

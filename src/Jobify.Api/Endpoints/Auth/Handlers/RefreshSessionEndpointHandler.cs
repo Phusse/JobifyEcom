@@ -1,7 +1,10 @@
-using Jobify.Api.Extensions.Responses;
+using System.Security.Claims;
+using Jobify.Api.Constants.Auth;
+using Jobify.Api.Constants.Cookies;
 using Jobify.Api.Models;
 using Jobify.Api.Services;
 using Jobify.Application.CQRS.Messaging;
+using Jobify.Application.Features.Auth.Models;
 using Jobify.Application.Features.Auth.RefreshSession;
 using Jobify.Application.Models;
 
@@ -9,37 +12,32 @@ namespace Jobify.Api.Endpoints.Auth.Handlers;
 
 public static class RefreshSessionEndpointHandler
 {
-    public static async Task<IResult> Handle(
-        HttpRequest request,
-        IMediator mediator,
-        CookieService cookieService,
-        HttpResponse response)
+    public static async Task<IResult> Handle(HttpContext context, IMediator mediator, CookieService cookieService, HttpResponse response)
     {
-        string? sessionIdStr = cookieService.GetCookie(request, "X-Session-Id");
+        Guid? sessionId = null;
+        string? rawSessionId = context.User.FindFirstValue(SessionClaimTypes.SessionId);
 
-        if (string.IsNullOrEmpty(sessionIdStr) || !Guid.TryParse(sessionIdStr, out Guid sessionId))
-        {
-            return Results.Unauthorized();
-        }
+        if (Guid.TryParse(rawSessionId, out Guid parsedSessionId))
+            sessionId = parsedSessionId;
 
-        var result = await mediator.Send(new RefreshSessionRequest(sessionId));
+        OperationResult<SessionResult> result = await mediator.Send(new RefreshSessionRequest(sessionId));
 
-        var session = result.Data;
+        SessionResult data = result.Data!;
 
-        if (session is not null)
-        {
-            cookieService.SetCookie(
-                response,
-                "X-Session-Id",
-                session.SessionId.ToString(),
-                expiresUtc: session.AbsoluteExpiresAt,
-                httpOnly: true,
-                secure: true
-            );
-        }
+        cookieService.SetCookie(
+            response,
+            CookieKeys.Session,
+            data.SessionId.ToString("N"),
+            data.Timestamps.ExpiresAt
+        );
 
-        ApiResponse<object> apiResponse = result.WithoutData()
-            .ToApiResponse();
+        ApiResponse<SessionTimestampsResponse> apiResponse = new(
+            Success: true,
+            MessageId: result.MessageId,
+            Message: result.Message,
+            Details: result.Details,
+            Data: data.Timestamps
+        );
 
         return Results.Ok(apiResponse);
     }

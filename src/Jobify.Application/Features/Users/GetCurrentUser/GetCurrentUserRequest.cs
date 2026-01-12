@@ -5,5 +5,5 @@ using Jobify.Application.Models;
 namespace Jobify.Application.Features.Users.GetCurrentUser;
 
 public record GetCurrentUserRequest(
-    Guid? SessionId
+    Guid? UserId
 ) : IRequest<OperationResult<UserResponse>>;

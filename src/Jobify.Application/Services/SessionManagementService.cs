@@ -24,7 +24,7 @@ public class SessionManagementService
     private readonly ICacheService _cacheService;
     private readonly AppDbContext _db;
 
-    internal SessionManagementService(IOptions<SessionManagementOptions> options, ICacheService cacheService, AppDbContext db)
+    public SessionManagementService(IOptions<SessionManagementOptions> options, ICacheService cacheService, AppDbContext db)
     {
         _cacheService = cacheService;
         _db = db;
@@ -60,7 +60,7 @@ public class SessionManagementService
         _db.UserSessions.Add(session);
         await _db.SaveChangesAsync(cancellationToken);
 
-        SessionData sessionData = session.ToSessionData(systemRole);
+        SessionData sessionData = session.ToSessionData(systemRole, isLocked: true);
         await _cacheService.SetAsync(CacheKey(session.Id), sessionData, TimeSpan.FromMinutes(30));
 
         return session;
@@ -83,6 +83,7 @@ public class SessionManagementService
                 AbsoluteExpiresAt: s.AbsoluteExpiresAt,
                 IsRevoked: s.IsRevoked,
                 RememberMe: s.RememberMe,
+                IsLocked: s.User.IsLocked,
                 Role: s.User.Role
             ))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
@@ -97,13 +98,14 @@ public class SessionManagementService
         return sessionDataDto;
     }
 
-    public async Task<SessionData?> RefreshSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    public async Task<SessionData?> ExtendSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         var sessionDataDto = await _db.UserSessions
             .Where(s => s.Id == sessionId)
             .Select(s => new
             {
                 Session = s,
+                s.User.IsLocked,
                 s.User.Role,
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -122,7 +124,7 @@ public class SessionManagementService
         await _db.SaveChangesAsync(cancellationToken);
         await _cacheService.RemoveAsync(CacheKey(sessionDataDto.Session.Id));
 
-        return sessionDataDto.Session.ToSessionData(sessionDataDto.Role);
+        return sessionDataDto.Session.ToSessionData(sessionDataDto.Role, sessionDataDto.IsLocked);
     }
 
     public async Task<bool> RevokeSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)

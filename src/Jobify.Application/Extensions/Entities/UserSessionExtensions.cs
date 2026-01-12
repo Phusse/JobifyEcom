@@ -9,7 +9,7 @@ internal static class UserSessionExtensions
 {
     extension(UserSession session)
     {
-        public SessionData ToSessionData(SystemRole role)
+        public SessionData ToSessionData(SystemRole role, bool isLocked)
             => new(
                 SessionId: session.Id,
                 UserId: session.UserId,
@@ -17,6 +17,7 @@ internal static class UserSessionExtensions
                 AbsoluteExpiresAt: session.AbsoluteExpiresAt,
                 IsRevoked: session.IsRevoked,
                 RememberMe: session.RememberMe,
+                IsLocked: isLocked,
                 Role: role
             );
 

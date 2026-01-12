@@ -3,7 +3,7 @@ using Microsoft.OpenApi;
 
 namespace Jobify.Api.Extensions.OpenApi;
 
-public static class OpenApiOptionsExtensions
+internal static class OpenApiOptionsExtensions
 {
     extension(OpenApiOptions options)
     {

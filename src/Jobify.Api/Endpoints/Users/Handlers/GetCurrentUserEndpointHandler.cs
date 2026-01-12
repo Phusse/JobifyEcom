@@ -1,24 +1,20 @@
-using Jobify.Api.Constants.Cookies;
 using Jobify.Api.Extensions.Responses;
-using Jobify.Api.Services;
 using Jobify.Application.CQRS.Messaging;
 using Jobify.Application.Features.Users.GetCurrentUser;
 using Jobify.Application.Features.Users.Models;
 using Jobify.Application.Models;
+using System.Security.Claims;
 
 namespace Jobify.Api.Endpoints.Users.Handlers;
 
 public static class GetCurrentUserEndpointHandler
 {
-    public static async Task<IResult> Handle(HttpRequest request, IMediator mediator, CookieService cookieService)
+    public static async Task<IResult> Handle(HttpContext context, IMediator mediator)
     {
-        string? sessionIdStr = cookieService.GetCookie(request, CookieKeys.Session);
-        Guid? sessionId = null;
+        string? rawUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Guid? userId = Guid.TryParse(rawUserId, out Guid parsedUserId) ? parsedUserId : null;
 
-        if (!string.IsNullOrEmpty(sessionIdStr) && Guid.TryParseExact(sessionIdStr, "N", out Guid parsed))
-            sessionId = parsed;
-
-        OperationResult<UserResponse> result = await mediator.Send(new GetCurrentUserRequest(sessionId));
+        OperationResult<UserResponse> result = await mediator.Send(new GetCurrentUserRequest(userId));
 
         return Results.Ok(result.ToApiResponse());
     }

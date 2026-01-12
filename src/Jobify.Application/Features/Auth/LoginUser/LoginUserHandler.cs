@@ -13,9 +13,9 @@ using Jobify.Application.Features.Auth.Extensions;
 namespace Jobify.Application.Features.Auth.LoginUser;
 
 public class LoginUserHandler(AppDbContext db, IHashingService hashingService, SessionManagementService sessionService)
-    : IHandler<LoginUserRequest, OperationResult<SessionTimestampsResponse>>
+    : IHandler<LoginUserRequest, OperationResult<SessionResult>>
 {
-    public async Task<OperationResult<SessionTimestampsResponse>> Handle(LoginUserRequest message, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<SessionResult>> Handle(LoginUserRequest message, CancellationToken cancellationToken = default)
     {
         string emailHash = hashingService.HashEmail(message.Identifier);
 
@@ -27,7 +27,7 @@ public class LoginUserHandler(AppDbContext db, IHashingService hashingService, S
                 u.Id,
                 u.PasswordHash,
                 u.IsLocked,
-                u.Role
+                u.Role,
             })
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw ResponseCatalog.Auth.InvalidCredentials.ToException();
@@ -42,10 +42,11 @@ public class LoginUserHandler(AppDbContext db, IHashingService hashingService, S
 
         UserSession sessionData = await sessionService.CreateSessionAsync(userDto.Id, userDto.Role, message.RememberMe, cancellationToken);
 
-        SessionTimestampsResponse data = sessionData.ToTimestampsResponse();
+        SessionTimestampsResponse timeStamps = sessionData.ToTimestampsResponse();
+        SessionResult data = new(sessionData.Id, timeStamps);
 
         return ResponseCatalog.Auth.LoginSuccessful
-            .As<SessionTimestampsResponse>()
+            .As<SessionResult>()
             .WithData(data)
             .ToOperationResult();
     }

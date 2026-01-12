@@ -13,20 +13,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Jobify.Application.Features.Users.GetCurrentUser;
 
-public class GetCurrentUserHandler(AppDbContext db, SessionManagementService sessionService, IDataEncryptionService encryptionService)
+public class GetCurrentUserHandler(AppDbContext db, IDataEncryptionService encryptionService)
     : IHandler<GetCurrentUserRequest, OperationResult<UserResponse>>
 {
     public async Task<OperationResult<UserResponse>> Handle(GetCurrentUserRequest message, CancellationToken cancellationToken = default)
     {
-        if (message.SessionId is null)
+        if (message.UserId is null)
             throw ResponseCatalog.Auth.InvalidSession.ToException();
 
-        SessionData? session = await sessionService.GetSessionDataAsync(message.SessionId.Value, cancellationToken)
+        User user = await db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == message.UserId.Value, cancellationToken)
             ?? throw ResponseCatalog.Auth.InvalidSession.ToException();
 
-        User? user = await db.Users
-            .FirstOrDefaultAsync(u => u.Id == session.UserId, cancellationToken)
-            ?? throw ResponseCatalog.Auth.InvalidSession.ToException();
+        if (user.IsLocked)
+            throw ResponseCatalog.Auth.AccountLocked.ToException();
 
         UserSensitive sensitiveData = ObjectByteConverter.DeserializeFromBytes<UserSensitive>(
             encryptionService.Decrypt(user.EncryptedData, CryptoPurpose.UserSensitiveData)

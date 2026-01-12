@@ -1,6 +1,6 @@
 namespace Jobify.Application.Configurations.Security;
 
-internal record SessionManagementOptions
+public record SessionManagementOptions
 {
     public int StandardSessionDurationHours { get; init; }
     public int ExtendedSessionDurationDays { get; init; }

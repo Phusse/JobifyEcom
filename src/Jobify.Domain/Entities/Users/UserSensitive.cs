@@ -1,12 +1,12 @@
 ﻿using System.Net.Mail;
+using System.Text.Json.Serialization;
 using Jobify.Domain.Components.Security;
 
 namespace Jobify.Domain.Entities.Users;
 
 public class UserSensitive : ISensitiveData
 {
-    private UserSensitive() { }
-
+    [JsonConstructor]
     private UserSensitive(string firstName, string? middleName, string lastName, string email)
     {
         FirstName = firstName;

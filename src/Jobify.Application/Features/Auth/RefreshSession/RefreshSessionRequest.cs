@@ -6,4 +6,4 @@ namespace Jobify.Application.Features.Auth.RefreshSession;
 
 public record RefreshSessionRequest(
     Guid? SessionId
-) : IRequest<OperationResult<SessionTimestampsResponse>>;
+) : IRequest<OperationResult<SessionResult>>;

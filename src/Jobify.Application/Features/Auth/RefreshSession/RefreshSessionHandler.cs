@@ -9,21 +9,22 @@ using Jobify.Application.Services;
 namespace Jobify.Application.Features.Auth.RefreshSession;
 
 public class RefreshSessionHandler(SessionManagementService sessionService)
-    : IHandler<RefreshSessionRequest, OperationResult<SessionTimestampsResponse>>
+    : IHandler<RefreshSessionRequest, OperationResult<SessionResult>>
 {
-    public async Task<OperationResult<SessionTimestampsResponse>> Handle(RefreshSessionRequest message, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<SessionResult>> Handle(RefreshSessionRequest message, CancellationToken cancellationToken = default)
     {
         if (message.SessionId is null)
             throw ResponseCatalog.Auth.InvalidSession.ToException();
 
         SessionData sessionData = await sessionService
-            .RefreshSessionAsync(message.SessionId.Value, cancellationToken)
+            .ExtendSessionAsync(message.SessionId.Value, cancellationToken)
             ?? throw ResponseCatalog.Auth.InvalidSession.ToException();
 
-        SessionTimestampsResponse data = sessionData.ToTimestampsResponse();
+        SessionTimestampsResponse timeStamps = sessionData.ToTimestampsResponse();
+        SessionResult data = new(sessionData.SessionId, timeStamps);
 
         return ResponseCatalog.Auth.SessionRefreshed
-            .As<SessionTimestampsResponse>()
+            .As<SessionResult>()
             .WithData(data)
             .ToOperationResult();
     }

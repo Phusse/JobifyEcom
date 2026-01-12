@@ -8,4 +8,4 @@ public record LoginUserRequest(
     string Identifier,
     string Password,
     bool RememberMe = false
-) : IRequest<OperationResult<SessionTimestampsResponse>>;
+) : IRequest<OperationResult<SessionResult>>;

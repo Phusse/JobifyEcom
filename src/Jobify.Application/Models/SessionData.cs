@@ -9,6 +9,7 @@ public record SessionData(
     DateTime AbsoluteExpiresAt,
     bool IsRevoked,
     bool RememberMe,
+    bool IsLocked,
     SystemRole Role
 )
 {

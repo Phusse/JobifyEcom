@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using Jobify.Api.Constants.Auth;
+using Jobify.Api.Constants.Cookies;
 using Jobify.Api.Extensions.Responses;
 using Jobify.Api.Models;
 using Jobify.Api.Services;
@@ -9,25 +12,19 @@ namespace Jobify.Api.Endpoints.Auth.Handlers;
 
 public static class LogoutUserEndpointHandler
 {
-    public static async Task<IResult> Handle(
-        HttpRequest request,
-        IMediator mediator,
-        CookieService cookieService,
-        HttpResponse response)
+    public static async Task<IResult> Handle(HttpContext context, HttpResponse response, IMediator mediator, CookieService cookieService)
     {
-        string? sessionIdStr = cookieService.GetCookie(request, "X-Session-Id");
+        Guid? sessionId = null;
+        string? rawSessionId = context.User.FindFirstValue(SessionClaimTypes.SessionId);
 
-        Guid sessionId = Guid.Empty;
-        if (!string.IsNullOrEmpty(sessionIdStr))
-        {
-            Guid.TryParse(sessionIdStr, out sessionId);
-        }
+        if (Guid.TryParse(rawSessionId, out Guid parsedSessionId))
+            sessionId = parsedSessionId;
 
-        OperationResult<object?> result = await mediator.Send(new LogoutUserRequest(sessionId));
+        OperationResult<object> result = await mediator.Send(new LogoutUserRequest(sessionId));
 
-        cookieService.DeleteCookie(response, "X-Session-Id");
+        cookieService.DeleteCookie(response, CookieKeys.Session);
 
-        ApiResponse<object?> apiResponse = result.ToApiResponse();
+        ApiResponse<object> apiResponse = result.ToApiResponse();
 
         return Results.Ok(apiResponse);
     }
