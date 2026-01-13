@@ -1,0 +1,42 @@
+<Solution>
+
+  <Folder Name="/config/">
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+
+  <Folder Name="/legacy/">
+    <Project Path="backend/JobifyEcom.csproj" />
+  </Folder>
+
+  <Folder Name="/scripts/">
+    <File Path="scripts/GenerateSecrets.cs" />
+  </Folder>
+
+  <Folder Name="/sql/Users/">
+    <File Path="sql/Users/list_user.sql" />
+  </Folder>
+
+  <Folder Name="/sql/UserSessions/">
+    <File Path="sql/UserSessions/delete_inactive_sessions.sql" />
+    <File Path="sql/UserSessions/find_inactive_sessions.sql" />
+    <File Path="sql/UserSessions/list_user_sessions.sql" />
+  </Folder>
+
+  <Folder Name="/src/">
+    <Project Path="src/Jobify.Api/Jobify.Api.csproj" />
+    <Project Path="src/Jobify.Application/Jobify.Application.csproj" />
+    <Project Path="src/Jobify.Domain/Jobify.Domain.csproj" />
+    <Project Path="src/Jobify.Infrastructure/Jobify.Infrastructure.csproj" />
+    <Project Path="src/Jobify.Persistence/Jobify.Persistence.csproj" />
+  </Folder>
+
+  <Folder Name="/test/">
+    <Project Path="test/Jobify.Api.Tests/Jobify.Api.Tests.csproj" />
+    <Project Path="test/Jobify.Application.Tests/Jobify.Application.Tests.csproj" />
+    <Project Path="test/Jobify.Domain.Tests/Jobify.Domain.Tests.csproj" />
+    <Project Path="test/Jobify.Infrastructure.Tests/Jobify.Infrastructure.Tests.csproj" />
+  </Folder>
+
+</Solution>
