@@ -111,48 +111,33 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 });
 
 //--------------- Swagger (only in dev) ---------------
-if (builder.Environment.IsDevelopment())
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
 {
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(options =>
+    string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "README.md"));
+
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "README.md"));
-
-        options.SwaggerDoc("v1", new OpenApiInfo
-        {
-            Title = "JobifyEcom",
-            Version = "1.0",
-            Description = apiDescription,
-        });
-
-        string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-        string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-        options.IncludeXmlComments(xmlPath, true);
-
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Name = "Authorization",
-            Type = SecuritySchemeType.Http,
-            Scheme = "Bearer",
-            BearerFormat = "JWT",
-            In = ParameterLocation.Header,
-            Description = "Enter the access token you are given after you login.",
-        });
-
-        // options.AddSecurityRequirement(new OpenApiSecurityRequirement
-        // {{
-        //     new OpenApiSecurityScheme
-        //     {
-        //         Reference = new OpenApiReference
-        //         {
-        //             Type = ReferenceType.SecurityScheme,
-        //             Id = "Bearer"
-        //         }
-        //     },
-        //     Array.Empty<string>()
-        // }});
+        Title = "JobifyEcom",
+        Version = "1.0",
+        Description = apiDescription,
     });
-}
+
+    string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath, true);
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter the access token you are given after you login.",
+    });
+});
 
 WebApplication app = builder.Build();
 
@@ -175,6 +160,34 @@ else
 {
     app.UseHttpsRedirection();
 }
+
+app.Use(async (context, next) =>
+{
+    var headers = context.Request.Headers;
+
+    if (headers.TryGetValue("X-Internal-Session", out var value))
+    {
+        Console.WriteLine($"X-Internal-Session received: {value}");
+
+        try
+        {
+            var parts = value.ToString().Split('.');
+
+            if (parts.Length == 2)
+            {
+                var jsonBytes = Convert.FromBase64String(parts[0]);
+                var json = Encoding.UTF8.GetString(jsonBytes);
+                Console.WriteLine($"Decoded session JSON: {json}");
+            }
+        }
+        catch
+        {
+            Console.WriteLine("Failed to decode X-Internal-Session header");
+        }
+    }
+
+    await next();
+});
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
