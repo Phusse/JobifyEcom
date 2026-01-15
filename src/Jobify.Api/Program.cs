@@ -20,6 +20,7 @@ using Jobify.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using Yarp.ReverseProxy.Transforms;
@@ -56,50 +57,65 @@ builder.Services.Configure<JsonOptions>(opts =>
     serializer.Converters.Add(new JsonStringEnumConverter());
 });
 
+
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
     .AddTransforms(builderContext =>
     {
-        builderContext.AddRequestTransform(async transformContext =>
+        builderContext.AddRequestTransform(async ctx =>
         {
-            var httpContext = transformContext.HttpContext;
+            // ALWAYS strip client-sent header
+            ctx.ProxyRequest.Headers.Remove("X-Internal-Session");
 
-            // 1. Get session ID from cookie
-            if (!httpContext.Request.Cookies.TryGetValue("jb_session_id", out string? rawSessionId)
+            var httpContext = ctx.HttpContext;
+
+            // Read session cookie
+            if (!httpContext.Request.Cookies.TryGetValue("jb_session_id", out var rawSessionId)
                 || !Guid.TryParse(rawSessionId, out var sessionId))
-                return; // No session, skip header
+                return;
 
-            // 2. Resolve session data via service
-            var sessionService = httpContext.RequestServices.GetRequiredService<SessionManagementService>();
-            SessionData? sessionData = await sessionService.GetSessionDataAsync(sessionId, transformContext.HttpContext.RequestAborted);
+            var sessionService = httpContext.RequestServices
+                .GetRequiredService<SessionManagementService>();
 
-            if (sessionData is null || sessionData.IsExpired() || sessionData.IsRevoked || sessionData.IsLocked)
-                return; // Invalid session, skip header
+            var session = await sessionService.GetSessionDataAsync(
+                sessionId,
+                httpContext.RequestAborted);
 
-            // 3. Serialize and Base64 encode
+            if (session is null || session.IsExpired() || session.IsRevoked || session.IsLocked)
+                return;
+
+            // Serialize session
             var jsonOptions = httpContext.RequestServices
                 .GetRequiredService<IOptions<JsonOptions>>()
                 .Value.SerializerOptions;
 
-            var json = JsonSerializer.Serialize(sessionData, jsonOptions);
-            var payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
+            var json = JsonSerializer.Serialize(session, jsonOptions);
+            var payloadBytes = Encoding.UTF8.GetBytes(json);
 
-            // 4. Sign using secret key
-            var secretKey = Encoding.UTF8.GetBytes(httpContext.RequestServices
-                .GetRequiredService<IConfiguration>()["SessionSigningKey"]
-                ?? throw new InvalidOperationException("Missing session signing key in configuration.")
+            // Base64URL encode payload
+            var payload = WebEncoders.Base64UrlEncode(payloadBytes);
+
+            // Load PRIVATE key
+            var privateKeyPem = httpContext.RequestServices
+                .GetRequiredService<IConfiguration>()["InternalAuth:PrivateKeyPem"]
+                ?? throw new InvalidOperationException("Missing RSA private key");
+
+            using var rsa = RSA.Create();
+            rsa.ImportFromPem(privateKeyPem);
+
+            // Sign RAW payload bytes
+            var signatureBytes = rsa.SignData(
+                payloadBytes,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1
             );
 
-            using var hmac = new HMACSHA256(secretKey);
-            var signature = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload)));
-
+            var signature = WebEncoders.Base64UrlEncode(signatureBytes);
             var token = $"{payload}.{signature}";
 
-            // 5. Add header to downstream request
-            transformContext.ProxyRequest.Headers.Add("X-Internal-Session", token);
+            ctx.ProxyRequest.Headers.Add("X-Internal-Session", token);
         });
-    }
-);
+    });
 
 builder.Services.AddOpenApi(options =>
 {

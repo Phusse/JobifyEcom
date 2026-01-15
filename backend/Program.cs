@@ -186,6 +186,67 @@ app.Use(async (context, next) =>
         }
     }
 
+    //     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    // {
+    //     if (!Request.Headers.TryGetValue("X-Internal-Session", out var header))
+    //         return Task.FromResult(AuthenticateResult.NoResult());
+
+    //     var token = header.ToString();
+    //     var parts = token.Split('.');
+
+    //     if (parts.Length != 2)
+    //         return Task.FromResult(AuthenticateResult.Fail("Invalid token format"));
+
+    //     byte[] payloadBytes;
+    //     byte[] signatureBytes;
+
+    //     try
+    //     {
+    //         payloadBytes = WebEncoders.Base64UrlDecode(parts[0]);
+    //         signatureBytes = WebEncoders.Base64UrlDecode(parts[1]);
+    //     }
+    //     catch
+    //     {
+    //         return Task.FromResult(AuthenticateResult.Fail("Invalid Base64"));
+    //     }
+
+    //     // Load PUBLIC key
+    //     var publicKeyPem = Context.RequestServices
+    //         .GetRequiredService<IConfiguration>()["InternalAuth:PublicKeyPem"]
+    //         ?? throw new InvalidOperationException("Missing RSA public key");
+
+    //     using var rsa = RSA.Create();
+    //     rsa.ImportFromPem(publicKeyPem);
+
+    //     // Verify signature
+    //     if (!rsa.VerifyData(
+    //             payloadBytes,
+    //             signatureBytes,
+    //             HashAlgorithmName.SHA256,
+    //             RSASignaturePadding.Pkcs1))
+    //     {
+    //         return Task.FromResult(AuthenticateResult.Fail("Invalid signature"));
+    //     }
+
+    //     // Deserialize session
+    //     var session = JsonSerializer.Deserialize<SessionData>(payloadBytes);
+    //     if (session is null || session.IsExpired())
+    //         return Task.FromResult(AuthenticateResult.Fail("Session expired"));
+
+    //     // Build claims (DOWNSTREAM decides)
+    //     var claims = new List<Claim>
+    //     {
+    //         new Claim(ClaimTypes.NameIdentifier, session.UserId.ToString()),
+    //         new Claim(ClaimTypes.Role, session.SystemRole.ToString())
+    //     };
+
+    //     var identity = new ClaimsIdentity(claims, Scheme.Name);
+    //     var principal = new ClaimsPrincipal(identity);
+    //     var ticket = new AuthenticationTicket(principal, Scheme.Name);
+
+    //     return Task.FromResult(AuthenticateResult.Success(ticket));
+    // }
+
     await next();
 });
 
