@@ -1,0 +1,12 @@
+﻿using Jobify.Ecom.Domain.Entities.Users;
+using Microsoft.EntityFrameworkCore;
+
+namespace Jobify.Ecom.Persistence.Context;
+
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+{
+    public DbSet<User> Users => Set<User>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        => modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+}
