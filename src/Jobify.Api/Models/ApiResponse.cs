@@ -8,7 +8,4 @@ public record ApiResponse<T>(
     string Message,
     List<ResponseDetail>? Details,
     T? Data
-)
-{
-    public DateTime Timestamp { get; private init; } = DateTime.UtcNow;
-}
+);
