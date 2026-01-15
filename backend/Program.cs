@@ -111,48 +111,33 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 });
 
 //--------------- Swagger (only in dev) ---------------
-if (builder.Environment.IsDevelopment())
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
 {
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(options =>
+    string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "README.md"));
+
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        string apiDescription = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "README.md"));
-
-        options.SwaggerDoc("v1", new OpenApiInfo
-        {
-            Title = "JobifyEcom",
-            Version = "1.0",
-            Description = apiDescription,
-        });
-
-        string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-        string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-        options.IncludeXmlComments(xmlPath, true);
-
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Name = "Authorization",
-            Type = SecuritySchemeType.Http,
-            Scheme = "Bearer",
-            BearerFormat = "JWT",
-            In = ParameterLocation.Header,
-            Description = "Enter the access token you are given after you login.",
-        });
-
-        // options.AddSecurityRequirement(new OpenApiSecurityRequirement
-        // {{
-        //     new OpenApiSecurityScheme
-        //     {
-        //         Reference = new OpenApiReference
-        //         {
-        //             Type = ReferenceType.SecurityScheme,
-        //             Id = "Bearer"
-        //         }
-        //     },
-        //     Array.Empty<string>()
-        // }});
+        Title = "JobifyEcom",
+        Version = "1.0",
+        Description = apiDescription,
     });
-}
+
+    string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath, true);
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter the access token you are given after you login.",
+    });
+});
 
 WebApplication app = builder.Build();
 
@@ -175,6 +160,8 @@ else
 {
     app.UseHttpsRedirection();
 }
+
+app.UseMiddleware<InternalSessionVerificationMiddleware>();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();

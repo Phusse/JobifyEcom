@@ -6,11 +6,12 @@ using Jobify.Api.Constants.Auth;
 using Jobify.Api.Endpoints.Auth;
 using Jobify.Api.Endpoints.Base;
 using Jobify.Api.Endpoints.Users;
+using Jobify.Api.Extensions.Claims;
 using Jobify.Api.Extensions.OpenApi;
+using Jobify.Api.Extensions.ReverseProxy;
 using Jobify.Api.Middleware;
 using Jobify.Application;
 using Jobify.Application.CQRS.Messaging;
-using Jobify.Domain.Enums;
 using Jobify.Infrastructure;
 using Jobify.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -35,10 +36,7 @@ builder.Services.AddAuthentication(AuthenticationSchemes.Session)
 
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthenticationResultHandler>();
 
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("UserOnly", p => p.RequireRole(SystemRole.User.ToString()))
-    .AddPolicy("AdminOnly", p => p.RequireRole(SystemRole.Admin.ToString(), SystemRole.SuperAdmin.ToString()))
-    .AddPolicy("SuperAdminOnly", p => p.RequireRole(SystemRole.SuperAdmin.ToString()));
+builder.Services.AddAuthorizationBuilder().AddCustomPolicies();
 
 builder.Services.Configure<JsonOptions>(opts =>
 {
@@ -50,10 +48,11 @@ builder.Services.Configure<JsonOptions>(opts =>
     serializer.Converters.Add(new JsonStringEnumConverter());
 });
 
-builder.Services.AddOpenApi(options =>
-{
-    options.AddCustomOpenApiTransformer();
-});
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .AddTransforms(builderContext => { builderContext.AddInternalSessionAuth(); });
+
+builder.Services.AddOpenApi(options => { options.AddCustomOpenApiTransformer(); });
 
 WebApplication app = builder.Build();
 
@@ -78,6 +77,8 @@ app.UseMiddleware<SessionRefreshMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapReverseProxy();
 
 app.MapBaseEndpoints();
 app.MapAuthEndpoints();

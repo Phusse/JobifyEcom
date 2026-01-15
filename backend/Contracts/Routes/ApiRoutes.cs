@@ -7,6 +7,6 @@ namespace JobifyEcom.Contracts.Routes;
 /// </summary>
 internal static partial class ApiRoutes
 {
-    private const string Root = "api";
+    private const string Root = "api/ecom";
     private const string Version = "v1";
 }
