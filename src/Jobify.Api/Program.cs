@@ -50,7 +50,12 @@ builder.Services.Configure<JsonOptions>(opts =>
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-    .AddTransforms(builderContext => { builderContext.AddInternalSessionAuth(); });
+    .AddTransforms(builderContext =>
+    {
+        builderContext
+            .AddInternalSessionAuth()
+            .AddInternalTraceId();
+    });
 
 builder.Services.AddOpenApi(options => { options.AddCustomOpenApiTransformer(); });
 

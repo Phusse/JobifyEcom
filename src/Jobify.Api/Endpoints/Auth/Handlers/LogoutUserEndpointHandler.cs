@@ -10,7 +10,7 @@ using Jobify.Application.Models;
 
 namespace Jobify.Api.Endpoints.Auth.Handlers;
 
-public static class LogoutUserEndpointHandler
+internal static class LogoutUserEndpointHandler
 {
     public static async Task<IResult> Handle(HttpContext context, HttpResponse response, IMediator mediator, CookieService cookieService)
     {
@@ -22,7 +22,7 @@ public static class LogoutUserEndpointHandler
 
         OperationResult<object> result = await mediator.Send(new LogoutUserRequest(sessionId));
 
-        cookieService.DeleteCookie(response, CookieKeys.Session);
+        CookieService.DeleteCookie(response, CookieKeys.Session);
 
         ApiResponse<object> apiResponse = result.ToApiResponse();
 

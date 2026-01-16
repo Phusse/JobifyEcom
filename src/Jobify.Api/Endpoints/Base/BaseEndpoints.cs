@@ -3,7 +3,7 @@ using Jobify.Api.Endpoints.Base.Handlers;
 
 namespace Jobify.Api.Endpoints.Base;
 
-public static class BaseEndpoints
+internal static class BaseEndpoints
 {
     extension(IEndpointRouteBuilder app)
     {

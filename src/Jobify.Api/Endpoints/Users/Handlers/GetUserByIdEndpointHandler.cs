@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Jobify.Api.Endpoints.Users.Handlers;
 
-public static class GetUserByIdEndpointHandler
+internal static class GetUserByIdEndpointHandler
 {
     public static async Task<IResult> Handle([FromRoute] Guid id, IMediator mediator)
     {

@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace Jobify.Api.Endpoints.Users.Handlers;
 
-public static class GetCurrentUserEndpointHandler
+internal static class GetCurrentUserEndpointHandler
 {
     public static async Task<IResult> Handle(HttpContext context, IMediator mediator)
     {

@@ -2,7 +2,7 @@ using Jobify.Api.Models;
 
 namespace Jobify.Api.Endpoints.Base.Handlers;
 
-public static class GetInfoEndpointHandler
+internal static class GetInfoEndpointHandler
 {
     private static readonly string[] Features = [
         "User Authentication & Management",

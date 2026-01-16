@@ -2,7 +2,7 @@ using Jobify.Ecom.Api.Models;
 
 namespace Jobify.Ecom.Api.Endpoints.Base.Handlers;
 
-public static class GetInfoEndpointHandler
+internal static class GetInfoEndpointHandler
 {
     private static readonly string[] Features = [
         "Job Posting & Candidate Sourcing",

@@ -13,7 +13,7 @@ using Yarp.ReverseProxy.Transforms.Builder;
 
 namespace Jobify.Api.Extensions.ReverseProxy;
 
-public static class ReverseProxyExtensions
+internal static class ReverseProxyExtensions
 {
     private const string InternalSessionHeader = "X-Internal-Session";
 
@@ -67,6 +67,21 @@ public static class ReverseProxyExtensions
                 string signature = WebEncoders.Base64UrlEncode(signatureBytes);
 
                 context.ProxyRequest.Headers.Add(InternalSessionHeader, $"{payload}.{signature}");
+            });
+
+            return builderContext;
+        }
+
+        public TransformBuilderContext AddInternalTraceId()
+        {
+            builderContext.AddRequestTransform(context =>
+            {
+                string traceId = context.HttpContext.TraceIdentifier;
+
+                context.ProxyRequest.Headers.Remove("X-Trace-Id");
+                context.ProxyRequest.Headers.Add("X-Trace-Id", traceId);
+
+                return ValueTask.CompletedTask;
             });
 
             return builderContext;

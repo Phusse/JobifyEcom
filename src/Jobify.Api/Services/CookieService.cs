@@ -1,8 +1,8 @@
 ﻿namespace Jobify.Api.Services;
 
-public class CookieService
+internal class CookieService
 {
-    public void SetCookie(HttpResponse response, string name, string value, DateTime? expiresUtc = null, bool httpOnly = true, bool secure = true, string path = "/", string? domain = null)
+    public static void SetCookie(HttpResponse response, string name, string value, DateTime? expiresUtc = null, bool httpOnly = true, bool secure = true, string path = "/", string? domain = null)
     {
         CookieOptions options = new()
         {
@@ -19,10 +19,10 @@ public class CookieService
         response.Cookies.Append(name, value, options);
     }
 
-    public string? GetCookie(HttpRequest request, string name)
+    public static string? GetCookie(HttpRequest request, string name)
         => request.Cookies.TryGetValue(name, out string? value) ? value : null;
 
-    public void DeleteCookie(HttpResponse response, string name, string path = "/", string? domain = null)
+    public static void DeleteCookie(HttpResponse response, string name, string path = "/", string? domain = null)
     {
         CookieOptions options = new()
         {

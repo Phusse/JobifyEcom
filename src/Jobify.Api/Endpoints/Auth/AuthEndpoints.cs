@@ -7,7 +7,7 @@ using Scalar.AspNetCore;
 
 namespace Jobify.Api.Endpoints.Auth;
 
-public static class AuthEndpoints
+internal static class AuthEndpoints
 {
     extension(IEndpointRouteBuilder app)
     {

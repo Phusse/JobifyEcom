@@ -10,14 +10,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Jobify.Api.Endpoints.Auth.Handlers;
 
-public static class LoginUserEndpointHandler
+internal static class LoginUserEndpointHandler
 {
     public static async Task<IResult> Handle([FromBody] LoginUserRequest message, IMediator mediator, CookieService cookieService, HttpResponse response, HttpRequest request)
     {
         OperationResult<SessionResult> result = await mediator.Send(message);
 
         Guid? sessionId = null;
-        string? rawSessionId = cookieService.GetCookie(request, CookieKeys.Session);
+        string? rawSessionId = CookieService.GetCookie(request, CookieKeys.Session);
 
         if (Guid.TryParse(rawSessionId, out Guid parsedSessionId))
             sessionId = parsedSessionId;
@@ -27,7 +27,7 @@ public static class LoginUserEndpointHandler
 
         SessionResult data = result.Data!;
 
-        cookieService.SetCookie(
+        CookieService.SetCookie(
             response,
             CookieKeys.Session,
             data.SessionId.ToString("N"),

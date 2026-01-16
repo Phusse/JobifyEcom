@@ -8,7 +8,7 @@ using Jobify.Ecom.Api.Extensions.Responses;
 
 namespace Jobify.Ecom.Api.Endpoints.Auth.Handlers;
 
-public static class RegisterUserEndpointHandler
+internal static class RegisterUserEndpointHandler
 {
     public static async Task<IResult> Handle(HttpContext httpContext, IMediator mediator)
     {

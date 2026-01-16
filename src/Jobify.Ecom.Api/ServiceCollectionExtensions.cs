@@ -1,5 +1,3 @@
-using Jobify.Ecom.Api.Services;
-
 namespace Jobify.Ecom.Api;
 
 public static class ServiceCollectionExtensions
@@ -8,8 +6,6 @@ public static class ServiceCollectionExtensions
     {
         public IServiceCollection AddApiServices()
         {
-            services.AddSingleton<CookieService>();
-
             return services;
         }
     }

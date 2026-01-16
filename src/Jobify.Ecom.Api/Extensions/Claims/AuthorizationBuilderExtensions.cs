@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Jobify.Ecom.Api.Extensions.Claims;
 
-public static class AuthorizationBuilderExtensions
+internal static class AuthorizationBuilderExtensions
 {
     extension(AuthorizationBuilder builder)
     {

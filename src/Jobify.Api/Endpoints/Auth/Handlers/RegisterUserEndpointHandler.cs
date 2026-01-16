@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Jobify.Api.Endpoints.Auth.Handlers;
 
-public static class RegisterUserEndpointHandler
+internal static class RegisterUserEndpointHandler
 {
     public static async Task<IResult> Handle([FromBody] RegisterUserRequest request, IMediator mediator)
     {

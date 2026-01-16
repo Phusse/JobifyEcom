@@ -2,7 +2,7 @@ using Jobify.Api.Services;
 
 namespace Jobify.Api;
 
-public static class ServiceCollectionExtensions
+internal static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {

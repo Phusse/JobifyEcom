@@ -10,7 +10,7 @@ using Jobify.Application.Models;
 
 namespace Jobify.Api.Endpoints.Auth.Handlers;
 
-public static class RefreshSessionEndpointHandler
+internal static class RefreshSessionEndpointHandler
 {
     public static async Task<IResult> Handle(HttpContext context, IMediator mediator, CookieService cookieService, HttpResponse response)
     {
@@ -24,7 +24,7 @@ public static class RefreshSessionEndpointHandler
 
         SessionResult data = result.Data!;
 
-        cookieService.SetCookie(
+        CookieService.SetCookie(
             response,
             CookieKeys.Session,
             data.SessionId.ToString("N"),

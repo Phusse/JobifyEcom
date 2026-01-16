@@ -6,7 +6,7 @@ using Jobify.Application.Features.Users.Models;
 
 namespace Jobify.Api.Endpoints.Users;
 
-public static class UserEndpoints
+internal static class UserEndpoints
 {
     extension(IEndpointRouteBuilder app)
     {
