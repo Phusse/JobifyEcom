@@ -4,6 +4,7 @@ using Jobify.Ecom.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Jobify.Ecom.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260116204322_JobEntity")]
+    partial class JobEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,11 +44,9 @@ namespace Jobify.Ecom.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("MaxSalary")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("MinSalary")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("PostedByUserId")
@@ -56,9 +57,14 @@ namespace Jobify.Ecom.Persistence.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PostedByUserId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Jobs");
                 });
@@ -83,10 +89,14 @@ namespace Jobify.Ecom.Persistence.Migrations
             modelBuilder.Entity("Jobify.Ecom.Domain.Entities.Jobs.Job", b =>
                 {
                     b.HasOne("Jobify.Ecom.Domain.Entities.Users.User", null)
-                        .WithMany("Jobs")
+                        .WithMany()
                         .HasForeignKey("PostedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Jobify.Ecom.Domain.Entities.Users.User", null)
+                        .WithMany("Jobs")
+                        .HasForeignKey("UserId");
 
                     b.OwnsOne("Jobify.Ecom.Domain.Components.Auditing.AuditState", "AuditState", b1 =>
                         {

@@ -52,8 +52,8 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
 
         builder.Property(u => u.Role)
-            .HasConversion<string>()
-            .IsRequired();
+            .IsRequired()
+            .HasConversion<string>();
 
         builder.HasMany(u => u.Sessions)
             .WithOne(us => us.User)

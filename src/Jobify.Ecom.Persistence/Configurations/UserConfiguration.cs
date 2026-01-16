@@ -15,5 +15,10 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(u => u.SourceUserId)
             .IsUnique();
+
+        builder.HasMany(u => u.Jobs)
+            .WithOne()
+            .HasForeignKey(j => j.PostedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
