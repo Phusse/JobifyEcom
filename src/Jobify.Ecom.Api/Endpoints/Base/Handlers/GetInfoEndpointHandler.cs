@@ -5,11 +5,8 @@ namespace Jobify.Ecom.Api.Endpoints.Base.Handlers;
 public static class GetInfoEndpointHandler
 {
     private static readonly string[] Features = [
-        "User Authentication & Management",
         "Job Posting & Candidate Sourcing",
-        "Job Matching & Recommendations",
-        "Roadmap & Career Planning",
-        "AI-Powered Insights",
+        "User Scouting & Engagement",
     ];
 
     public static IResult Handle()
@@ -17,15 +14,15 @@ public static class GetInfoEndpointHandler
         ApiResponse<object> response = new(
             Success: true,
             MessageId: "SYSTEM_API_INFO",
-            Message: "Jobify API Gateway Information",
+            Message: "Jobify Ecom API Information",
             Details: null,
             Data: new
             {
-                Name = "Jobify API Gateway",
+                Name = "Jobify Ecom API",
                 Version = "1.0.0",
-                Description = "A scalable and secure API platform powering job matching, recruitment, and career management.",
+                Description = "A robust e-commerce API for job postings, candidate sourcing, scouting and engagement.",
                 Features,
-                Documentation = "/scalar (development only endpoint)",
+                Documentation = "/docs (development only endpoint)",
             }
         );
 

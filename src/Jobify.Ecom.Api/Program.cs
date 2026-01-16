@@ -3,8 +3,8 @@ using System.Text.Json.Serialization;
 using Jobify.Ecom.Api;
 using Jobify.Ecom.Api.Authentication;
 using Jobify.Ecom.Api.Constants.Auth;
+using Jobify.Ecom.Api.Endpoints.Auth;
 using Jobify.Ecom.Api.Endpoints.Base;
-using Jobify.Ecom.Api.Endpoints.Users;
 using Jobify.Ecom.Api.Extensions.Claims;
 using Jobify.Ecom.Api.Extensions.OpenApi;
 using Jobify.Ecom.Api.Middleware;
@@ -26,11 +26,11 @@ builder.Services.AddApiServices();
 
 builder.Services.AddHttpContextAccessor();
 
-// builder.Services.AddAuthentication(AuthenticationSchemes.Session)
-//     .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(
-//         AuthenticationSchemes.Session,
-//         options => { options.ClaimsIssuer = "Jobify"; }
-//     );
+builder.Services.AddAuthentication(AuthenticationSchemes.Session)
+    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(
+        AuthenticationSchemes.Session,
+        options => { options.ClaimsIssuer = "Jobify Ecom"; }
+    );
 
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthenticationResultHandler>();
 
@@ -46,10 +46,6 @@ builder.Services.Configure<JsonOptions>(opts =>
     serializer.Converters.Add(new JsonStringEnumConverter());
 });
 
-// builder.Services.AddReverseProxy()
-//     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-//     .AddTransforms(builderContext => { builderContext.AddInternalSessionAuth(); });
-
 builder.Services.AddOpenApi(options => { options.AddCustomOpenApiTransformer(); });
 
 WebApplication app = builder.Build();
@@ -60,7 +56,7 @@ if (app.Environment.IsDevelopment())
 
     app.MapScalarApiReference(options =>
     {
-        options.Title = "Jobify API Gateway";
+        options.Title = "Jobify Ecom API";
         options.DefaultHttpClient = new(ScalarTarget.Node, ScalarClient.Fetch);
     });
 }
@@ -69,17 +65,12 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseMiddleware<TraceIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-// app.UseMiddleware<SessionRefreshMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapReverseProxy();
-
 app.MapBaseEndpoints();
-// app.MapAuthEndpoints();
-app.MapUserEndpoints();
+app.MapAuthEndpoints();
 
 app.Run();

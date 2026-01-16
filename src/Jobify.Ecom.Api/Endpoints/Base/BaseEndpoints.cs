@@ -9,7 +9,7 @@ public static class BaseEndpoints
     {
         public void MapBaseEndpoints()
         {
-            app.MapGet(ApiRoutes.BasePath, GetInfoEndpointHandler.Handle)
+            app.MapGet(ApiRoutes.ApiBasePath, GetInfoEndpointHandler.Handle)
                 .ExcludeFromDescription();
         }
     }

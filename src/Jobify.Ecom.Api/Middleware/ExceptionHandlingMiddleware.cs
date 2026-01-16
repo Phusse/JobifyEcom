@@ -4,6 +4,7 @@ using Jobify.Ecom.Api.Models;
 using Jobify.Ecom.Application.Exceptions;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 
 namespace Jobify.Ecom.Api.Middleware;
 
@@ -27,8 +28,12 @@ internal class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Excepti
 
     private async Task HandleExceptionAsync(HttpContext httpContext, Exception ex)
     {
+        string traceId = httpContext.Request.Headers
+            .TryGetValue("X-Trace-Id", out StringValues values) && !string.IsNullOrEmpty(values)
+            ? values.ToString()
+            : httpContext.TraceIdentifier;
+
         ApiResponse<object> response;
-        string traceId = httpContext.TraceIdentifier;
 
         if (ex is AppException appEx)
         {

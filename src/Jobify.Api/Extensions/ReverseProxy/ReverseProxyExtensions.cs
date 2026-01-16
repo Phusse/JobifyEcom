@@ -53,7 +53,7 @@ public static class ReverseProxyExtensions
 
                 string privateKeyPem = httpContext.RequestServices
                     .GetRequiredService<IConfiguration>()["InternalSessionAuth:PrivateKeyPem"]
-                    ?? throw new InvalidOperationException("Missing RSA private key");
+                    ?? throw new InvalidOperationException("InternalSessionAuth:PrivateKeyPem is missing in the config.");
 
                 using RSA rsa = RSA.Create();
                 rsa.ImportFromPem(privateKeyPem);

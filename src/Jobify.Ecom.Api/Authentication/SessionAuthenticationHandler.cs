@@ -1,49 +1,74 @@
-// using System.Security.Claims;
-// using System.Text.Encodings.Web;
-// using Jobify.Ecom.Api.Constants.Cookies;
-// using Jobify.Ecom.Api.Extensions.Claims;
-// using Jobify.Ecom.Application.Models;
-// using Jobify.Ecom.Application.Services;
-// using Microsoft.AspNetCore.Authentication;
-// using Microsoft.AspNetCore.Authorization;
-// using Microsoft.Extensions.Options;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using Jobify.Ecom.Api.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 
-// namespace Jobify.Ecom.Api.Authentication;
+namespace Jobify.Ecom.Api.Authentication;
 
-// internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, SessionManagementService sessionService)
-//     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
-// {
-//     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
-//     {
-//         Endpoint? endpoint = Context.GetEndpoint();
+internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, IConfiguration config)
+    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
 
-//         if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() is not null)
-//             return AuthenticateResult.NoResult();
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        Endpoint? endpoint = Context.GetEndpoint();
 
-//         if (!TryGetSessionIdFromCookie(out Guid sessionId))
-//             return AuthenticateResult.NoResult();
+        if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() is not null)
+            return AuthenticateResult.NoResult();
 
-//         SessionData? sessionData = await sessionService.GetSessionDataAsync(sessionId, Context.RequestAborted);
+        if (!Request.Headers.TryGetValue("X-Internal-Session", out var headerValue))
+            return AuthenticateResult.NoResult();
 
-//         if (sessionData is null || sessionData.IsLocked || sessionData.IsExpired())
-//             return AuthenticateResult.Fail("Invalid or expired session");
+        try
+        {
+            string[] parts = headerValue.ToString().Split('.');
 
-//         IEnumerable<Claim> claims = sessionData.ToClaims();
+            if (parts.Length is not 2)
+                return AuthenticateResult.Fail("Invalid token format");
 
-//         ClaimsIdentity identity = new(claims, Scheme.Name);
-//         ClaimsPrincipal principal = new(identity);
-//         AuthenticationTicket ticket = new(principal, Scheme.Name);
+            byte[] payloadBytes = WebEncoders.Base64UrlDecode(parts[0]);
+            byte[] signatureBytes = WebEncoders.Base64UrlDecode(parts[1]);
+            string payloadJson = Encoding.UTF8.GetString(payloadBytes);
 
-//         return AuthenticateResult.Success(ticket);
-//     }
+            string publicKeyPem = config["InternalSessionAuth:PublicKeyPem"]
+                ?? throw new InvalidOperationException("InternalSessionAuth:PublicKeyPem is in the config.");
 
-//     private bool TryGetSessionIdFromCookie(out Guid sessionId)
-//     {
-//         sessionId = Guid.Empty;
+            using RSA rsa = RSA.Create();
+            rsa.ImportFromPem(publicKeyPem);
 
-//         if (!Request.Cookies.TryGetValue(CookieKeys.Session, out string? rawSessionId))
-//             return false;
+            if (!rsa.VerifyData(payloadBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1))
+                return AuthenticateResult.Fail("Invalid signature");
 
-//         return Guid.TryParse(rawSessionId, out sessionId);
-//     }
-// }
+            var session = JsonSerializer.Deserialize<SessionData>(payloadJson, JsonOptions);
+
+            if (session is null)
+                return AuthenticateResult.Fail("Invalid session data");
+
+            IEnumerable<Claim> claims = [
+                new Claim(ClaimTypes.NameIdentifier, session.UserId.ToString("N")),
+                new Claim(ClaimTypes.Role, session.Role),
+            ];
+
+            ClaimsIdentity identity = new(claims, Scheme.Name);
+            ClaimsPrincipal principal = new(identity);
+            AuthenticationTicket ticket = new(principal, Scheme.Name);
+
+            return AuthenticateResult.Success(ticket);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error validating InternalSession header");
+            return AuthenticateResult.Fail("Exception validating session");
+        }
+    }
+}

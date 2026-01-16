@@ -1,4 +1,3 @@
-using Jobify.Ecom.Application.Configurations.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,11 +7,8 @@ public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddApplicationServices(IConfiguration configuration)
+        public IServiceCollection AddApplicationServices(IConfiguration _)
         {
-            services.Configure<SessionManagementOptions>(configuration.GetSection("SessionManagement"));
-            // services.AddScoped<SessionManagementService>();
-
             return services;
         }
     }

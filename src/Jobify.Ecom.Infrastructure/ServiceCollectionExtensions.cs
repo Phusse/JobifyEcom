@@ -20,9 +20,6 @@ public static class ServiceCollectionExtensions
         {
             services.AddSingleton<ICacheService, RedisCacheService>();
 
-            services.Configure<HashingOptions>(configuration.GetSection("Hashing"));
-            services.AddSingleton<IHashingService, HashingService>();
-
             services.Configure<DataEncryptionOptions>(configuration.GetSection("DataEncryption"));
             services.AddSingleton<IDataEncryptionService, AesGcmDataEncryptionService>();
 

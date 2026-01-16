@@ -15,7 +15,7 @@ internal static class OpenApiOptionsExtensions
                 var env = services.GetRequiredService<IHostEnvironment>();
                 var httpContextAccessor = services.GetRequiredService<IHttpContextAccessor>();
 
-                document.Info.Title = "Jobify API Gateway";
+                document.Info.Title = "Jobify Ecom API";
                 document.Info.Version = "v1.0.0";
 
                 string readmePath = Path.Combine(env.ContentRootPath, "README.md");
