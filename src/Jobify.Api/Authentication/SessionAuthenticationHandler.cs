@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Jobify.Api.Constants.Cookies;
 using Jobify.Api.Extensions.Claims;
+using Jobify.Api.Helpers;
 using Jobify.Application.Models;
 using Jobify.Application.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -38,11 +39,7 @@ internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationScheme
 
     private bool TryGetSessionIdFromCookie(out Guid sessionId)
     {
-        sessionId = Guid.Empty;
-
-        if (!Request.Cookies.TryGetValue(CookieKeys.Session, out string? rawSessionId))
-            return false;
-
+        string? rawSessionId = CookieHelper.GetCookie(Context.Request, CookieKeys.Session);
         return Guid.TryParse(rawSessionId, out sessionId);
     }
 }

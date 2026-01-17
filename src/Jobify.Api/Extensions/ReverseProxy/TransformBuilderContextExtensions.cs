@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Jobify.Api.Constants.Cookies;
+using Jobify.Api.Helpers;
 using Jobify.Api.Models;
 using Jobify.Application.Models;
 using Jobify.Application.Services;
@@ -26,8 +27,7 @@ internal static class TransformBuilderContextExtensions
                 context.ProxyRequest.Headers.Remove(InternalSessionHeader);
                 HttpContext httpContext = context.HttpContext;
 
-                if (!httpContext.Request.Cookies.TryGetValue(CookieKeys.Session, out string? rawSessionId))
-                    return;
+                string? rawSessionId = CookieHelper.GetCookie(httpContext.Request, CookieKeys.Session);
 
                 if (!Guid.TryParse(rawSessionId, out Guid sessionId))
                     return;

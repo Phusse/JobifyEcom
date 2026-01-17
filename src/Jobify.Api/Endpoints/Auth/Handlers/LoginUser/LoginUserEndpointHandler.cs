@@ -16,13 +16,9 @@ internal static class LoginUserEndpointHandler
     {
         OperationResult<SessionResult> result = await mediator.Send(message);
 
-        Guid? sessionId = null;
         string? rawSessionId = CookieHelper.GetCookie(request, CookieKeys.Session);
 
-        if (Guid.TryParse(rawSessionId, out Guid parsedSessionId))
-            sessionId = parsedSessionId;
-
-        if (sessionId.HasValue)
+        if (Guid.TryParse(rawSessionId, out Guid sessionId))
             await mediator.Send(new RevokeSessionCommand(sessionId));
 
         SessionResult data = result.Data!;
