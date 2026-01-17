@@ -5,6 +5,7 @@ using Jobify.Ecom.Api.Authentication;
 using Jobify.Ecom.Api.Constants.Auth;
 using Jobify.Ecom.Api.Endpoints.Auth;
 using Jobify.Ecom.Api.Endpoints.Base;
+using Jobify.Ecom.Api.Endpoints.Jobs;
 using Jobify.Ecom.Api.Extensions.Claims;
 using Jobify.Ecom.Api.Extensions.OpenApi;
 using Jobify.Ecom.Api.Middleware;
@@ -72,5 +73,6 @@ app.UseAuthorization();
 
 app.MapBaseEndpoints();
 app.MapAuthEndpoints();
+app.MapJobEndpoints();
 
 app.Run();

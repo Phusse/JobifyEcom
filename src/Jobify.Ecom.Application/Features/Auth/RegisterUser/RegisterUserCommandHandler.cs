@@ -8,10 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Jobify.Ecom.Application.Features.Auth.RegisterUser;
 
-public class RegisterUserHandler(AppDbContext db)
-    : IHandler<RegisterUserRequest, OperationResult<Guid>>
+public class RegisterUserCommandHandler(AppDbContext db)
+    : IHandler<RegisterUserCommand, OperationResult<Guid>>
 {
-    public async Task<OperationResult<Guid>> Handle(RegisterUserRequest message, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<Guid>> Handle(RegisterUserCommand message, CancellationToken cancellationToken = default)
     {
         if (message.SourceUserId is null)
             throw ResponseCatalog.Auth.InvalidSession.ToException();

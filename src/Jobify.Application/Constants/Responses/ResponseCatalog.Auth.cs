@@ -57,6 +57,7 @@ internal static partial class ResponseCatalog
             Title: "Session is invalid or expired.",
             Details: []
         );
+
         public static readonly OperationFailureResponse AccountLocked = new(
             Id: "AUTH_ACCOUNT_LOCKED",
             StatusCode: HttpStatusCodes.Forbidden,

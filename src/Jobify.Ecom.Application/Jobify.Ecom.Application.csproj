@@ -11,4 +11,9 @@
     <ProjectReference Include="..\Jobify.Ecom.Persistence\Jobify.Ecom.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Jobs\Extensions\" />
+    <Folder Include="Features\Jobs\Models\" />
+  </ItemGroup>
+
 </Project>

@@ -18,7 +18,7 @@ internal static class RegisterUserEndpointHandler
         if (Guid.TryParse(claimValue, out Guid parsed))
             sourceUserId = parsed;
 
-        RegisterUserRequest request = new(sourceUserId);
+        RegisterUserCommand request = new(sourceUserId);
         OperationResult<Guid> result = await mediator.Send(request);
 
         string location = $"{ApiRoutes.User.Base}/{result.Data}";

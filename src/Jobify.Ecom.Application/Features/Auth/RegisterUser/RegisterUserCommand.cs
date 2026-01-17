@@ -3,6 +3,6 @@ using Jobify.Ecom.Application.Models;
 
 namespace Jobify.Ecom.Application.Features.Auth.RegisterUser;
 
-public record RegisterUserRequest(
+public record RegisterUserCommand(
     Guid? SourceUserId
 ) : IRequest<OperationResult<Guid>>;

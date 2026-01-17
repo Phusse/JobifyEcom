@@ -12,25 +12,13 @@ public class Job : IEntity, IAuditable
 
     public Job(Guid postedByUserId, string title, string description, JobType jobType, decimal minSalary, decimal maxSalary, DateTime closingDate)
     {
-        if (string.IsNullOrWhiteSpace(title))
-            throw new ArgumentException("Job title is required.", nameof(title));
-
-        if (string.IsNullOrWhiteSpace(description))
-            throw new ArgumentException("Job description is required.", nameof(description));
-
-        if (minSalary < 0 || maxSalary < 0 || minSalary > maxSalary)
-            throw new ArgumentException("Invalid salary range.");
-
-        if (closingDate <= DateTime.UtcNow)
-            throw new ArgumentException("Closing date must be in the future.");
-
         PostedByUserId = postedByUserId;
-        Title = title;
-        Description = description;
-        JobType = jobType;
-        MinSalary = minSalary;
-        MaxSalary = maxSalary;
-        ClosingDate = closingDate;
+
+        UpdateTitle(title);
+        UpdateDescription(description);
+        UpdateJobType(jobType);
+        UpdateSalary(minSalary, maxSalary);
+        UpdateClosingDate(closingDate);
     }
 
     public Guid Id { get; private set; } = Guid.CreateVersion7();
@@ -48,4 +36,67 @@ public class Job : IEntity, IAuditable
     public decimal MaxSalary { get; private set; }
 
     public DateTime ClosingDate { get; private set; }
+
+    public void UpdateTitle(string newTitle)
+    {
+        if (string.IsNullOrWhiteSpace(newTitle))
+            throw new ArgumentException("Job title is required.", nameof(newTitle));
+
+        Title = newTitle;
+        AuditState.UpdateAudit();
+    }
+
+    public void UpdateDescription(string newDescription)
+    {
+        if (string.IsNullOrWhiteSpace(newDescription))
+            throw new ArgumentException("Job description is required.", nameof(newDescription));
+
+        Description = newDescription;
+        AuditState.UpdateAudit();
+    }
+
+    public void UpdateJobType(JobType jobType)
+    {
+        if (!Enum.IsDefined(jobType))
+            throw new ArgumentException("Invalid job type.");
+
+        JobType = jobType;
+        AuditState.UpdateAudit();
+    }
+
+    public void UpdateSalary(decimal minSalary, decimal maxSalary)
+    {
+        if (minSalary < 0 || maxSalary < 0 || minSalary > maxSalary)
+            throw new ArgumentException("Invalid salary range.");
+
+        MinSalary = minSalary;
+        MaxSalary = maxSalary;
+        AuditState.UpdateAudit();
+    }
+
+    public void UpdateClosingDate(DateTime closingDate)
+    {
+        if (closingDate <= DateTime.UtcNow)
+            throw new ArgumentException("Closing date must be in the future.");
+
+        ClosingDate = closingDate;
+        AuditState.UpdateAudit();
+    }
+
+    public void Update(
+    string? title,
+    string? description,
+    JobType? jobType,
+    decimal? minSalary,
+    decimal? maxSalary,
+    DateTime? closingDate
+)
+    {
+        // Only update fields that are provided (not null)
+        if (title != null) UpdateTitle(title);
+        if (description != null) UpdateDescription(description);
+        if (jobType.HasValue) UpdateJobType(jobType.Value);
+        if (minSalary.HasValue && maxSalary.HasValue) UpdateSalary(minSalary.Value, maxSalary.Value);
+        if (closingDate.HasValue) UpdateClosingDate(closingDate.Value);
+    }
 }
