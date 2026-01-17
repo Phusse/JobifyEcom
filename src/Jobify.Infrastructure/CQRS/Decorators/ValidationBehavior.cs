@@ -10,7 +10,7 @@ using System.Net;
 namespace Jobify.Infrastructure.CQRS.Decorators;
 
 internal class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : IMessage<TResponse>
 {
     public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken = default)
     {

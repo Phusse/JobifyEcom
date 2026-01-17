@@ -13,7 +13,7 @@ using Yarp.ReverseProxy.Transforms.Builder;
 
 namespace Jobify.Api.Extensions.ReverseProxy;
 
-internal static class ReverseProxyExtensions
+internal static class TransformBuilderContextExtensions
 {
     private const string InternalSessionHeader = "X-Internal-Session";
 
@@ -52,8 +52,8 @@ internal static class ReverseProxyExtensions
                 string payload = WebEncoders.Base64UrlEncode(payloadBytes);
 
                 string privateKeyPem = httpContext.RequestServices
-                    .GetRequiredService<IConfiguration>()["InternalSessionAuth:PrivateKeyPem"]
-                    ?? throw new InvalidOperationException("InternalSessionAuth:PrivateKeyPem is missing in the config.");
+                    .GetRequiredService<IConfiguration>()["DownstreamSessionSigningKey"]
+                    ?? throw new InvalidOperationException("DownstreamSessionSigningKey is missing in the config.");
 
                 using RSA rsa = RSA.Create();
                 rsa.ImportFromPem(privateKeyPem);

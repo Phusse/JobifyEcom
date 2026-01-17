@@ -4,6 +4,6 @@ using Jobify.Application.Models;
 
 namespace Jobify.Application.Features.Users.GetUserById;
 
-public record GetUserByIdRequest(
+public record GetUserByIdQuery(
     Guid Id
-) : IRequest<OperationResult<UserResponse>>;
+) : IMessage<OperationResult<UserResponse>>;

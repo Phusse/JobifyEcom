@@ -4,6 +4,6 @@ using Jobify.Application.Models;
 
 namespace Jobify.Application.Features.Auth.RefreshSession;
 
-public record RefreshSessionRequest(
+public record RefreshSessionCommand(
     Guid? SessionId
-) : IRequest<OperationResult<SessionResult>>;
+) : IMessage<OperationResult<SessionResult>>;

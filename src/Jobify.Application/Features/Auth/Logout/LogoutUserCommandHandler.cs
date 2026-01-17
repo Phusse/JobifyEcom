@@ -6,10 +6,9 @@ using Jobify.Application.Services;
 
 namespace Jobify.Application.Features.Auth.Logout;
 
-public class LogoutUserHandler(SessionManagementService sessionService)
-    : IHandler<LogoutUserRequest, OperationResult<object>>
+public class LogoutUserCommandHandler(SessionManagementService sessionService) : IHandler<LogoutUserCommand, OperationResult<object>>
 {
-    public async Task<OperationResult<object>> Handle(LogoutUserRequest message, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<object>> Handle(LogoutUserCommand message, CancellationToken cancellationToken = default)
     {
         if (message.SessionId.HasValue)
             await sessionService.RevokeSessionAsync(message.SessionId.Value, cancellationToken);

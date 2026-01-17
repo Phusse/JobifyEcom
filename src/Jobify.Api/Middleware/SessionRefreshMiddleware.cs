@@ -5,8 +5,6 @@ namespace Jobify.Api.Middleware;
 
 internal class SessionRefreshMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next = next;
-
     public async Task InvokeAsync(HttpContext context, SessionManagementService sessionManagementService)
     {
         try
@@ -15,7 +13,7 @@ internal class SessionRefreshMiddleware(RequestDelegate next)
         }
         catch { }
 
-        await _next(context);
+        await next(context);
     }
 
     private static async Task TryRefreshSessionAsync(HttpContext context, SessionManagementService sessionManagementService, CancellationToken cancellationToken)

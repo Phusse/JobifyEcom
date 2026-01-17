@@ -6,11 +6,11 @@ using Jobify.Application.Features.Auth.RegisterUser;
 using Jobify.Application.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jobify.Api.Endpoints.Auth.Handlers;
+namespace Jobify.Api.Endpoints.Auth.Handlers.RegisterUser;
 
 internal static class RegisterUserEndpointHandler
 {
-    public static async Task<IResult> Handle([FromBody] RegisterUserRequest request, IMediator mediator)
+    public static async Task<IResult> Handle([FromBody] RegisterUserCommand request, IMediator mediator)
     {
         OperationResult<Guid> result = await mediator.Send(request);
 

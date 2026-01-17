@@ -6,7 +6,8 @@ internal abstract record BaseOperationResponse<TSelf>(
 	string Id,
 	string Title,
 	ResponseDetail[] Details
-) : IOperationResponse where TSelf : BaseOperationResponse<TSelf>
+) : IOperationResponse
+	where TSelf : BaseOperationResponse<TSelf>
 {
 	protected TSelf Self => (TSelf)this;
 

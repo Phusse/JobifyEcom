@@ -6,10 +6,9 @@ using Jobify.Application.Services;
 
 namespace Jobify.Application.Features.Auth.RevokeSession;
 
-public class RevokeSessionHandler(SessionManagementService sessionService)
-    : IHandler<RevokeSessionRequest, OperationResult<object>>
+public class RevokeSessionCommandHandler(SessionManagementService sessionService) : IHandler<RevokeSessionCommand, OperationResult<object>>
 {
-    public async Task<OperationResult<object>> Handle(RevokeSessionRequest request, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<object>> Handle(RevokeSessionCommand request, CancellationToken cancellationToken = default)
     {
         if (request.SessionId.HasValue)
             await sessionService.RevokeSessionAsync(request.SessionId.Value, cancellationToken);

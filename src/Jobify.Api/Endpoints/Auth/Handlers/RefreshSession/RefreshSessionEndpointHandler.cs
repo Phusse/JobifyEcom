@@ -1,18 +1,18 @@
 using System.Security.Claims;
 using Jobify.Api.Constants.Auth;
 using Jobify.Api.Constants.Cookies;
+using Jobify.Api.Helpers;
 using Jobify.Api.Models;
-using Jobify.Api.Services;
 using Jobify.Application.CQRS.Messaging;
 using Jobify.Application.Features.Auth.Models;
 using Jobify.Application.Features.Auth.RefreshSession;
 using Jobify.Application.Models;
 
-namespace Jobify.Api.Endpoints.Auth.Handlers;
+namespace Jobify.Api.Endpoints.Auth.Handlers.RefreshSession;
 
 internal static class RefreshSessionEndpointHandler
 {
-    public static async Task<IResult> Handle(HttpContext context, IMediator mediator, CookieService cookieService, HttpResponse response)
+    public static async Task<IResult> Handle(HttpContext context, IMediator mediator, HttpResponse response)
     {
         Guid? sessionId = null;
         string? rawSessionId = context.User.FindFirstValue(SessionClaimTypes.SessionId);
@@ -20,11 +20,11 @@ internal static class RefreshSessionEndpointHandler
         if (Guid.TryParse(rawSessionId, out Guid parsedSessionId))
             sessionId = parsedSessionId;
 
-        OperationResult<SessionResult> result = await mediator.Send(new RefreshSessionRequest(sessionId));
+        OperationResult<SessionResult> result = await mediator.Send(new RefreshSessionCommand(sessionId));
 
         SessionResult data = result.Data!;
 
-        CookieService.SetCookie(
+        CookieHelper.SetCookie(
             response,
             CookieKeys.Session,
             data.SessionId.ToString("N"),

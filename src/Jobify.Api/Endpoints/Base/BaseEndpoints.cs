@@ -1,5 +1,5 @@
 using Jobify.Api.Constants.Routes;
-using Jobify.Api.Endpoints.Base.Handlers;
+using Jobify.Api.Endpoints.Base.Handlers.GetInfo;
 
 namespace Jobify.Api.Endpoints.Base;
 

@@ -12,10 +12,9 @@ using Jobify.Application.Features.Auth.Extensions;
 
 namespace Jobify.Application.Features.Auth.LoginUser;
 
-public class LoginUserHandler(AppDbContext db, IHashingService hashingService, SessionManagementService sessionService)
-    : IHandler<LoginUserRequest, OperationResult<SessionResult>>
+public class LoginUserCommandHandler(AppDbContext db, IHashingService hashingService, SessionManagementService sessionService) : IHandler<LoginUserCommand, OperationResult<SessionResult>>
 {
-    public async Task<OperationResult<SessionResult>> Handle(LoginUserRequest message, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<SessionResult>> Handle(LoginUserCommand message, CancellationToken cancellationToken = default)
     {
         string emailHash = hashingService.HashEmail(message.Identifier);
 

@@ -40,8 +40,8 @@ internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationScheme
             byte[] signatureBytes = WebEncoders.Base64UrlDecode(parts[1]);
             string payloadJson = Encoding.UTF8.GetString(payloadBytes);
 
-            string publicKeyPem = config["InternalSessionAuth:PublicKeyPem"]
-                ?? throw new InvalidOperationException("InternalSessionAuth:PublicKeyPem is in the config.");
+            string publicKeyPem = config["GatewaySessionVerificationKey"]
+                ?? throw new InvalidOperationException("GatewaySessionVerificationKey is in the config.");
 
             using RSA rsa = RSA.Create();
             rsa.ImportFromPem(publicKeyPem);

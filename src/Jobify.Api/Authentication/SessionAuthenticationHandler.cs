@@ -10,8 +10,7 @@ using Microsoft.Extensions.Options;
 
 namespace Jobify.Api.Authentication;
 
-internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, SessionManagementService sessionService)
-    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, SessionManagementService sessionService) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {

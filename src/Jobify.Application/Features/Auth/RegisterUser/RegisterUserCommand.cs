@@ -3,11 +3,11 @@ using Jobify.Application.Models;
 
 namespace Jobify.Application.Features.Auth.RegisterUser;
 
-public record RegisterUserRequest(
+public record RegisterUserCommand(
     string FirstName,
     string? MiddleName,
     string LastName,
     string UserName,
     string Email,
     string Password
-) : IRequest<OperationResult<Guid>>;
+) : IMessage<OperationResult<Guid>>;

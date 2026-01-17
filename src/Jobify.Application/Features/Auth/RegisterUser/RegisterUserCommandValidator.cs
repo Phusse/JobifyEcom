@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace Jobify.Application.Features.Auth.RegisterUser;
 
-public class RegisterUserValidator : AbstractValidator<RegisterUserRequest>
+public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
 {
-    public RegisterUserValidator()
+    public RegisterUserCommandValidator()
     {
         RuleFor(x => x.FirstName)
             .Cascade(CascadeMode.Stop)

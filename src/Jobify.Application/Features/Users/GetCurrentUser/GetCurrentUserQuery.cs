@@ -4,6 +4,6 @@ using Jobify.Application.Models;
 
 namespace Jobify.Application.Features.Users.GetCurrentUser;
 
-public record GetCurrentUserRequest(
+public record GetCurrentUserQuery(
     Guid? UserId
-) : IRequest<OperationResult<UserResponse>>;
+) : IMessage<OperationResult<UserResponse>>;

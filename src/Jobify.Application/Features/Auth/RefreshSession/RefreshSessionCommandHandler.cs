@@ -8,10 +8,10 @@ using Jobify.Application.Services;
 
 namespace Jobify.Application.Features.Auth.RefreshSession;
 
-public class RefreshSessionHandler(SessionManagementService sessionService)
-    : IHandler<RefreshSessionRequest, OperationResult<SessionResult>>
+public class RefreshSessionCommandHandler(SessionManagementService sessionService)
+    : IHandler<RefreshSessionCommand, OperationResult<SessionResult>>
 {
-    public async Task<OperationResult<SessionResult>> Handle(RefreshSessionRequest message, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<SessionResult>> Handle(RefreshSessionCommand message, CancellationToken cancellationToken = default)
     {
         if (message.SessionId is null)
             throw ResponseCatalog.Auth.InvalidSession.ToException();

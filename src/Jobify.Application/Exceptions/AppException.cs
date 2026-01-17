@@ -9,8 +9,7 @@ public class AppException : Exception
 	public string Id { set; get; }
 	public List<ResponseDetail>? Details { set; get; }
 
-	public AppException(string? id, int statusCode, string? title, ResponseDetail[]? details = null)
-	: base(ResolveMessage(title))
+	public AppException(string? id, int statusCode, string? title, ResponseDetail[]? details = null) : base(ResolveMessage(title))
 	{
 		Id = string.IsNullOrWhiteSpace(id)
 			? "UNKNOWN_ERROR"

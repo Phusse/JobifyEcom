@@ -1,6 +1,7 @@
 using Jobify.Api.Constants.Cookies;
 using Jobify.Api.Constants.Routes;
-using Jobify.Api.Endpoints.Users.Handlers;
+using Jobify.Api.Endpoints.Users.Handlers.GetCurrentUser;
+using Jobify.Api.Endpoints.Users.Handlers.GetUserById;
 using Jobify.Api.Models;
 using Jobify.Application.Features.Users.Models;
 

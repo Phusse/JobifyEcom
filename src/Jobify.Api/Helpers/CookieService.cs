@@ -1,6 +1,6 @@
-﻿namespace Jobify.Api.Services;
+﻿namespace Jobify.Api.Helpers;
 
-internal class CookieService
+internal static class CookieHelper
 {
     public static void SetCookie(HttpResponse response, string name, string value, DateTime? expiresUtc = null, bool httpOnly = true, bool secure = true, string path = "/", string? domain = null)
     {

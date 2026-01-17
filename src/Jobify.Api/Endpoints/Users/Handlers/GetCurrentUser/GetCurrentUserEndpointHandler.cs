@@ -5,7 +5,7 @@ using Jobify.Application.Features.Users.Models;
 using Jobify.Application.Models;
 using System.Security.Claims;
 
-namespace Jobify.Api.Endpoints.Users.Handlers;
+namespace Jobify.Api.Endpoints.Users.Handlers.GetCurrentUser;
 
 internal static class GetCurrentUserEndpointHandler
 {
@@ -14,7 +14,7 @@ internal static class GetCurrentUserEndpointHandler
         string? rawUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         Guid? userId = Guid.TryParse(rawUserId, out Guid parsedUserId) ? parsedUserId : null;
 
-        OperationResult<UserResponse> result = await mediator.Send(new GetCurrentUserRequest(userId));
+        OperationResult<UserResponse> result = await mediator.Send(new GetCurrentUserQuery(userId));
 
         return Results.Ok(result.ToApiResponse());
     }

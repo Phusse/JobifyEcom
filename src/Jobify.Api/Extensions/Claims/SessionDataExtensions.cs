@@ -4,7 +4,7 @@ using Jobify.Api.Constants.Auth;
 
 namespace Jobify.Api.Extensions.Claims;
 
-internal static class SessionDataClaimsExtensions
+internal static class SessionDataExtensions
 {
     extension(SessionData session)
     {

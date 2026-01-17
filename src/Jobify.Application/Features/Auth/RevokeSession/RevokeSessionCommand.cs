@@ -3,6 +3,6 @@ using Jobify.Application.Models;
 
 namespace Jobify.Application.Features.Auth.RevokeSession;
 
-public record RevokeSessionRequest(
+public record RevokeSessionCommand(
     Guid? SessionId
-) : IRequest<OperationResult<object>>;
+) : IMessage<OperationResult<object>>;

@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace Jobify.Application.Features.Auth.LoginUser;
 
-public class LoginUserValidator : AbstractValidator<LoginUserRequest>
+public class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
 {
-    public LoginUserValidator()
+    public LoginUserCommandValidator()
     {
         RuleFor(x => x.Identifier)
             .NotEmpty()

@@ -4,8 +4,8 @@ using Jobify.Application.Models;
 
 namespace Jobify.Application.Features.Auth.LoginUser;
 
-public record LoginUserRequest(
+public record LoginUserCommand(
     string Identifier,
     string Password,
     bool RememberMe = false
-) : IRequest<OperationResult<SessionResult>>;
+) : IMessage<OperationResult<SessionResult>>;

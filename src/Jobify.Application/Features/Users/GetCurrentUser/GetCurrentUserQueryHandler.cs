@@ -11,16 +11,22 @@ using Jobify.Domain.Entities.Users;
 using Jobify.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Jobify.Application.Features.Users.GetUserById;
+namespace Jobify.Application.Features.Users.GetCurrentUser;
 
-public class GetUserByIdHandler(AppDbContext db, IDataEncryptionService encryptionService)
-    : IHandler<GetUserByIdRequest, OperationResult<UserResponse>>
+public class GetCurrentUserQueryHandler(AppDbContext db, IDataEncryptionService encryptionService) : IHandler<GetCurrentUserQuery, OperationResult<UserResponse>>
 {
-    public async Task<OperationResult<UserResponse>> Handle(GetUserByIdRequest message, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<UserResponse>> Handle(GetCurrentUserQuery message, CancellationToken cancellationToken = default)
     {
-        User? user = await db.Users
-            .FirstOrDefaultAsync(u => u.Id == message.Id, cancellationToken)
-            ?? throw ResponseCatalog.User.UserNotFound.ToException();
+        if (message.UserId is null)
+            throw ResponseCatalog.Auth.InvalidSession.ToException();
+
+        User user = await db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == message.UserId.Value, cancellationToken)
+            ?? throw ResponseCatalog.Auth.InvalidSession.ToException();
+
+        if (user.IsLocked)
+            throw ResponseCatalog.Auth.AccountLocked.ToException();
 
         UserSensitive sensitiveData = ObjectByteConverter.DeserializeFromBytes<UserSensitive>(
             encryptionService.Decrypt(user.EncryptedData, CryptoPurpose.UserSensitiveData)
@@ -28,7 +34,7 @@ public class GetUserByIdHandler(AppDbContext db, IDataEncryptionService encrypti
 
         user.SetSensitiveData(sensitiveData);
 
-        return ResponseCatalog.User.UserRetrieved
+        return ResponseCatalog.User.Retrieved
             .As<UserResponse>()
             .WithData(user.ToUserResponse())
             .ToOperationResult();
