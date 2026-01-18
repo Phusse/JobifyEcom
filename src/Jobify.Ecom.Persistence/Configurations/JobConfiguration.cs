@@ -23,11 +23,11 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
 
         builder.Property(j => j.Title)
             .IsRequired()
-            .HasMaxLength(120);
+            .HasMaxLength(150);
 
         builder.Property(j => j.Description)
             .IsRequired()
-            .HasMaxLength(500);
+            .HasMaxLength(3000);
 
         builder.Property(j => j.JobType)
             .IsRequired()

@@ -12,4 +12,4 @@ public record CreateJobCommand(
     decimal MaxSalary,
     DateTime ClosingDate,
     Guid? PostedByUserId
-) : IRequest<OperationResult<Guid>>;
+) : IMessage<OperationResult<Guid>>;

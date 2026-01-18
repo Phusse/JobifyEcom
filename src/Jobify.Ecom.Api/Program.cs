@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Jobify.Ecom.Api;
 using Jobify.Ecom.Api.Authentication;
 using Jobify.Ecom.Api.Constants.Auth;
 using Jobify.Ecom.Api.Endpoints.Auth;
@@ -23,7 +22,6 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration, [typeof(IMediator).Assembly]);
-builder.Services.AddApiServices();
 
 builder.Services.AddHttpContextAccessor();
 

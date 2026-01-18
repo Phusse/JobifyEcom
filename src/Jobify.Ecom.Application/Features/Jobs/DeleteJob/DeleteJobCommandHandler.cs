@@ -8,24 +8,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Jobify.Ecom.Application.Features.Jobs.DeleteJob;
 
-internal sealed class DeleteJobCommandHandler(AppDbContext context) : IHandler<DeleteJobCommand, OperationResult<object>>
+public class DeleteJobCommandHandler(AppDbContext context) : IHandler<DeleteJobCommand, OperationResult<object>>
 {
-    public async Task<OperationResult<object>> Handle(DeleteJobCommand message, CancellationToken cancellationToken)
+    public async Task<OperationResult<object>> Handle(DeleteJobCommand message, CancellationToken cancellationToken = default)
     {
-        if (message.DeletedByUserId is null)
+        if (message.DeletedByUserId is not Guid userId)
             throw ResponseCatalog.Auth.InvalidSession.ToException();
 
         Job job = await context.Jobs
             .FirstOrDefaultAsync(j => j.Id == message.JobId, cancellationToken)
-            ?? throw ResponseCatalog.Job.JobNotFound.ToException();
+            ?? throw ResponseCatalog.Job.NotFound.ToException();
 
-        if (job.PostedByUserId != message.DeletedByUserId.Value)
-            throw ResponseCatalog.Job.JobModificationForbidden.ToException();
+        if (job.PostedByUserId != userId)
+            throw ResponseCatalog.Job.ModificationForbidden.ToException();
 
         context.Jobs.Remove(job);
         await context.SaveChangesAsync(cancellationToken);
 
-        return ResponseCatalog.Job.JobDeleted
+        return ResponseCatalog.Job.Deleted
             .As<object>()
             .ToOperationResult();
     }

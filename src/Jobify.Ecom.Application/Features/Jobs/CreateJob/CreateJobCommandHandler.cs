@@ -7,16 +7,15 @@ using Jobify.Ecom.Persistence.Context;
 
 namespace Jobify.Ecom.Application.Features.Jobs.CreateJob;
 
-internal sealed class CreateJobCommandHandler(AppDbContext context)
-    : IHandler<CreateJobCommand, OperationResult<Guid>>
+public class CreateJobCommandHandler(AppDbContext context) : IHandler<CreateJobCommand, OperationResult<Guid>>
 {
-    public async Task<OperationResult<Guid>> Handle(CreateJobCommand message, CancellationToken cancellationToken)
+    public async Task<OperationResult<Guid>> Handle(CreateJobCommand message, CancellationToken cancellationToken = default)
     {
-        if (message.PostedByUserId is null)
+        if (message.PostedByUserId is not Guid userId)
             throw ResponseCatalog.Auth.InvalidSession.ToException();
 
         Job job = new(
-            message.PostedByUserId.Value,
+            userId,
             message.Title,
             message.Description,
             message.JobType,
@@ -28,7 +27,7 @@ internal sealed class CreateJobCommandHandler(AppDbContext context)
         context.Jobs.Add(job);
         await context.SaveChangesAsync(cancellationToken);
 
-        return ResponseCatalog.Job.JobCreated
+        return ResponseCatalog.Job.Created
             .As<Guid>()
             .WithData(job.Id)
             .ToOperationResult();

@@ -6,7 +6,7 @@ namespace Jobify.Ecom.Domain.Entities.Jobs;
 
 public class Job : IEntity, IAuditable
 {
-    internal readonly AuditState AuditState = new();
+    public readonly AuditState AuditState = new();
 
     private Job() { }
 
@@ -81,22 +81,5 @@ public class Job : IEntity, IAuditable
 
         ClosingDate = closingDate;
         AuditState.UpdateAudit();
-    }
-
-    public void Update(
-    string? title,
-    string? description,
-    JobType? jobType,
-    decimal? minSalary,
-    decimal? maxSalary,
-    DateTime? closingDate
-)
-    {
-        // Only update fields that are provided (not null)
-        if (title != null) UpdateTitle(title);
-        if (description != null) UpdateDescription(description);
-        if (jobType.HasValue) UpdateJobType(jobType.Value);
-        if (minSalary.HasValue && maxSalary.HasValue) UpdateSalary(minSalary.Value, maxSalary.Value);
-        if (closingDate.HasValue) UpdateClosingDate(closingDate.Value);
     }
 }

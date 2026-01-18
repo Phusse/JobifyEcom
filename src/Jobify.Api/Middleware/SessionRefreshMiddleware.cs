@@ -17,7 +17,7 @@ internal class SessionRefreshMiddleware(RequestDelegate next)
         await next(context);
     }
 
-    private static async Task TryRefreshSessionAsync(HttpContext context, SessionManagementService sessionManagementService, CancellationToken cancellationToken)
+    private static async Task TryRefreshSessionAsync(HttpContext context, SessionManagementService sessionManagementService, CancellationToken cancellationToken = default)
     {
         string? rawSessionId = CookieHelper.GetCookie(context.Request, CookieKeys.Session);
 

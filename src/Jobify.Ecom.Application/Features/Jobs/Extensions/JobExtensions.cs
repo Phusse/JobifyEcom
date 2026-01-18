@@ -5,8 +5,9 @@ namespace Jobify.Ecom.Application.Features.Jobs.Extensions;
 
 public static class JobExtensions
 {
-    public static JobResponse ToResponse(this Job job) =>
-        new(
+    extension(Job job)
+    {
+        public JobResponse ToResponse() => new(
             job.Id,
             job.PostedByUserId,
             job.Title,
@@ -18,4 +19,5 @@ public static class JobExtensions
             job.CreatedAt,
             job.UpdatedAt
         );
+    }
 }

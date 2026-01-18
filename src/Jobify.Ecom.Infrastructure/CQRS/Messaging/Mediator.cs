@@ -11,24 +11,24 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
 {
     private static readonly ConcurrentDictionary<(Type MessageType, Type ResultType), object> _cache = new();
 
-    public Task<TResult> Send<TResult>(IRequest<TResult> message, CancellationToken cancellationToken = default)
+    public Task<TResult> Send<TResult>(IMessage<TResult> message, CancellationToken cancellationToken = default)
     {
         (Type MessageType, Type ResultType) key = (message.GetType(), typeof(TResult));
 
-        var executor = (Func<IServiceProvider, IRequest<TResult>, CancellationToken, Task<TResult>>)
+        var executor = (Func<IServiceProvider, IMessage<TResult>, CancellationToken, Task<TResult>>)
             _cache.GetOrAdd(key, _ => BuildExecutorWithPipeline<TResult>(key.MessageType));
 
         return executor(serviceProvider, message, cancellationToken);
     }
 
-    private static Func<IServiceProvider, IRequest<TResult>, CancellationToken, Task<TResult>> BuildExecutorWithPipeline<TResult>(Type messageType)
+    private static Func<IServiceProvider, IMessage<TResult>, CancellationToken, Task<TResult>> BuildExecutorWithPipeline<TResult>(Type messageType)
     {
         // Concrete handler type
         Type handlerType = typeof(IHandler<,>).MakeGenericType(messageType, typeof(TResult));
 
         // Lambda parameters
         ParameterExpression providerParam = Expression.Parameter(typeof(IServiceProvider), "serviceProvider");
-        ParameterExpression messageParam = Expression.Parameter(typeof(IRequest<TResult>), "message");
+        ParameterExpression messageParam = Expression.Parameter(typeof(IMessage<TResult>), "message");
         ParameterExpression ctParam = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
         // Get handler from DI
@@ -71,7 +71,7 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
         );
 
         // Compile final lambda
-        var lambda = Expression.Lambda<Func<IServiceProvider, IRequest<TResult>, CancellationToken, Task<TResult>>>(
+        var lambda = Expression.Lambda<Func<IServiceProvider, IMessage<TResult>, CancellationToken, Task<TResult>>>(
             pipelineCall,
             providerParam,
             messageParam,
@@ -82,7 +82,7 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
     }
 
     private static async Task<TResult> BuildPipeline<TRequest, TResult>(IServiceProvider serviceProvider, TRequest request, Func<Task<TResult>> handler, CancellationToken cancellationToken = default)
-        where TRequest : IRequest<TResult>
+        where TRequest : IMessage<TResult>
     {
         var behaviors = serviceProvider.GetServices<IPipelineBehavior<TRequest, TResult>>();
         Func<Task<TResult>> next = handler;

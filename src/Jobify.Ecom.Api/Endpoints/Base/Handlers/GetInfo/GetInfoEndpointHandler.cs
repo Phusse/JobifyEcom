@@ -1,6 +1,6 @@
 using Jobify.Ecom.Api.Models;
 
-namespace Jobify.Ecom.Api.Endpoints.Base.Handlers;
+namespace Jobify.Ecom.Api.Endpoints.Base.Handlers.GetInfo;
 
 internal static class GetInfoEndpointHandler
 {

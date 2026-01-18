@@ -1,5 +1,5 @@
 using Jobify.Ecom.Api.Constants.Routes;
-using Jobify.Ecom.Api.Endpoints.Auth.Handlers;
+using Jobify.Ecom.Api.Endpoints.Auth.Handlers.RegisterUser;
 using Jobify.Ecom.Api.Models;
 using Scalar.AspNetCore;
 
@@ -30,7 +30,7 @@ internal static class AuthEndpoints
 
                     Possible responses:
                     - `201 Created`: User successfully registered.
-                    - `409 Conflict`: Email already in use.
+                    - `409 Conflict`: User already has been registered.
                     - `500 InternalServerError`: Unexpected server error.
                     """
                 )

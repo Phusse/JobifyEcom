@@ -16,15 +16,12 @@ internal static class ExceptionExtensions
 
     extension(Exception exception)
     {
-        public ApiResponse<T> ToApiResponse<T>()
-        {
-            return new ApiResponse<T>(
-                Success: false,
-                MessageId: "UNEXPECTED_ERROR",
-                Message: "Something went wrong on our side. Please try again later.",
-                Details: ContactDetail,
-                Data: default
-            );
-        }
+        public ApiResponse<T> ToApiResponse<T>() => new(
+            Success: false,
+            MessageId: "UNEXPECTED_ERROR",
+            Message: "Something went wrong on our side. Please try again later.",
+            Details: ContactDetail,
+            Data: default
+        );
     }
 }

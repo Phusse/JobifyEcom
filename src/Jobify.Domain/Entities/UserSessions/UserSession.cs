@@ -6,7 +6,7 @@ namespace Jobify.Domain.Entities.UserSessions;
 
 public class UserSession : IEntity, IAuditable
 {
-    internal readonly AuditState AuditState = new();
+    public readonly AuditState AuditState = new();
 
     private UserSession() { }
 

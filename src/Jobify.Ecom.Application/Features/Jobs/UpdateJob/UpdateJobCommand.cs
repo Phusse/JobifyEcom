@@ -13,4 +13,4 @@ public record UpdateJobCommand(
     decimal? MaxSalary,
     DateTime? ClosingDate,
     Guid? UpdatedByUserId
-) : IRequest<OperationResult<Guid>>;
+) : IMessage<OperationResult<object>>;

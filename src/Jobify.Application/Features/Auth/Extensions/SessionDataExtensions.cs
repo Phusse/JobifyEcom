@@ -7,12 +7,9 @@ internal static class SessionDataExtensions
 {
     extension(SessionData sessionData)
     {
-        public SessionTimestampsResponse ToTimestampsResponse()
-        {
-            return new SessionTimestampsResponse(
-                sessionData.ExpiresAt,
-                sessionData.AbsoluteExpiresAt
-            );
-        }
+        public SessionTimestampsResponse ToTimestampsResponse() => new(
+            sessionData.ExpiresAt,
+            sessionData.AbsoluteExpiresAt
+        );
     }
 }

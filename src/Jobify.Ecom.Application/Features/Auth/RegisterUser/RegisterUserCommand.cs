@@ -5,4 +5,4 @@ namespace Jobify.Ecom.Application.Features.Auth.RegisterUser;
 
 public record RegisterUserCommand(
     Guid? SourceUserId
-) : IRequest<OperationResult<Guid>>;
+) : IMessage<OperationResult<Guid>>;

@@ -6,4 +6,4 @@ namespace Jobify.Ecom.Application.Features.Jobs.DeleteJob;
 public record DeleteJobCommand(
     Guid JobId,
     Guid? DeletedByUserId
-) : IRequest<OperationResult<object>>;
+) : IMessage<OperationResult<object>>;

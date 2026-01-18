@@ -8,21 +8,20 @@ using Jobify.Ecom.Domain.Entities.Jobs;
 using Jobify.Ecom.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Jobify.Ecom.Application.Features.Jobs.GetJob;
+namespace Jobify.Ecom.Application.Features.Jobs.GetJobById;
 
-internal sealed class GetJobRequestHandler(AppDbContext context)
-    : IHandler<GetJobRequest, OperationResult<JobResponse>>
+public class GetJobByIdQueryHandler(AppDbContext context) : IHandler<GetJobByIdQuery, OperationResult<JobResponse>>
 {
-    public async Task<OperationResult<JobResponse>> Handle(GetJobRequest request, CancellationToken cancellationToken)
+    public async Task<OperationResult<JobResponse>> Handle(GetJobByIdQuery message, CancellationToken cancellationToken = default)
     {
         Job job = await context.Jobs
             .AsNoTracking()
-            .FirstOrDefaultAsync(j => j.Id == request.JobId, cancellationToken)
-            ?? throw ResponseCatalog.Job.JobNotFound.ToException();
+            .FirstOrDefaultAsync(j => j.Id == message.JobId, cancellationToken)
+            ?? throw ResponseCatalog.Job.NotFound.ToException();
 
         JobResponse response = job.ToResponse();
 
-        return ResponseCatalog.Job.JobFound
+        return ResponseCatalog.Job.Found
             .As<JobResponse>()
             .WithData(response)
             .ToOperationResult();

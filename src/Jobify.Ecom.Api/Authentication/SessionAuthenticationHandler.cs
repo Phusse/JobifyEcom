@@ -3,20 +3,23 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using Jobify.Ecom.Api.Constants.Auth;
 using Jobify.Ecom.Api.Models;
+using Jobify.Ecom.Application.Models;
+using Jobify.Ecom.Application.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 
 namespace Jobify.Ecom.Api.Authentication;
 
-internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, IConfiguration config)
-    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, IConfiguration configuration, UserIdentityService userIdentityService) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true,
+        PropertyNameCaseInsensitive = true
     };
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -26,7 +29,7 @@ internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationScheme
         if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() is not null)
             return AuthenticateResult.NoResult();
 
-        if (!Request.Headers.TryGetValue("X-Internal-Session", out var headerValue))
+        if (!Request.Headers.TryGetValue("X-Internal-Session", out StringValues headerValue))
             return AuthenticateResult.NoResult();
 
         try
@@ -40,8 +43,8 @@ internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationScheme
             byte[] signatureBytes = WebEncoders.Base64UrlDecode(parts[1]);
             string payloadJson = Encoding.UTF8.GetString(payloadBytes);
 
-            string publicKeyPem = config["GatewaySessionVerificationKey"]
-                ?? throw new InvalidOperationException("GatewaySessionVerificationKey is in the config.");
+            string publicKeyPem = configuration["GatewaySessionVerificationKey"]
+                ?? throw new InvalidOperationException("GatewaySessionVerificationKey is missing in config.");
 
             using RSA rsa = RSA.Create();
             rsa.ImportFromPem(publicKeyPem);
@@ -49,15 +52,20 @@ internal class SessionAuthenticationHandler(IOptionsMonitor<AuthenticationScheme
             if (!rsa.VerifyData(payloadBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1))
                 return AuthenticateResult.Fail("Invalid signature");
 
-            var session = JsonSerializer.Deserialize<SessionData>(payloadJson, JsonOptions);
+            SessionData? session = JsonSerializer.Deserialize<SessionData>(payloadJson, JsonOptions);
 
             if (session is null)
                 return AuthenticateResult.Fail("Invalid session data");
 
-            IEnumerable<Claim> claims = [
-                new Claim(ClaimTypes.NameIdentifier, session.UserId.ToString("N")),
-                new Claim(ClaimTypes.Role, session.Role),
+            List<Claim> claims = [
+                new Claim(SessionClaimTypes.ExternalUserId, session.UserId.ToString("N")),
+                new Claim(ClaimTypes.Role, session.Role)
             ];
+
+            UserIdentity? userIdentity = await userIdentityService.GetBySourceUserIdAsync(session.UserId);
+
+            if (userIdentity is not null)
+                claims.Add(new Claim(ClaimTypes.NameIdentifier, userIdentity.UserId.ToString("N")));
 
             ClaimsIdentity identity = new(claims, Scheme.Name);
             ClaimsPrincipal principal = new(identity);

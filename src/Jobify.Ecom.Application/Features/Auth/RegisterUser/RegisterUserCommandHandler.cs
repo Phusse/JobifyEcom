@@ -8,18 +8,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Jobify.Ecom.Application.Features.Auth.RegisterUser;
 
-public class RegisterUserCommandHandler(AppDbContext db)
-    : IHandler<RegisterUserCommand, OperationResult<Guid>>
+public class RegisterUserCommandHandler(AppDbContext db) : IHandler<RegisterUserCommand, OperationResult<Guid>>
 {
     public async Task<OperationResult<Guid>> Handle(RegisterUserCommand message, CancellationToken cancellationToken = default)
     {
-        if (message.SourceUserId is null)
+        if (message.SourceUserId is not Guid userId)
             throw ResponseCatalog.Auth.InvalidSession.ToException();
 
         if (await db.Users.AnyAsync(u => u.SourceUserId == message.SourceUserId, cancellationToken))
             throw ResponseCatalog.Auth.UserAlreadyExists.ToException();
 
-        User user = new(message.SourceUserId.Value);
+        User user = new(userId);
 
         db.Users.Add(user);
         await db.SaveChangesAsync(cancellationToken);
