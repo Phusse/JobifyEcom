@@ -1,5 +1,7 @@
 using Jobify.Ecom.Domain.Abstractions;
 using Jobify.Ecom.Domain.Components.Auditing;
+using Jobify.Ecom.Domain.Entities.JobApplications;
+using Jobify.Ecom.Domain.Entities.Users;
 using Jobify.Ecom.Domain.Enums;
 
 namespace Jobify.Ecom.Domain.Entities.Jobs;
@@ -27,6 +29,7 @@ public class Job : IEntity, IAuditable
     public DateTime UpdatedAt => AuditState.UpdatedAt;
 
     public Guid PostedByUserId { get; private set; }
+    public User PostedByUser { get; private set; } = null!;
 
     public string Title { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
@@ -36,6 +39,8 @@ public class Job : IEntity, IAuditable
     public decimal MaxSalary { get; private set; }
 
     public DateTime ClosingDate { get; private set; }
+
+    public IReadOnlyCollection<JobApplication> JobApplications { get; private set; } = [];
 
     public void UpdateTitle(string newTitle)
     {

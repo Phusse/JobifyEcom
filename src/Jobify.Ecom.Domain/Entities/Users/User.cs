@@ -1,4 +1,5 @@
 ﻿using Jobify.Ecom.Domain.Abstractions;
+using Jobify.Ecom.Domain.Entities.JobApplications;
 using Jobify.Ecom.Domain.Entities.Jobs;
 
 namespace Jobify.Ecom.Domain.Entities.Users;
@@ -15,4 +16,5 @@ public class User : IEntity
     public Guid SourceUserId { get; private set; }
 
     public IReadOnlyCollection<Job> Jobs { get; private set; } = [];
+    public IReadOnlyCollection<JobApplication> JobApplications { get; private set; } = [];
 }
