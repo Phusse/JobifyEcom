@@ -40,7 +40,7 @@ public class Job : IEntity, IAuditable
 
     public DateTime ClosingDate { get; private set; }
 
-    public IReadOnlyCollection<JobApplication> JobApplications { get; private set; } = [];
+    public IReadOnlyCollection<JobApplication> Applications { get; private set; } = [];
 
     public void UpdateTitle(string newTitle)
     {

@@ -10,7 +10,6 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
     {
         builder.HasKey(j => j.Id);
 
-        // Audit
         builder.OwnsOne(j => j.AuditState, audit =>
         {
             audit.Property(a => a.CreatedAt)
@@ -22,40 +21,32 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
                 .IsRequired();
         });
 
-        // Properties
         builder.Property(j => j.Title)
-               .IsRequired()
-               .HasMaxLength(150);
+            .HasMaxLength(150)
+            .IsRequired();
 
         builder.Property(j => j.Description)
-               .IsRequired()
-               .HasMaxLength(3000);
+            .HasMaxLength(3000)
+            .IsRequired();
 
         builder.Property(j => j.JobType)
-               .IsRequired()
-               .HasConversion<string>();
+            .HasConversion<string>()
+            .IsRequired();
 
         builder.Property(j => j.MinSalary)
-               .HasPrecision(18, 2)
-               .IsRequired();
+            .HasPrecision(18, 2)
+            .IsRequired();
 
         builder.Property(j => j.MaxSalary)
-               .HasPrecision(18, 2)
-               .IsRequired();
+            .HasPrecision(18, 2)
+            .IsRequired();
 
         builder.Property(j => j.ClosingDate)
-               .IsRequired();
+            .IsRequired();
 
-        // Navigation: Job -> JobApplications
-        builder.HasMany(j => j.JobApplications)
-               .WithOne(ja => ja.Job)
-               .HasForeignKey(ja => ja.JobId)
-               .OnDelete(DeleteBehavior.Cascade);
-
-        // Navigation: Job -> PostedByUser
-        builder.HasOne(j => j.PostedByUser)
-               .WithMany(u => u.Jobs)
-               .HasForeignKey(j => j.PostedByUserId)
-               .OnDelete(DeleteBehavior.Restrict);
+        builder.HasMany(j => j.Applications)
+            .WithOne(ja => ja.Job)
+            .HasForeignKey(ja => ja.JobId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

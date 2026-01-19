@@ -40,9 +40,10 @@ namespace Jobify.Ecom.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicantUserId");
-
                     b.HasIndex("JobId");
+
+                    b.HasIndex("ApplicantUserId", "JobId")
+                        .IsUnique();
 
                     b.ToTable("JobApplications");
                 });
@@ -110,11 +111,11 @@ namespace Jobify.Ecom.Persistence.Migrations
                     b.HasOne("Jobify.Ecom.Domain.Entities.Users.User", "ApplicantUser")
                         .WithMany("JobApplications")
                         .HasForeignKey("ApplicantUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Jobify.Ecom.Domain.Entities.Jobs.Job", "Job")
-                        .WithMany("JobApplications")
+                        .WithMany("Applications")
                         .HasForeignKey("JobId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -150,7 +151,7 @@ namespace Jobify.Ecom.Persistence.Migrations
             modelBuilder.Entity("Jobify.Ecom.Domain.Entities.Jobs.Job", b =>
                 {
                     b.HasOne("Jobify.Ecom.Domain.Entities.Users.User", "PostedByUser")
-                        .WithMany("Jobs")
+                        .WithMany("PostedJobs")
                         .HasForeignKey("PostedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -183,14 +184,14 @@ namespace Jobify.Ecom.Persistence.Migrations
 
             modelBuilder.Entity("Jobify.Ecom.Domain.Entities.Jobs.Job", b =>
                 {
-                    b.Navigation("JobApplications");
+                    b.Navigation("Applications");
                 });
 
             modelBuilder.Entity("Jobify.Ecom.Domain.Entities.Users.User", b =>
                 {
                     b.Navigation("JobApplications");
 
-                    b.Navigation("Jobs");
+                    b.Navigation("PostedJobs");
                 });
 #pragma warning restore 612, 618
         }

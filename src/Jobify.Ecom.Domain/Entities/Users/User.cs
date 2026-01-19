@@ -15,6 +15,6 @@ public class User : IEntity
 
     public Guid SourceUserId { get; private set; }
 
-    public IReadOnlyCollection<Job> Jobs { get; private set; } = [];
+    public IReadOnlyCollection<Job> PostedJobs { get; private set; } = [];
     public IReadOnlyCollection<JobApplication> JobApplications { get; private set; } = [];
 }

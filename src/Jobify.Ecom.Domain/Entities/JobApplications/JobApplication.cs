@@ -26,8 +26,8 @@ public class JobApplication : IEntity, IAuditable
     public DateTime UpdatedAt => AuditState.UpdatedAt;
 
     public Guid JobId { get; private set; }
-    public Guid ApplicantUserId { get; private set; }
     public Job Job { get; private set; } = null!;
+    public Guid ApplicantUserId { get; private set; }
     public User ApplicantUser { get; private set; } = null!;
 
     public JobApplicationStatus Status { get; private set; } = JobApplicationStatus.Submitted;

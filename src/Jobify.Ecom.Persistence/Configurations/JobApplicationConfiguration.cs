@@ -10,32 +10,22 @@ internal class JobApplicationConfiguration : IEntityTypeConfiguration<JobApplica
     {
         builder.HasKey(ja => ja.Id);
 
-        // Audit
         builder.OwnsOne(ja => ja.AuditState, audit =>
         {
             audit.Property(a => a.CreatedAt)
-                 .HasColumnName("CreatedAt")
-                 .IsRequired();
+                .HasColumnName("CreatedAt")
+                .IsRequired();
 
             audit.Property(a => a.UpdatedAt)
-                 .HasColumnName("UpdatedAt")
-                 .IsRequired();
+                .HasColumnName("UpdatedAt")
+                .IsRequired();
         });
 
-        // Enum
         builder.Property(ja => ja.Status)
-               .HasConversion<string>()
-               .IsRequired();
+            .HasConversion<string>()
+            .IsRequired();
 
-        // Relationships
-        builder.HasOne(ja => ja.Job)
-               .WithMany(j => j.JobApplications)
-               .HasForeignKey(ja => ja.JobId)
-               .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne(ja => ja.ApplicantUser)
-               .WithMany(u => u.JobApplications)
-               .HasForeignKey(ja => ja.ApplicantUserId)
-               .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(ja => new { ja.ApplicantUserId, ja.JobId })
+            .IsUnique();
     }
 }
