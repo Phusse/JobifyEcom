@@ -24,6 +24,8 @@ public class SessionManagementService
     private readonly ICacheService _cacheService;
     private readonly AppDbContext _db;
 
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(30);
+
     public SessionManagementService(IOptions<SessionManagementOptions> options, ICacheService cacheService, AppDbContext db)
     {
         _cacheService = cacheService;
@@ -61,7 +63,7 @@ public class SessionManagementService
         await _db.SaveChangesAsync(cancellationToken);
 
         SessionData sessionData = session.ToSessionData(systemRole, isLocked: true);
-        await _cacheService.SetAsync(CacheKey(session.Id), sessionData, TimeSpan.FromMinutes(30));
+        await _cacheService.SetAsync(CacheKey(session.Id), sessionData, CacheTtl);
 
         return session;
     }
@@ -90,7 +92,7 @@ public class SessionManagementService
 
         if (sessionDataDto is null) return null;
 
-        TimeSpan cacheDuration = CalculateCacheTimeToLive(sessionDataDto.ExpiresAt, TimeSpan.FromMinutes(30));
+        TimeSpan cacheDuration = CalculateCacheTimeToLive(sessionDataDto.ExpiresAt, CacheTtl);
 
         if (cacheDuration > TimeSpan.Zero)
             await _cacheService.SetAsync(CacheKey(sessionId), sessionDataDto, cacheDuration);

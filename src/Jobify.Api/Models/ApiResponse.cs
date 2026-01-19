@@ -2,7 +2,7 @@
 
 namespace Jobify.Api.Models;
 
-public record ApiResponse<T>(
+internal record ApiResponse<T>(
     bool Success,
     string MessageId,
     string Message,

@@ -8,8 +8,8 @@ namespace Jobify.Domain.Entities.Users;
 
 public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
 {
-    internal readonly AuditState AuditState = new();
-    internal readonly SensitiveDataState<UserSensitive> SensitiveDataState = new();
+    public readonly AuditState AuditState = new();
+    public readonly SensitiveDataState<UserSensitive> SensitiveDataState = new();
 
     private User() { }
 

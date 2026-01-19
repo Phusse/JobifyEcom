@@ -1,13 +1,16 @@
 using Jobify.Api.Constants.Cookies;
 using Jobify.Api.Constants.Routes;
-using Jobify.Api.Endpoints.Auth.Handlers;
+using Jobify.Api.Endpoints.Auth.Handlers.LoginUser;
+using Jobify.Api.Endpoints.Auth.Handlers.LogoutUser;
+using Jobify.Api.Endpoints.Auth.Handlers.RefreshSession;
+using Jobify.Api.Endpoints.Auth.Handlers.RegisterUser;
 using Jobify.Api.Models;
 using Jobify.Application.Features.Auth.Models;
 using Scalar.AspNetCore;
 
 namespace Jobify.Api.Endpoints.Auth;
 
-public static class AuthEndpoints
+internal static class AuthEndpoints
 {
     extension(IEndpointRouteBuilder app)
     {

@@ -11,10 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Jobify.Application.Features.Auth.RegisterUser;
 
-public class RegisterUserHandler(AppDbContext db, IHashingService hashingService, IDataEncryptionService encryptionService)
-    : IHandler<RegisterUserRequest, OperationResult<Guid>>
+public class RegisterUserCommandHandler(AppDbContext db, IHashingService hashingService, IDataEncryptionService encryptionService) : IHandler<RegisterUserCommand, OperationResult<Guid>>
 {
-    public async Task<OperationResult<Guid>> Handle(RegisterUserRequest message, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<Guid>> Handle(RegisterUserCommand message, CancellationToken cancellationToken = default)
     {
         string emailHash = hashingService.HashEmail(message.Email);
 

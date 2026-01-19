@@ -9,15 +9,11 @@ namespace Jobify.Api.Middleware;
 
 internal class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IOptions<JsonOptions> jsonOptions)
 {
-    private readonly RequestDelegate _next = next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger = logger;
-    private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions;
-
     public async Task InvokeAsync(HttpContext context)
     {
         try
         {
-            await _next(context);
+            await next(context);
         }
         catch (Exception ex)
         {
@@ -35,8 +31,8 @@ internal class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Excepti
             httpContext.Response.StatusCode = appEx.StatusCode;
             response = appEx.ToApiResponse<object>();
 
-            if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(
+            if (logger.IsEnabled(LogLevel.Warning))
+                logger.LogWarning(
                     "Handled application error | TraceId: {TraceId} | MessageId: {MessageId}",
                     traceId,
                     response.MessageId
@@ -47,8 +43,8 @@ internal class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Excepti
             httpContext.Response.StatusCode = 500;
             response = ex.ToApiResponse<object>();
 
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(
+            if (logger.IsEnabled(LogLevel.Error))
+                logger.LogError(
                     ex,
                     "Unhandled server exception | TraceId: {TraceId} | MessageId: {MessageId}",
                     traceId,
@@ -57,7 +53,7 @@ internal class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Excepti
         }
 
         httpContext.Response.ContentType = "application/json; charset=utf-8";
-        string json = JsonSerializer.Serialize(response, _jsonOptions);
+        string json = JsonSerializer.Serialize(response, jsonOptions.Value.SerializerOptions);
         await httpContext.Response.WriteAsync(json);
     }
 }

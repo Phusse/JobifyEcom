@@ -1,15 +1,15 @@
 using Jobify.Api.Constants.Routes;
-using Jobify.Api.Endpoints.Base.Handlers;
+using Jobify.Api.Endpoints.Base.Handlers.GetInfo;
 
 namespace Jobify.Api.Endpoints.Base;
 
-public static class BaseEndpoints
+internal static class BaseEndpoints
 {
     extension(IEndpointRouteBuilder app)
     {
         public void MapBaseEndpoints()
         {
-            app.MapGet(ApiRoutes.BasePath, GetInfoEndpointHandler.Handle)
+            app.MapGet(ApiRoutes.ApiBasePath, GetInfoEndpointHandler.Handle)
                 .ExcludeFromDescription();
         }
     }

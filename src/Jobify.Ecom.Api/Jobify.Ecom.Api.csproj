@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>c82149c6-da21-4217-8043-1830bb7117e3</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jobify.Ecom.Application\Jobify.Ecom.Application.csproj" />
+    <ProjectReference Include="..\Jobify.Ecom.Infrastructure\Jobify.Ecom.Infrastructure.csproj" />
+    <ProjectReference Include="..\Jobify.Ecom.Persistence\Jobify.Ecom.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

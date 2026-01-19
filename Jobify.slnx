@@ -6,13 +6,11 @@
     <File Path="Directory.Packages.props" />
   </Folder>
 
-  <Folder Name="/legacy/">
-    <Project Path="backend/JobifyEcom.csproj" />
-  </Folder>
-
   <Folder Name="/scripts/">
     <File Path="scripts/GenerateSecrets.cs" />
   </Folder>
+
+  <Folder Name="/sql/" />
 
   <Folder Name="/sql/Users/">
     <File Path="sql/Users/list_user.sql" />
@@ -28,15 +26,13 @@
     <Project Path="src/Jobify.Api/Jobify.Api.csproj" />
     <Project Path="src/Jobify.Application/Jobify.Application.csproj" />
     <Project Path="src/Jobify.Domain/Jobify.Domain.csproj" />
+    <Project Path="src/Jobify.Ecom.Api/Jobify.Ecom.Api.csproj" />
+    <Project Path="src/Jobify.Ecom.Application/Jobify.Ecom.Application.csproj" />
+    <Project Path="src/Jobify.Ecom.Domain/Jobify.Ecom.Domain.csproj" />
+    <Project Path="src/Jobify.Ecom.Infrastructure/Jobify.Ecom.Infrastructure.csproj" />
+    <Project Path="src/Jobify.Ecom.Persistence/Jobify.Ecom.Persistence.csproj" />
     <Project Path="src/Jobify.Infrastructure/Jobify.Infrastructure.csproj" />
     <Project Path="src/Jobify.Persistence/Jobify.Persistence.csproj" />
-  </Folder>
-
-  <Folder Name="/test/">
-    <Project Path="test/Jobify.Api.Tests/Jobify.Api.Tests.csproj" />
-    <Project Path="test/Jobify.Application.Tests/Jobify.Application.Tests.csproj" />
-    <Project Path="test/Jobify.Domain.Tests/Jobify.Domain.Tests.csproj" />
-    <Project Path="test/Jobify.Infrastructure.Tests/Jobify.Infrastructure.Tests.csproj" />
   </Folder>
 
 </Solution>

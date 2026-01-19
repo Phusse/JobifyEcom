@@ -2,8 +2,6 @@
 
 internal class TraceIdMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next = next;
-
     public async Task InvokeAsync(HttpContext context)
     {
         string traceId = context.TraceIdentifier;
@@ -14,6 +12,6 @@ internal class TraceIdMiddleware(RequestDelegate next)
             return Task.CompletedTask;
         });
 
-        await _next(context);
+        await next(context);
     }
 }

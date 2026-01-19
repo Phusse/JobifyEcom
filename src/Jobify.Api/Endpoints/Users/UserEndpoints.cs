@@ -1,12 +1,13 @@
 using Jobify.Api.Constants.Cookies;
 using Jobify.Api.Constants.Routes;
-using Jobify.Api.Endpoints.Users.Handlers;
+using Jobify.Api.Endpoints.Users.Handlers.GetCurrentUser;
+using Jobify.Api.Endpoints.Users.Handlers.GetUserById;
 using Jobify.Api.Models;
 using Jobify.Application.Features.Users.Models;
 
 namespace Jobify.Api.Endpoints.Users;
 
-public static class UserEndpoints
+internal static class UserEndpoints
 {
     extension(IEndpointRouteBuilder app)
     {

@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Jobify.Api;
 using Jobify.Api.Authentication;
 using Jobify.Api.Constants.Auth;
 using Jobify.Api.Endpoints.Auth;
@@ -24,7 +23,6 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration, [typeof(IMediator).Assembly]);
-builder.Services.AddApiServices();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -50,7 +48,12 @@ builder.Services.Configure<JsonOptions>(opts =>
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-    .AddTransforms(builderContext => { builderContext.AddInternalSessionAuth(); });
+    .AddTransforms(builderContext =>
+    {
+        builderContext
+            .AddInternalSessionAuth()
+            .AddInternalTraceId();
+    });
 
 builder.Services.AddOpenApi(options => { options.AddCustomOpenApiTransformer(); });
 
