@@ -15,6 +15,7 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
 
         RuleFor(x => x.MiddleName)
             .Cascade(CascadeMode.Stop)
+            .MinimumLength(1)
             .MaximumLength(40)
             .Matches("^[a-zA-Z'-]+$").WithMessage("Names can only contain letters, hyphens, or apostrophes.");
 
