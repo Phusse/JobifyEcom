@@ -22,6 +22,32 @@ namespace Jobify.Ecom.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Jobify.Ecom.Domain.Entities.JobApplications.JobApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ApplicantUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobId");
+
+                    b.HasIndex("ApplicantUserId", "JobId")
+                        .IsUnique();
+
+                    b.ToTable("JobApplications");
+                });
+
             modelBuilder.Entity("Jobify.Ecom.Domain.Entities.Jobs.Job", b =>
                 {
                     b.Property<Guid>("Id")
@@ -33,8 +59,8 @@ namespace Jobify.Ecom.Persistence.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<string>("JobType")
                         .IsRequired()
@@ -53,8 +79,8 @@ namespace Jobify.Ecom.Persistence.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.HasKey("Id");
 
@@ -80,10 +106,52 @@ namespace Jobify.Ecom.Persistence.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Jobify.Ecom.Domain.Entities.JobApplications.JobApplication", b =>
+                {
+                    b.HasOne("Jobify.Ecom.Domain.Entities.Users.User", "ApplicantUser")
+                        .WithMany("JobApplications")
+                        .HasForeignKey("ApplicantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Jobify.Ecom.Domain.Entities.Jobs.Job", "Job")
+                        .WithMany("Applications")
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Jobify.Ecom.Domain.Components.Auditing.AuditState", "AuditState", b1 =>
+                        {
+                            b1.Property<Guid>("JobApplicationId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime>("CreatedAt")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("CreatedAt");
+
+                            b1.Property<DateTime>("UpdatedAt")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("UpdatedAt");
+
+                            b1.HasKey("JobApplicationId");
+
+                            b1.ToTable("JobApplications");
+
+                            b1.WithOwner()
+                                .HasForeignKey("JobApplicationId");
+                        });
+
+                    b.Navigation("ApplicantUser");
+
+                    b.Navigation("AuditState");
+
+                    b.Navigation("Job");
+                });
+
             modelBuilder.Entity("Jobify.Ecom.Domain.Entities.Jobs.Job", b =>
                 {
-                    b.HasOne("Jobify.Ecom.Domain.Entities.Users.User", null)
-                        .WithMany("Jobs")
+                    b.HasOne("Jobify.Ecom.Domain.Entities.Users.User", "PostedByUser")
+                        .WithMany("PostedJobs")
                         .HasForeignKey("PostedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -110,11 +178,20 @@ namespace Jobify.Ecom.Persistence.Migrations
                         });
 
                     b.Navigation("AuditState");
+
+                    b.Navigation("PostedByUser");
+                });
+
+            modelBuilder.Entity("Jobify.Ecom.Domain.Entities.Jobs.Job", b =>
+                {
+                    b.Navigation("Applications");
                 });
 
             modelBuilder.Entity("Jobify.Ecom.Domain.Entities.Users.User", b =>
                 {
-                    b.Navigation("Jobs");
+                    b.Navigation("JobApplications");
+
+                    b.Navigation("PostedJobs");
                 });
 #pragma warning restore 612, 618
         }

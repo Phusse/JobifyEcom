@@ -7,7 +7,7 @@ internal static class OperationResultExtension
 {
     extension<T>(OperationResult<T> result)
     {
-        public OperationResult<object> WithoutData() => new (
+        public OperationResult<object> WithoutData() => new(
             MessageId: result.MessageId,
             Message: result.Message,
             Details: result.Details,

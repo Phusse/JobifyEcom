@@ -18,7 +18,7 @@ internal static class UserExtensions
                 user.Id,
                 user.UserName,
                 data.FirstName,
-                data.MiddleName ?? string.Empty,
+                data.MiddleName,
                 data.LastName,
                 user.Role
             );

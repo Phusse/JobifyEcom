@@ -26,11 +26,6 @@ internal class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
         builder.Property(us => us.UserId)
             .IsRequired();
 
-        builder.HasOne(us => us.User)
-            .WithMany(u => u.Sessions)
-            .HasForeignKey(us => us.UserId)
-            .IsRequired();
-
         builder.Property(us => us.RememberMe)
             .IsRequired();
 

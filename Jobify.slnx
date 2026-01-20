@@ -6,22 +6,6 @@
     <File Path="Directory.Packages.props" />
   </Folder>
 
-  <Folder Name="/scripts/">
-    <File Path="scripts/GenerateSecrets.cs" />
-  </Folder>
-
-  <Folder Name="/sql/" />
-
-  <Folder Name="/sql/Users/">
-    <File Path="sql/Users/list_user.sql" />
-  </Folder>
-
-  <Folder Name="/sql/UserSessions/">
-    <File Path="sql/UserSessions/delete_inactive_sessions.sql" />
-    <File Path="sql/UserSessions/find_inactive_sessions.sql" />
-    <File Path="sql/UserSessions/list_user_sessions.sql" />
-  </Folder>
-
   <Folder Name="/src/">
     <Project Path="src/Jobify.Api/Jobify.Api.csproj" />
     <Project Path="src/Jobify.Application/Jobify.Application.csproj" />

@@ -6,7 +6,7 @@ public record UserResponse(
     Guid Id,
     string UserName,
     string FirstName,
-    string MiddleName,
+    string? MiddleName,
     string LastName,
     SystemRole Role
 );

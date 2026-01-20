@@ -22,16 +22,16 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
         });
 
         builder.Property(j => j.Title)
-            .IsRequired()
-            .HasMaxLength(150);
+            .HasMaxLength(150)
+            .IsRequired();
 
         builder.Property(j => j.Description)
-            .IsRequired()
-            .HasMaxLength(3000);
+            .HasMaxLength(3000)
+            .IsRequired();
 
         builder.Property(j => j.JobType)
-            .IsRequired()
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .IsRequired();
 
         builder.Property(j => j.MinSalary)
             .HasPrecision(18, 2)
@@ -43,5 +43,10 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
 
         builder.Property(j => j.ClosingDate)
             .IsRequired();
+
+        builder.HasMany(j => j.Applications)
+            .WithOne(ja => ja.Job)
+            .HasForeignKey(ja => ja.JobId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

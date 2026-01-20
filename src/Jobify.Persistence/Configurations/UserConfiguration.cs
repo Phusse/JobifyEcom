@@ -34,31 +34,31 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         });
 
         builder.Property(u => u.UserName)
-            .IsRequired()
-            .HasMaxLength(30);
+            .HasMaxLength(30)
+            .IsRequired();
 
         builder.HasIndex(u => u.EmailHash)
             .IsUnique();
 
         builder.Property(u => u.EmailHash)
-            .IsRequired()
-            .HasMaxLength(64);
+            .HasMaxLength(64)
+            .IsRequired();
 
         builder.Property(u => u.PasswordHash)
-            .IsRequired()
-            .HasMaxLength(60);
+            .HasMaxLength(60)
+            .IsRequired();
 
         builder.Property(u => u.IsLocked)
             .IsRequired();
 
         builder.Property(u => u.Role)
-            .IsRequired()
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .IsRequired();
 
         builder.HasMany(u => u.Sessions)
             .WithOne(us => us.User)
             .HasForeignKey(us => us.UserId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
     }
 }

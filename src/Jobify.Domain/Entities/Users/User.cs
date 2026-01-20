@@ -35,7 +35,7 @@ public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
     public bool IsLocked { get; private set; } = false;
     public SystemRole Role { get; private set; } = SystemRole.User;
 
-    public ICollection<UserSession> Sessions { get; private set; } = [];
+    public IReadOnlyCollection<UserSession> Sessions { get; private set; } = [];
 
     public void SetEncryptedData(byte[] data)
     {
