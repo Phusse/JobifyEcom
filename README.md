@@ -85,11 +85,71 @@ dotnet run
 
 ```bash
 # Run the Gateway
-dotnet run --project src/Jobify.Api/Jobify.Api.csproj
+dotnet run --project src/Jobify.Api
 
 # Run the Ecom Service (in another terminal)
-dotnet run --project src/Jobify.Ecom.Api/Jobify.Ecom.Api.csproj
+dotnet run --project src/Jobify.Ecom.Api
 ```
+
+## Database Migrations
+
+Jobify uses **Entity Framework Core** for database migrations. To create or update the database schema, run migrations from the **solution root** using the `dotnet ef` CLI.
+
+### Prerequisites
+
+* Make sure the **.NET 10 SDK** is installed.
+* Ensure your `appsettings.json` files are correctly configured with the connection strings.
+* Install EF Core CLI tools if not already installed:
+
+```bash
+dotnet tool install --global dotnet-ef
+```
+
+You can check the installation:
+
+```bash
+dotnet ef --version
+```
+
+---
+
+### Run Migrations from Solution Root
+
+#### 1. Apply Migrations for **Jobify.Api** (Gateway)
+
+```bash
+dotnet ef database update --project src/Jobify.Persistence --startup-project src/Jobify.Api
+```
+
+* `--project` points to the **EF Core DbContext project** (Persistence layer)
+* `--startup-project` points to the **project that runs the application** (Gateway)
+
+#### 2. Apply Migrations for **Jobify.Ecom.Api** (E-commerce Service)
+
+```bash
+dotnet ef database update --project src/Jobify.Ecom.Persistence --startup-project src/Jobify.Ecom.Api
+```
+
+> **Tip:** If you need to **add a new migration**, use:
+
+```bash
+dotnet ef migrations add <MigrationName> --project <PersistenceProject> --startup-project <ApiProject>
+```
+
+Example:
+
+```bash
+dotnet ef migrations add InitialCreate --project src/Jobify.Ecom.Persistence --startup-project src/Jobify.Ecom.Api
+```
+
+---
+
+### Verification
+
+After running the migrations, check that the database tables have been created in your Database. You should see tables corresponding to:
+
+* Users, Jobs, Applications, etc. (depending on the DbContext models)
+* EF Core migration history table: `__EFMigrationsHistory`
 
 ---
 
