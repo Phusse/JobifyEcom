@@ -37,7 +37,30 @@ public class JobApplication : IEntity, IAuditable
         if (!Enum.IsDefined(newStatus))
             throw new ArgumentException("Invalid job application status.", nameof(newStatus));
 
+        if (!IsValidTransition(Status, newStatus))
+            throw new InvalidOperationException($"Cannot change status from {Status} to {newStatus}.");
+
         Status = newStatus;
         AuditState.UpdateAudit();
+    }
+
+    public static bool IsValidTransition(JobApplicationStatus current, JobApplicationStatus next)
+    {
+        return current switch
+        {
+            JobApplicationStatus.Submitted =>
+                next is JobApplicationStatus.Reviewed or JobApplicationStatus.Rejected,
+
+            JobApplicationStatus.Reviewed =>
+                next is JobApplicationStatus.Shortlisted or JobApplicationStatus.Rejected,
+
+            JobApplicationStatus.Shortlisted =>
+                next is JobApplicationStatus.Accepted or JobApplicationStatus.Rejected,
+
+            JobApplicationStatus.Accepted => false,
+            JobApplicationStatus.Rejected => false,
+
+            _ => false
+        };
     }
 }

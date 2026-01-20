@@ -42,8 +42,8 @@ public class UpdateJobCommandHandler(AppDbContext context) : IHandler<UpdateJobC
                 throw ResponseCatalog.Job.InvalidUpdate
                     .WithDetails([
                         new ResponseDetail(
-                            "The salary range is invalid. Ensure that both minimum and maximum salaries are non-negative and that the maximum salary is greater than or equal to the minimum salary.",
-                            ResponseSeverity.Error
+                            Message: "The salary range is invalid. Ensure that both minimum and maximum salaries are non-negative and that the maximum salary is greater than or equal to the minimum salary.",
+                            Severity: ResponseSeverity.Error
                         )
                     ])
                     .ToException();
