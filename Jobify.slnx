@@ -6,10 +6,6 @@
     <File Path="Directory.Packages.props" />
   </Folder>
 
-  <Folder Name="/scripts/">
-    <File Path="scripts/GenerateSecrets.cs" />
-  </Folder>
-
   <Folder Name="/src/">
     <Project Path="src/Jobify.Api/Jobify.Api.csproj" />
     <Project Path="src/Jobify.Application/Jobify.Application.csproj" />
