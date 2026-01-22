@@ -56,6 +56,12 @@ public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
         if (string.IsNullOrWhiteSpace(userName))
             throw new ArgumentException("UserName cannot be null or empty.", nameof(userName));
 
+        if (userName.Length < UserLimits.UserNameMinLength || userName.Length > UserLimits.UserNameMaxLength)
+            throw new ArgumentException(
+                $"UserName must be between {UserLimits.UserNameMinLength} and {UserLimits.UserNameMaxLength} characters.",
+                nameof(userName)
+            );
+
         UserName = userName;
         AuditState.UpdateAudit();
     }
@@ -65,6 +71,12 @@ public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
         if (string.IsNullOrWhiteSpace(emailHash))
             throw new ArgumentException("EmailHash cannot be null or empty.", nameof(emailHash));
 
+        if (emailHash.Length is not UserLimits.EmailHashMaxLength)
+            throw new ArgumentException(
+                $"EmailHash must be exactly {UserLimits.EmailHashMaxLength} characters.",
+                nameof(emailHash)
+            );
+
         EmailHash = emailHash;
         AuditState.UpdateAudit();
     }
@@ -73,6 +85,12 @@ public class User : IEntity, IAuditable, IHasSensitiveData<UserSensitive>
     {
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new ArgumentException("PasswordHash cannot be null or empty.", nameof(passwordHash));
+
+        if (passwordHash.Length > UserLimits.PasswordHashMaxLength)
+            throw new ArgumentException(
+                $"PasswordHash cannot exceed {UserLimits.PasswordHashMaxLength} characters.",
+                nameof(passwordHash)
+            );
 
         PasswordHash = passwordHash;
         AuditState.UpdateAudit();
