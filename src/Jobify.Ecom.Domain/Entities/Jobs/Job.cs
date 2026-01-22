@@ -47,6 +47,12 @@ public class Job : IEntity, IAuditable
         if (string.IsNullOrWhiteSpace(newTitle))
             throw new ArgumentException("Job title is required.", nameof(newTitle));
 
+        if (newTitle.Length < JobLimits.TitleMinLength || newTitle.Length > JobLimits.TitleMaxLength)
+            throw new ArgumentException(
+                $"Job title must be between {JobLimits.TitleMinLength} and {JobLimits.TitleMaxLength} characters.",
+                nameof(newTitle)
+            );
+
         Title = newTitle;
         AuditState.UpdateAudit();
     }
@@ -55,6 +61,12 @@ public class Job : IEntity, IAuditable
     {
         if (string.IsNullOrWhiteSpace(newDescription))
             throw new ArgumentException("Job description is required.", nameof(newDescription));
+
+        if (newDescription.Length < JobLimits.DescriptionMinLength || newDescription.Length > JobLimits.DescriptionMaxLength)
+            throw new ArgumentException(
+                $"Job description must be between {JobLimits.DescriptionMinLength} and {JobLimits.DescriptionMaxLength} characters.",
+                nameof(newDescription)
+            );
 
         Description = newDescription;
         AuditState.UpdateAudit();
@@ -71,11 +83,18 @@ public class Job : IEntity, IAuditable
 
     public void UpdateSalary(decimal minSalary, decimal maxSalary)
     {
-        if (minSalary < 0 || maxSalary < 0 || minSalary > maxSalary)
-            throw new ArgumentException("Invalid salary range.");
+        if (minSalary < JobLimits.MinAllowedMoney || maxSalary > JobLimits.MaxAllowedMoney || maxSalary < minSalary)
+        {
+            throw new ArgumentException(
+                $"Salary range is invalid. Minimum salary must be at least {JobLimits.MinAllowedMoney}, " +
+                $"maximum salary cannot exceed {JobLimits.MaxAllowedMoney}, " +
+                "and maximum must be greater than or equal to minimum."
+            );
+        }
 
         MinSalary = minSalary;
         MaxSalary = maxSalary;
+
         AuditState.UpdateAudit();
     }
 
