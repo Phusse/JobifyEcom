@@ -121,10 +121,10 @@ public class SessionManagementService
                 : _standardExpiryExtension;
 
             sessionDataDto.Session.ExtendSession(extension);
-        }
 
-        await _db.SaveChangesAsync(cancellationToken);
-        await _cacheService.RemoveAsync(CacheKey(sessionDataDto.Session.Id));
+            await _db.SaveChangesAsync(cancellationToken);
+            await _cacheService.RemoveAsync(CacheKey(sessionDataDto.Session.Id));
+        }
 
         return sessionDataDto.Session.ToSessionData(sessionDataDto.Role, sessionDataDto.IsLocked);
     }

@@ -12,7 +12,7 @@ namespace Jobify.Api.Endpoints.Auth.Handlers.RefreshSession;
 
 internal static class RefreshSessionEndpointHandler
 {
-    public static async Task<IResult> Handle(HttpContext context, IMediator mediator, HttpResponse response)
+    public static async Task<IResult> Handle(HttpContext context, IMediator mediator)
     {
         Guid? sessionId = null;
         string? rawSessionId = context.User.FindFirstValue(SessionClaimTypes.SessionId);
@@ -25,7 +25,7 @@ internal static class RefreshSessionEndpointHandler
         SessionResult data = result.Data!;
 
         CookieHelper.SetCookie(
-            response,
+            context.Response,
             CookieKeys.Session,
             data.SessionId.ToString("N"),
             data.Timestamps.ExpiresAt
