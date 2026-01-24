@@ -19,4 +19,12 @@
     <Project Path="src/Jobify.Persistence/Jobify.Persistence.csproj" />
   </Folder>
 
+  <Folder Name="/tests/">
+    <Project Path="tests/Jobify.Domain.Tests/Jobify.Domain.Tests.csproj" />
+    <Project Path="tests/Jobify.Application.Tests/Jobify.Application.Tests.csproj" />
+    <Project Path="tests/Jobify.Infrastructure.Tests/Jobify.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Jobify.Ecom.Domain.Tests/Jobify.Ecom.Domain.Tests.csproj" />
+    <Project Path="tests/Jobify.Ecom.Application.Tests/Jobify.Ecom.Application.Tests.csproj" />
+  </Folder>
+
 </Solution>
