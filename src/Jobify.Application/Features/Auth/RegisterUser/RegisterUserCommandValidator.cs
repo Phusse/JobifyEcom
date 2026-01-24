@@ -1,4 +1,5 @@
 using FluentValidation;
+using Jobify.Domain.Entities.Users;
 
 namespace Jobify.Application.Features.Auth.RegisterUser;
 
@@ -9,40 +10,40 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
         RuleFor(x => x.FirstName)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .MinimumLength(1)
-            .MaximumLength(40)
+            .MinimumLength(UserLimits.NameMinLength)
+            .MaximumLength(UserLimits.NameMaxLength)
             .Matches("^[a-zA-Z'-]+$").WithMessage("Names can only contain letters, hyphens, or apostrophes.");
 
         RuleFor(x => x.MiddleName)
             .Cascade(CascadeMode.Stop)
-            .MinimumLength(1)
-            .MaximumLength(40)
+            .MinimumLength(UserLimits.NameMinLength)
+            .MaximumLength(UserLimits.NameMaxLength)
             .Matches("^[a-zA-Z'-]+$").WithMessage("Names can only contain letters, hyphens, or apostrophes.");
 
         RuleFor(x => x.LastName)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .MinimumLength(1)
-            .MaximumLength(60)
+            .MinimumLength(UserLimits.NameMinLength)
+            .MaximumLength(UserLimits.NameMaxLength)
             .Matches("^[a-zA-Z'-]+$").WithMessage("Names can only contain letters, hyphens, or apostrophes.");
 
         RuleFor(x => x.UserName)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .MinimumLength(3)
-            .MaximumLength(30)
+            .MinimumLength(UserLimits.UserNameMinLength)
+            .MaximumLength(UserLimits.UserNameMaxLength)
             .Matches("^[a-zA-Z0-9._]+$").WithMessage("Username can only contain letters, numbers, dots, or underscores.");
 
         RuleFor(x => x.Email)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .MaximumLength(254)
+            .MaximumLength(UserLimits.IdentifierIdMaxLength)
             .Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
 
         RuleFor(x => x.Password)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .MinimumLength(8)
+            .MinimumLength(UserLimits.PasswordMinLength)
             .Matches(@"^\S+$").WithMessage("Password cannot contain spaces.");
 
         When(x => !string.IsNullOrEmpty(x.Password), () =>

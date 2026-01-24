@@ -10,9 +10,6 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.HasKey(u => u.Id);
 
-        builder.HasIndex(u => u.UserName)
-            .IsUnique();
-
         builder.OwnsOne(u => u.AuditState, audit =>
         {
             audit.Property(a => a.CreatedAt)
@@ -33,19 +30,22 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
             sensitive.Ignore(s => s.SensitiveData);
         });
 
+        builder.HasIndex(u => u.UserName)
+            .IsUnique();
+
         builder.Property(u => u.UserName)
-            .HasMaxLength(30)
+            .HasMaxLength(UserLimits.UserNameMaxLength)
             .IsRequired();
 
         builder.HasIndex(u => u.EmailHash)
             .IsUnique();
 
         builder.Property(u => u.EmailHash)
-            .HasMaxLength(64)
+            .HasMaxLength(UserLimits.EmailHashMaxLength)
             .IsRequired();
 
         builder.Property(u => u.PasswordHash)
-            .HasMaxLength(60)
+            .HasMaxLength(UserLimits.PasswordHashMaxLength)
             .IsRequired();
 
         builder.Property(u => u.IsLocked)

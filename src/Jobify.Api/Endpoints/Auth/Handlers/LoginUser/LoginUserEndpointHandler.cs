@@ -12,11 +12,11 @@ namespace Jobify.Api.Endpoints.Auth.Handlers.LoginUser;
 
 internal static class LoginUserEndpointHandler
 {
-    public static async Task<IResult> Handle([FromBody] LoginUserCommand message, IMediator mediator, HttpResponse response, HttpRequest request)
+    public static async Task<IResult> Handle([FromBody] LoginUserCommand message, IMediator mediator, HttpContext context)
     {
         OperationResult<SessionResult> result = await mediator.Send(message);
 
-        string? rawSessionId = CookieHelper.GetCookie(request, CookieKeys.Session);
+        string? rawSessionId = CookieHelper.GetCookie(context.Request, CookieKeys.Session);
 
         if (Guid.TryParse(rawSessionId, out Guid sessionId))
             await mediator.Send(new RevokeSessionCommand(sessionId));
@@ -24,7 +24,7 @@ internal static class LoginUserEndpointHandler
         SessionResult data = result.Data!;
 
         CookieHelper.SetCookie(
-            response,
+            context.Response,
             CookieKeys.Session,
             data.SessionId.ToString("N"),
             expiresUtc: data.Timestamps.ExpiresAt

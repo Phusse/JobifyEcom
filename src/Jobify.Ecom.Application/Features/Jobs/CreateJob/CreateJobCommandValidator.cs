@@ -1,4 +1,5 @@
 using FluentValidation;
+using Jobify.Ecom.Domain.Entities.Jobs;
 
 namespace Jobify.Ecom.Application.Features.Jobs.CreateJob;
 
@@ -9,21 +10,24 @@ public class CreateJobCommandValidator : AbstractValidator<CreateJobCommand>
         RuleFor(x => x.Title)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .MinimumLength(1)
-            .MaximumLength(150);
+            .MinimumLength(JobLimits.TitleMinLength)
+            .MaximumLength(JobLimits.TitleMaxLength);
 
         RuleFor(x => x.Description)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .MinimumLength(1)
-            .MaximumLength(3000);
+            .MinimumLength(JobLimits.DescriptionMinLength)
+            .MaximumLength(JobLimits.DescriptionMaxLength);
 
         RuleFor(x => x.MinSalary)
-            .GreaterThanOrEqualTo(0);
+            .Cascade(CascadeMode.Stop)
+            .GreaterThanOrEqualTo(JobLimits.MinAllowedMoney)
+            .LessThanOrEqualTo(JobLimits.MaxAllowedMoney);
 
         RuleFor(x => x.MaxSalary)
             .Cascade(CascadeMode.Stop)
-            .GreaterThanOrEqualTo(0)
+            .GreaterThanOrEqualTo(JobLimits.MinAllowedMoney)
+            .LessThanOrEqualTo(JobLimits.MaxAllowedMoney)
             .GreaterThanOrEqualTo(x => x.MinSalary)
             .WithMessage("Maximum salary must be greater than or equal to minimum salary.");
 

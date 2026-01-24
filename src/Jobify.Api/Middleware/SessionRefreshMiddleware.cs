@@ -1,5 +1,6 @@
 using Jobify.Api.Constants.Cookies;
 using Jobify.Api.Helpers;
+using Jobify.Application.Models;
 using Jobify.Application.Services;
 
 namespace Jobify.Api.Middleware;
@@ -24,6 +25,15 @@ internal class SessionRefreshMiddleware(RequestDelegate next)
         if (!Guid.TryParse(rawSessionId, out Guid sessionId))
             return;
 
-        await sessionManagementService.ExtendSessionAsync(sessionId, cancellationToken);
+        SessionData? session = await sessionManagementService.ExtendSessionAsync(sessionId, cancellationToken);
+
+        if (session is null) return;
+
+        CookieHelper.SetCookie(
+            context.Response,
+            CookieKeys.Session,
+            session.SessionId.ToString("N"),
+            session.ExpiresAt
+        );
     }
 }

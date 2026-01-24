@@ -22,11 +22,11 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
         });
 
         builder.Property(j => j.Title)
-            .HasMaxLength(150)
+            .HasMaxLength(JobLimits.TitleMaxLength)
             .IsRequired();
 
         builder.Property(j => j.Description)
-            .HasMaxLength(3000)
+            .HasMaxLength(JobLimits.DescriptionMaxLength)
             .IsRequired();
 
         builder.Property(j => j.JobType)

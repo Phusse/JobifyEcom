@@ -12,7 +12,7 @@ namespace Jobify.Api.Endpoints.Auth.Handlers.LogoutUser;
 
 internal static class LogoutUserEndpointHandler
 {
-    public static async Task<IResult> Handle(HttpContext context, HttpResponse response, IMediator mediator)
+    public static async Task<IResult> Handle(HttpContext context, IMediator mediator)
     {
         Guid? sessionId = null;
         string? rawSessionId = context.User.FindFirstValue(SessionClaimTypes.SessionId);
@@ -22,7 +22,7 @@ internal static class LogoutUserEndpointHandler
 
         OperationResult<object> result = await mediator.Send(new LogoutUserCommand(sessionId));
 
-        CookieHelper.DeleteCookie(response, CookieKeys.Session);
+        CookieHelper.DeleteCookie(context.Response, CookieKeys.Session);
 
         ApiResponse<object> apiResponse = result.ToApiResponse();
 
